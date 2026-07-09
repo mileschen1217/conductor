@@ -7,7 +7,12 @@ set -u
 python3 - "$1" <<'PYEOF'
 import json, sys
 violations = []
-with open(sys.argv[1], encoding="utf-8") as f:
+try:
+    f = open(sys.argv[1], encoding="utf-8")
+except OSError as err:
+    print(f"MALFORMED: cannot read journal: {err}")
+    sys.exit(2)
+with f:
     for i, line in enumerate(f, 1):
         line = line.strip()
         if not line:
