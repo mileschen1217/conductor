@@ -1,4 +1,7 @@
 # In-flight local working state (specs, plans, research, epics) — same convention as touchstone
-.touchstone/
 ROADMAP.md
+ROADMAP.html
 CLAUDE.local.md
+.touchstone/*
+!.touchstone/checker/
+!.touchstone/checker/**

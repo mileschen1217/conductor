@@ -1,0 +1,4 @@
+# written by /touchstone:init v0.20.1. Hand-editable.
+schema_version: 2  # current schema; legacy schema 1 is handled by --migrate
+workspace_root: .touchstone
+adopted_disciplines: [source-as-truth]
