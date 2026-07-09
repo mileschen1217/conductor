@@ -32,11 +32,12 @@ command -v codex >/dev/null || { echo "codex-unavailable"; exit 3; }
 
 # 2. dispatch (single-writer note: read-only fan-out uses --sandbox read-only;
 #    write-capable workers use workspace-write, at most one at a time)
+#    stdin MUST be /dev/null: codex exec waits on stdin in non-interactive contexts
 codex exec \
   --cd "$task_dir" \
   --sandbox workspace-write \
   -m "$model" \
-  "You are a worker under orchestration mode. Read ./task-contract.md and obey its implementer behavioral contract. Do the work within Scope only. Write ./result.json (schema: $conductor/contract/task-result.schema.json, schema_version \"1.1\"), recording every command you ran with its exit code in commands_run. If the contracted Commands to Run fail, still write a schema-valid result.json — status \"failed\", risks and/or fallback_reason filled — never crash, never leave no artifact. Final output: the single line RESULT: ./result.json"
+  "You are a worker under orchestration mode. Read ./task-contract.md and obey its implementer behavioral contract. Do the work within Scope only. Write ./result.json (schema: $conductor/contract/task-result.schema.json, schema_version \"1.1\"), recording every command you ran with its exit code in commands_run. If the contracted Commands to Run fail, still write a schema-valid result.json — status \"failed\", risks and/or fallback_reason filled — never crash, never leave no artifact. Final output: the single line RESULT: ./result.json" < /dev/null
 rc=$?
 
 # 3. infra-failure fallback (codex exec started but died): the adapter still
