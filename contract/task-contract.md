@@ -13,6 +13,9 @@ x_provenance:
     - "dropped tool-internal cross-reference (CONTEXT.md pointer)"
     - "scope-changes ledger path made workspace-convention-relative"
     - "source_repo recorded by repo identity, not local disk path: the checkout path contains a term this repo's neutrality scan bans; full local path in the vendor commit message (outside scan scope)"
+    - "Do Not Touch category example generalized: 'vendored crates' → 'vendored deps' (language-ecosystem-specific noun removed)"
+    - "Expected Output normalized: schema version stated as 1.1 (source text said '1' while the source schema file is 1.1 — source-internal inconsistency resolved toward the file); 'review.md' → 'review file'"
+    - "reversibility_basis example wording: 'git-recoverable' → 'recoverable via version control' (tool-neutral phrasing, same spirit as the seam-sentence modification)"
 task_id: <id>
 epic: <slug>
 role: <role-name>
