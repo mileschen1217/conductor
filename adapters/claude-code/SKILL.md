@@ -16,14 +16,15 @@ VALID/exit 0 is the only acceptable worker return.
 
 Evaluate the L1 entry gate (§ Entry gate) and present the call to the human
 before any dispatch. Record the decision in `dispatch-plan.md` (§ Audit
-surface shape).
+surface (dispatch-plan)).
 
 - [ ] dispatch-plan.md exists with an entry decision naming both disqualifiers.
 
 ## Phase 2 — Plan the wave
 
-Grade each subtask (§ Complexity tiering), assign a capability tier, resolve
-the concrete model from `binding.md`, and write one task-contract file per
+Grade each subtask (§ Complexity tiering), assign a capability tier (§
+Capability tiers), resolve the concrete model from `binding.md`, and write
+one task-contract file per
 subtask from `contract/task-contract.md`. Fill all four dispatch elements
 (§ Dispatch contract). Respect the concurrency hard cap (5).
 
