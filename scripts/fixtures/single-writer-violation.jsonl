@@ -1,0 +1,3 @@
+{"phase": "parallel", "worker": "w1", "action": "read", "path": "src/a.md"}
+{"phase": "parallel", "worker": "w2", "action": "write", "path": "src/b.md"}
+{"phase": "single", "worker": "w3", "action": "write", "path": "src/c.md"}
