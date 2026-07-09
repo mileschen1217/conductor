@@ -21,11 +21,27 @@ if [ "${1:-}" = "--self-test" ]; then
   exit 1
 fi
 
+for d in "$ROOT/doctrine" "$ROOT/contract"; do
+  if [ ! -d "$d" ] || [ ! -r "$d" ]; then
+    echo "ERROR: scan directory missing or unreadable: $d" >&2
+    exit 2
+  fi
+done
+
 hits="$(grep -rnioEH "$TERMS" "$ROOT/doctrine" "$ROOT/contract" 2>/dev/null)"
-if [ -n "$hits" ]; then
-  # normalize to: <repo-relative-file>:<line>: <matched-term>
-  printf '%s\n' "$hits" | sed -e "s|^$ROOT/||" -e 's|^\([^:]*:[0-9]*\):|\1: |'
-  exit 1
-fi
-echo "CLEAN"
-exit 0
+rc=$?
+case "$rc" in
+  0)
+    # matches found; normalize to: <repo-relative-file>:<line>: <matched-term>
+    printf '%s\n' "$hits" | sed -e "s|^$ROOT/||" -e 's|^\([^:]*:[0-9]*\):|\1: |'
+    exit 1
+    ;;
+  1)
+    echo "CLEAN"
+    exit 0
+    ;;
+  *)
+    echo "ERROR: grep failed (exit $rc) while scanning doctrine/ + contract/" >&2
+    exit 2
+    ;;
+esac
