@@ -3,14 +3,29 @@
 Portable orchestration doctrine (L1 doctrine / L2 file contracts / L3 per-harness
 adapters). Inherits all rules from `~/.claude/CLAUDE.md`.
 
-## Status: pre-contract
+## Status: contract accepted — ready for Build
 
-No contract accepted yet. Next steps, in order:
+Contract accepted 2026-07-10 (crucible complete: assay → design-spec →
+2-round cross-provider design-review C+H=0 → human accept).
 
-1. `/touchstone:init` (sets up doc routing for this repo)
-2. `/touchstone:crucible` — forge the contract. Primary input: founding research at
-   `.touchstone/research/2026-07-09-orchestration-mode.md` (+ worknotes subdir).
-3. Build in a fresh session after human accept.
+**Next step (fresh session): `/touchstone:anvil` on the accepted spec:**
+`.touchstone/specs/2026-07-10-orchestration-mode-design.md`
+(3 stories → 7 REQs → 13 ACs; live-bearing: AC-2/6/7/8/10/12/13)
+
+Companion records:
+- ADR 0001 (three-layer file-contract architecture, accepted):
+  `.touchstone/docs/adr/0001-three-layer-file-contract-architecture.md`
+- Assay record (guardrail block, flip-triggers FT-1/2/3, deferred D-1/2/3):
+  `.touchstone/epics/orchestration-mode/assay-2026-07-10-orchestration-mode.md`
+- Design-review trail: `.touchstone/epics/orchestration-mode/design-review-2026-07-10/`
+- Epic tracker: `.touchstone/epics/orchestration-mode/index.md` (Phase 2 = Build)
+
+## Doc Routing
+
+Workspace root `.touchstone/` (see `.claude/touchstone.yaml`): specs →
+`.touchstone/specs/`, ADR drafts → `.touchstone/docs/adr/`, epics →
+`.touchstone/epics/`, plans → `.touchstone/plans/`, research →
+`.touchstone/research/`.
 
 ## Standing requirements (from the founding session, 2026-07-10)
 
@@ -20,11 +35,11 @@ No contract accepted yet. Next steps, in order:
   adapter and the Codex adapter, both producing schema-valid results with the same
   acceptance verdict.
 - **Author skills against touchstone's standards**: follow
-  `~/claude_code/touchstone/docs/skill-authoring-template.md` and reuse/refer the
-  task-contract + result-schema templates in
-  `~/claude_code/touchstone/skills/epic-driven-roadmap/templates/`
-  (task-contract.md, task-result.json). Whether conductor *refers to* or *vendors
-  a provenance-stamped copy of* those templates is a crucible-stage decision — do
-  not pick silently.
-- **Do not pre-build structure.** The three-layer directory shape in README.md is
-  a proposal, not a decision; let the contract settle it.
+  `~/claude_code/touchstone/docs/skill-authoring-template.md`. The task-contract +
+  result-schema templates from
+  `~/claude_code/touchstone/skills/epic-driven-roadmap/templates/` are **vendored**
+  (provenance-stamped copy in `contract/`) — decided at assay 2026-07-10, do not
+  revert to refer-by-path.
+- **Structure is settled**: three-layer shape (L1 `doctrine/` / L2 `contract/` /
+  L3 `adapters/` + `benchmark/`, `scripts/`) is now contractual — ADR 0001 +
+  accepted spec § Scope are authoritative, not README.md.
