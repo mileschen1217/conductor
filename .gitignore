@@ -5,3 +5,7 @@ CLAUDE.local.md
 .touchstone/*
 !.touchstone/checker/
 !.touchstone/checker/**
+# Session working notes (SDD ledgers, briefs, reports — contain local paths)
+.superpowers/
+# Personal Claude Code overrides
+.claude/settings.local.json

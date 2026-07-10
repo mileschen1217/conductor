@@ -1,8 +1,8 @@
 # Capability-tier binding — Claude Code
 
-查得方法：Agent tool `model` 參數合法值（sonnet | opus | haiku）+ 本機 harness
-dispatch doctrine 的 knob 表（`~/.claude/harness/dispatch.md § 0`）；模型 ID 以
-該表為準。查證日期：2026-07-10。
+查得方法：Agent tool `model` 參數合法值（sonnet | opus | haiku）+ Claude Code
+官方文件的現行模型 ID（操作者本機的 dispatch 慣例檔可覆寫此表）。
+查證日期：2026-07-10。
 
 | 能力階層 | 模型/agent | 適用任務形 | 備註 |
 |---|---|---|---|
