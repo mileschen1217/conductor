@@ -12,7 +12,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 
-usage() { sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
+usage() { sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
 [ $# -ge 1 ] || usage
 
 case "$1" in

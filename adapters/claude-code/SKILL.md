@@ -6,9 +6,12 @@ description: Use when a task warrants commander-mode dispatch on Claude Code —
 # orchestration-mode — Claude Code adapter
 
 Binds the L1 dispatch primitive's harness step to the Claude Code Agent tool.
-**conductor root** — `${CLAUDE_PLUGIN_ROOT}` when installed as a plugin; the
-repo checkout root when running from a clone. Every path below resolves
-against it. Doctrine lives at `${CLAUDE_PLUGIN_ROOT}/doctrine/orchestration-mode.md`
+**conductor root** — `${CLAUDE_PLUGIN_ROOT}` when installed as a plugin
+(substituted automatically); when running from a clone the variable is UNSET —
+you (the commander) substitute the checkout root into every path below before
+using it, and never execute a command with the variable unexpanded (an unset
+expansion yields a broken `/contract/...` path). Doctrine lives at
+`${CLAUDE_PLUGIN_ROOT}/doctrine/orchestration-mode.md`
 (cite, never restate); tier→model resolution lives in `binding.md` beside
 this file.
 
