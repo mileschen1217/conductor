@@ -42,35 +42,14 @@ codex exec \
 rc=$?
 
 # 3. infra-failure fallback (codex exec died, or left no/empty/invalid
-#    result.json): the adapter still yields a schema-valid result.json —
-#    status failed, fallback_reason = infra cause. Any existing invalid
-#    file is preserved alongside, not overwritten silently.
+#    result.json): synthesize a schema-valid failure result via the L2-owned
+#    generator — result-shape knowledge stays in contract/; this adapter only
+#    binds and calls. Any existing invalid file is preserved alongside.
 if [ $rc -ne 0 ]; then
   if ! python3 "$conductor/contract/check-result.py" "$task_dir/result.json" >/dev/null 2>&1; then
     [ -f "$task_dir/result.json" ] && mv "$task_dir/result.json" "$task_dir/result.invalid.json"
-    python3 - "$task_dir" "$rc" <<'PYEOF'
-import json, sys, datetime
-task_dir, rc = sys.argv[1], sys.argv[2]
-now = datetime.datetime.now(datetime.timezone.utc).isoformat()
-json.dump({
-  "schema_version": "1.1",
-  "task_id": "unknown-infra-failure", "role": "implementer", "runtime": "codex",
-  "status": "failed", "scope_change_request": None,
-  "summary": "harness invocation failed before the worker produced a result",
-  "files_changed": [], "commands_run": [f"codex exec … → exit {rc}"],
-  "tests_passed": None, "risks": ["infra-level failure: codex exec exited nonzero with no result.json"],
-  "handoff_notes": "", "observations": "",
-  "started_at": now, "completed_at": now, "duration_ms": 0,
-  "fallback_reason": f"infra: codex exec exit {rc}, no result.json produced"
-}, open(f"{task_dir}/result.json", "w"), indent=2)
-PYEOF
-    # then fill task_id from the contract frontmatter before validating:
-    tid=$(awk -F': ' '/^task_id:/{print $2; exit}' "$task_dir/task-contract.md")
-    python3 - "$task_dir" "$tid" <<'PYEOF'
-import json, sys
-d = json.load(open(f"{sys.argv[1]}/result.json")); d["task_id"] = sys.argv[2]
-json.dump(d, open(f"{sys.argv[1]}/result.json", "w"), indent=2)
-PYEOF
+    python3 "$conductor/contract/make-fallback-result.py" "$task_dir" codex \
+      "infra: codex exec exit $rc, no usable result.json"
   fi
 fi
 
