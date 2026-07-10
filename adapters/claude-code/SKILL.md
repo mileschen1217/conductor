@@ -42,14 +42,10 @@ Per contract file, launch ONE worker with the Agent tool:
 - Set `model` from binding.md. Worker prompt template (fill both paths):
 
   > You are a worker under orchestration mode. Read the task contract at
-  > `<contract-path>` and obey its implementer behavioral contract. Do the
-  > work within Scope only. Write `result.json` (schema:
-  > `contract/task-result.schema.json`, schema_version "1.1") into
-  > `<task-dir>`, recording every command you ran with its exit code in
-  > commands_run. If the contracted Commands to Run fail, still write a
-  > schema-valid result.json — status "failed", risks and/or fallback_reason
-  > filled — never crash, never leave no artifact. Your final message: one
-  > line — the result.json path.
+  > `<contract-path>`; it is the single home of your duties — obey its
+  > implementer behavioral contract in full and produce its Expected Output
+  > into `<task-dir>` (result schema: `contract/task-result.schema.json`).
+  > Your final message: one line — the result.json path.
 
 - [ ] Each dispatch record notes agent type (read-only or write-capable), model, contract path.
 

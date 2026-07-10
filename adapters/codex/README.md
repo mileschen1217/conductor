@@ -13,11 +13,9 @@ the mode contract:
 ```markdown
 ## orchestration-mode worker contract
 You may be dispatched as an orchestration-mode worker. When your prompt names
-a task-contract file: read it and obey its implementer behavioral contract
-(stated in full inside the contract file — it is the single home). Write
-result.json conforming to the vendored schema (path given in your prompt)
-into the task directory, recording every command run with its exit code in
-commands_run.
+a task-contract file: read it; it is the single home of your duties — obey its
+implementer behavioral contract in full and produce its Expected Output into
+the task directory (result schema path given in your prompt).
 ```
 
 ## Thin-forwarder recipe (dispatch primitive, middle step)
@@ -40,7 +38,7 @@ codex exec \
   --cd "$task_dir" \
   --sandbox "$sandbox" \
   -m "$model" \
-  "You are a worker under orchestration mode. Read ./task-contract.md and obey its implementer behavioral contract. Do the work within Scope only. Write ./result.json (schema: $conductor/contract/task-result.schema.json, schema_version \"1.1\"), recording every command you ran with its exit code in commands_run. If the contracted Commands to Run fail, still write a schema-valid result.json — status \"failed\", risks and/or fallback_reason filled — never crash, never leave no artifact. Final output: the single line RESULT: ./result.json" < /dev/null
+  "You are a worker under orchestration mode. Read ./task-contract.md; it is the single home of your duties — obey its implementer behavioral contract in full and produce its Expected Output into this directory (result schema: $conductor/contract/task-result.schema.json). Final output: the single line RESULT: ./result.json" < /dev/null
 rc=$?
 
 # 3. infra-failure fallback (codex exec died, or left no/empty/invalid

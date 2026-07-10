@@ -16,6 +16,7 @@ x_provenance:
     - "Do Not Touch category example generalized: 'vendored crates' → 'vendored deps' (language-ecosystem-specific noun removed)"
     - "Expected Output normalized: schema version stated as 1.1 (source text said '1' while the source schema file is 1.1 — source-internal inconsistency resolved toward the file); 'review.md' → 'review file'"
     - "reversibility_basis example wording: 'git-recoverable' → 'recoverable via version control' (tool-neutral phrasing, same spirit as the seam-sentence modification)"
+    - "behavioral-contract rule 5 (result discipline: commands_run recording + failure-still-writes-valid-result) added: the vendor source leaves these worker duties implicit; the single-home requirement moved them from adapter worker prompts into this contract (human ruling D1, 2026-07-10)"
 task_id: <id>
 epic: <slug>
 role: <role-name>
@@ -64,6 +65,7 @@ created: YYYY-MM-DD
 2. **Hard stop at Read-Only Boundaries and Do Not Touch** — if AC appears to require modifying any of these, do **not** modify. Set `status: failed` with `risks` naming the path and the AC that conflicts.
 3. **Outside-scope necessity → needs-scope-expansion** — if AC requires touching a repo or module outside Scope (not in Read-Only Boundaries / Do Not Touch — i.e. the planner missed it), do **not** modify it. Set `status: needs-scope-expansion`, fill `scope_change_request` (see § Scope-Change Protocol), and return. (Read-Only / Do Not Touch conflicts are different — those mean the AC itself is wrong → rule 2 `failed`.)
 4. **Use `observations`** for any context that doesn't fit summary/risks/handoff_notes — unexpected codebase shape, ambiguities resolved by judgment, related issues out of scope, design questions, anything you'd tell the next implementer if you could chat. Don't pre-filter; the orchestrator skims.
+5. **Result discipline** — record every command you ran with its exit code in `commands_run`. If the contracted Commands to Run fail, still write a schema-valid result at the task dir — `status: failed`, `risks` and/or `fallback_reason` filled — never crash, never leave the task dir without a result artifact.
 
 ---
 
