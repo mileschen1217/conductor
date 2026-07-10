@@ -1,0 +1,13 @@
+{
+  "name": "conductor",
+  "owner": {
+    "name": "mileschen1217"
+  },
+  "plugins": [
+    {
+      "name": "conductor",
+      "source": "./",
+      "description": "Portable orchestration mode (single plugin; this repo is its own marketplace)."
+    }
+  ]
+}

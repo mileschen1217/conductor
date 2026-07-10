@@ -6,10 +6,13 @@ description: Use when a task warrants commander-mode dispatch on Claude Code —
 # orchestration-mode — Claude Code adapter
 
 Binds the L1 dispatch primitive's harness step to the Claude Code Agent tool.
-Doctrine lives at `doctrine/orchestration-mode.md` (cite, never restate);
-tier→model resolution lives in `binding.md` beside this file.
+**conductor root** — `${CLAUDE_PLUGIN_ROOT}` when installed as a plugin; the
+repo checkout root when running from a clone. Every path below resolves
+against it. Doctrine lives at `${CLAUDE_PLUGIN_ROOT}/doctrine/orchestration-mode.md`
+(cite, never restate); tier→model resolution lives in `binding.md` beside
+this file.
 
-**contract checker** — `python3 contract/check-result.py <result.json>`;
+**contract checker** — `python3 ${CLAUDE_PLUGIN_ROOT}/contract/check-result.py <result.json>`;
 VALID/exit 0 is the only acceptable worker return.
 
 ## Phase 1 — Entry
@@ -24,9 +27,10 @@ surface (dispatch-plan)).
 
 Grade each subtask (§ Complexity tiering), assign a capability tier (§
 Capability tiers), resolve the concrete model from `binding.md`, and write
-one task-contract file per
-subtask from `contract/task-contract.md`. Fill all four dispatch elements
-(§ Dispatch contract). Respect the concurrency hard cap (§ Complexity tiering).
+one task-contract file per subtask from
+`${CLAUDE_PLUGIN_ROOT}/contract/task-contract.md`. Fill all four dispatch
+elements (§ Dispatch contract). Respect the concurrency hard cap
+(§ Complexity tiering).
 
 - [ ] Every subtask row in dispatch-plan.md has grade, tier, resolved model, contract path, wave.
 
@@ -44,8 +48,9 @@ Per contract file, launch ONE worker with the Agent tool:
   > You are a worker under orchestration mode. Read the task contract at
   > `<contract-path>`; it is the single home of your duties — obey its
   > implementer behavioral contract in full and produce its Expected Output
-  > into `<task-dir>` (result schema: `contract/task-result.schema.json`).
-  > Your final message: one line — the result.json path.
+  > into `<task-dir>` (result schema:
+  > `${CLAUDE_PLUGIN_ROOT}/contract/task-result.schema.json` — fill as an
+  > absolute path). Your final message: one line — the result.json path.
 
 - [ ] Each dispatch record notes agent type (read-only or write-capable), model, contract path.
 
@@ -60,5 +65,5 @@ goes to a fresh-context worker (§ Verification).
 
 ## Related
 
-- Doctrine: `doctrine/orchestration-mode.md` — single home of mode behavior.
-- Binding: `adapters/claude-code/binding.md` — tier→model table.
+- Doctrine: `${CLAUDE_PLUGIN_ROOT}/doctrine/orchestration-mode.md` — single home of mode behavior.
+- Binding: `binding.md` beside this file — tier→model table.
