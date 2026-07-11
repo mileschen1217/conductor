@@ -22,9 +22,10 @@ VALID/exit 0 is the only acceptable worker return.
 
 Evaluate the L1 entry gate (§ Entry gate) and present the call to the human
 before any dispatch. Record the decision in `dispatch-plan.md` (§ Audit
-surface (dispatch-plan)).
+surface).
 
-- [ ] dispatch-plan.md exists with an entry decision naming both disqualifiers.
+- [ ] journal.jsonl opened in the task directory; FIRST line is `commander_stamp` (self-reported model id + doctrine_rev via `git -C ${CLAUDE_PLUGIN_ROOT} rev-parse --short HEAD` or the installed release stamp).
+- [ ] dispatch-plan.md exists with the entry decision (write shape + execution config + named grounds), the `task-shape:` line, and the `precedent:` line (query `.conductor/precedent.jsonl` first — cite or deviate; § Precedent & eval loop).
 
 ## Phase 2 — Plan the wave
 
@@ -36,6 +37,7 @@ elements (§ Dispatch contract). Respect the concurrency hard cap
 (§ Complexity tiering).
 
 - [ ] Every subtask row in dispatch-plan.md has grade, tier, resolved model, contract path, wave.
+- [ ] dispatch-plan.md carries per-subtask `why-not-a-script`, the containment-check line, and doubt-surfacing (§ Audit surface).
 
 ## Phase 3 — Dispatch (the harness-bound step)
 
@@ -46,7 +48,11 @@ Per contract file, launch ONE worker with the Agent tool:
   its CC preventive binding; must appear in the dispatch record).
 - Writing work (implementation): `subagent_type: "general-purpose"`, ONE at a
   time (§ Single-writer rule — this is its CC preventive binding).
-- Set `model` from binding.md. Worker prompt template (fill both paths):
+- **Model param (ST-5 regression point):** every Agent call MUST carry an
+  explicit `model:` equal to the binding-resolved model — never rely on the
+  default. The SAME resolved id goes into the journal `dispatch` line
+  (`resolved_model`) before the call; `audit-model-conformance.py` joins
+  journal vs telemetry after the run. Worker prompt template (fill both paths):
 
   > You are a worker under orchestration mode. Read the task contract at
   > `<contract-path>`; it is the single home of your duties — obey its
@@ -65,6 +71,21 @@ escalate to the human (§ Judgment reservation). Acceptance of deliverables
 goes to a fresh-context worker (§ Verification).
 
 - [ ] Every harvested result: checker exit code recorded; scope-change requests (if any) escalated, not adjudicated.
+- [ ] Journal audits run: `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/audit-judgment-flow.py <journal>` exits 0; with a telemetry export also `audit-model-conformance.py <journal> <telemetry>` (absent telemetry = UNVERIFIABLE, recorded, never claimed CLEAN).
+
+## Phase 5 — Close
+
+Append the run's `precedent/v1` line to `.conductor/precedent.jsonl` (schema:
+`${CLAUDE_PLUGIN_ROOT}/contract/precedent.schema.json`; append on EVERY
+terminal — done, failed, blocked). Run the calibration trigger check:
+`python3 ${CLAUDE_PLUGIN_ROOT}/scripts/audit-precedent.py --calibration-check .conductor/precedent.jsonl`.
+On TRIGGER: append the `calibration/v1 status=proposed` line, list it in the
+run report's pending-calibrations section, emit the promote-pending
+notification via the binding-named channel, and journal `calibration_notify`.
+Promotion/rejection is the human's (§ Precedent & eval loop) — never
+auto-promote.
+
+- [ ] Precedent line appended; calibration check run; any TRIGGER surfaced, not self-ruled.
 
 ## Related
 
