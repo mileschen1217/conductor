@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.1",
+  "task_id": "smoke-greeting-001",
+  "role": "implementer",
+  "runtime": "harness-x",
+  "status": "done",
+  "scope_change_request": null,
+  "summary": "created out/greeting.txt with the exact required line",
+  "files_changed": ["out/greeting.txt"],
+  "commands_run": ["grep -cx 'hello from the contract' out/greeting.txt → exit 0"],
+  "tests_passed": true,
+  "risks": [],
+  "handoff_notes": "",
+  "observations": "",
+  "started_at": "2026-07-10T00:00:00Z",
+  "completed_at": "2026-07-10T00:00:30Z",
+  "duration_ms": 30000,
+  "fallback_reason": null,
+  "judgment_events": [
+    {"type": "advisor_call", "decision_type": "tactical"}
+  ]
+}

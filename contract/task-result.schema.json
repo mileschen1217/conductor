@@ -15,7 +15,8 @@
       "template instance transcribed into JSON Schema form (fields, types, closed value sets)",
       "runtime kept as free string: source enum names concrete harnesses, which violates this repo's neutrality invariant (I1); harness binding lives in adapters/",
       "status value set transcribed from the two source_paths named above (single home here after vendoring)",
-      "source_repo recorded by repo identity, not local disk path: the checkout path contains a term this repo's neutrality scan bans; the full local path is recorded in the vendor commit message (outside scan scope)"
+      "source_repo recorded by repo identity, not local disk path: the checkout path contains a term this repo's neutrality scan bans; the full local path is recorded in the vendor commit message (outside scan scope)",
+      "2026-07-11 (v2 spec REQ-3): optional judgment_events added — additive, schema_version stays 1.1; worker advisor-use disclosure surface"
     ]
   },
   "type": "object",
@@ -43,6 +44,19 @@
     "started_at": { "type": "string" },
     "completed_at": { "type": "string" },
     "duration_ms": { "type": "integer" },
-    "fallback_reason": { "type": ["string", "null"] }
+    "fallback_reason": { "type": ["string", "null"] },
+    "judgment_events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "decision_type", "summary"],
+        "properties": {
+          "type": { "type": "string", "enum": ["advisor_call"] },
+          "decision_type": { "type": "string", "enum": ["tactical", "contract-interpretation", "acceptance-interpretation"] },
+          "summary": { "type": "string" }
+        }
+      }
+    }
   }
 }

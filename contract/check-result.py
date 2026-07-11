@@ -85,6 +85,26 @@ def main():
                     problems.append(
                         f"INVALID: {name}[{i}]: expected item type {'|'.join(item_types)}, got {type(item).__name__}"
                     )
+                    continue
+                if isinstance(item, dict) and "properties" in spec["items"]:
+                    ispec = spec["items"]
+                    for req in ispec.get("required", []):
+                        if req not in item:
+                            problems.append(f"INVALID: {name}[{i}].{req}: required field missing")
+                    for k, v in item.items():
+                        if k not in ispec["properties"]:
+                            if ispec.get("additionalProperties") is False:
+                                problems.append(f"INVALID: {name}[{i}].{k}: unknown field")
+                            continue
+                        kspec = ispec["properties"][k]
+                        kallowed = kspec["type"] if isinstance(kspec["type"], list) else [kspec["type"]]
+                        if not type_ok(v, kallowed):
+                            problems.append(
+                                f"INVALID: {name}[{i}].{k}: expected type {'|'.join(kallowed)}, got {type(v).__name__}"
+                            )
+                            continue
+                        if "enum" in kspec and v not in kspec["enum"]:
+                            problems.append(f"INVALID: {name}[{i}].{k}: value {v!r} not in {kspec['enum']}")
 
     for name in data:
         if name not in props:
