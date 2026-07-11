@@ -36,8 +36,10 @@ contract's tactical_consults_declared): disclosed count > n is reported as
 CALIBRATION (overage is calibration data, never a violation).
 Observation face (--advisor-observations, joins --results by task_id):
 observed advisor-call count > disclosed judgment_events count = VIOLATION
-(undisclosed use). --results WITHOUT observations degrades this check to
-UNVERIFIABLE, never CLEAN (fail-closed).
+(undisclosed use). An observed call whose task_id no result discloses =
+UNVERIFIABLE (a call charged to no task cannot be cleared — otherwise an
+unrecognized id is a hiding place). --results WITHOUT observations degrades
+this check to UNVERIFIABLE, never CLEAN (fail-closed).
 
 Exit: 1 if any VIOLATION, else 2 if any UNVERIFIABLE, else 0 (max severity).
 """
@@ -215,6 +217,12 @@ def main():
                     f"advisor_threshold line malformed or misplaced: expected threshold={args.threshold}, consults_so_far={args.threshold + 1}, moment_id={crossing_mid}, landing AT the crossing (after intent line {crossing_line}, before that moment's terminal)")
 
     # Worker + observation faces
+    if args.observations and not args.results:
+        # Observations without results is not a lighter audit — it is an audit
+        # with the accounting side missing. Every observed call is orphaned by
+        # construction, so nothing can be cleared.
+        unverifiables.append(
+            "--advisor-observations given without --results: observed advisor calls have no disclosure to check against — UNVERIFIABLE, never CLEAN")
     if args.results:
         disclosed = {}
         for rp in args.results:
@@ -250,6 +258,13 @@ def main():
                 if n_obs > n_disc:
                     violations.append(
                         f"undisclosed advisor use: task {tid} observed {n_obs} call(s), disclosed {n_disc}")
+            # An observed call under a task_id no result claims is not a
+            # non-event: it is a call nobody accounted for. Ignoring it would
+            # let any producer hide undisclosed use behind an unrecognized id.
+            for tid, n_obs in sorted(observed.items()):
+                if tid not in disclosed:
+                    unverifiables.append(
+                        f"observed {n_obs} advisor call(s) under task {tid!r}, which no result file discloses — unattributable observation, UNVERIFIABLE (a call charged to no task cannot be cleared)")
         else:
             unverifiables.append(
                 "undisclosed-use check has no observation surface (--advisor-observations absent) — UNVERIFIABLE, never CLEAN")

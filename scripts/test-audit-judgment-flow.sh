@@ -32,8 +32,12 @@ check ruling-echo      1 '^VIOLATION: .*advisor_ruling line .* echo broken|^VIOL
 check bad-notify       1 '^VIOLATION: calibration_notify'    $A "$F/journal-bad-notify.jsonl"
 check missing-journal  2 '^UNVERIFIABLE: '                   $A "$F/nonexistent.jsonl"
 check results-no-obs   2 '^UNVERIFIABLE: undisclosed-use'    $A "$F/journal-clean.jsonl" --results "$F/results/result-disclosed.json"
-check undisclosed      1 '^VIOLATION: .*undisclosed'         $A "$F/journal-clean.jsonl" --results "$F/results/result-disclosed.json" "$F/results/result-silent.json" --advisor-observations "$F/observations.jsonl"
-check disclosed-ok     0 '^CALIBRATION: '                    $A "$F/journal-clean.jsonl" --results "$F/results/result-disclosed.json" --advisor-observations "$F/observations.jsonl"
-check illegal-type     1 '^VIOLATION: .*worker-layer'        $A "$F/journal-clean.jsonl" --results "$F/results/result-illegal.json" --advisor-observations "$F/observations.jsonl"
-check overage          0 '^CALIBRATION: disclosed overage'   $A "$F/journal-clean.jsonl" --results "$F/results/result-disclosed.json" --advisor-observations "$F/observations.jsonl" --declared-scope w-disclosed=1
+check undisclosed      1 '^VIOLATION: .*undisclosed'         $A "$F/journal-clean.jsonl" --results "$F/results/result-disclosed.json" "$F/results/result-silent.json" "$F/results/result-illegal.json" --advisor-observations "$F/observations.jsonl"
+check disclosed-ok     0 '^CALIBRATION: '                    $A "$F/journal-clean.jsonl" --results "$F/results/result-disclosed.json" --advisor-observations "$F/observations-scoped.jsonl"
+check illegal-type     1 '^VIOLATION: .*worker-layer'        $A "$F/journal-clean.jsonl" --results "$F/results/result-disclosed.json" "$F/results/result-silent.json" "$F/results/result-illegal.json" --advisor-observations "$F/observations.jsonl"
+check overage          0 '^CALIBRATION: disclosed overage'   $A "$F/journal-clean.jsonl" --results "$F/results/result-disclosed.json" --advisor-observations "$F/observations-scoped.jsonl" --declared-scope w-disclosed=1
+# an observed call charged to a task no result discloses: not a non-event — it is uncleared
+check orphan-obs       2 '^UNVERIFIABLE: observed .* no result file discloses' $A "$F/journal-clean.jsonl" --results "$F/results/result-disclosed.json" --advisor-observations "$F/observations.jsonl"
+# observations with no results = the accounting side is missing; every call is orphaned
+check obs-no-results   2 '^UNVERIFIABLE: --advisor-observations given without --results' $A "$F/journal-unavailable.jsonl" --advisor-observations "$F/observations.jsonl"
 exit "$fail"
