@@ -1,6 +1,8 @@
 {
   "name": "conductor",
-  "description": "Portable orchestration mode — a commander judges, decomposes, and dispatches; tiered workers execute through file contracts (L1 doctrine / L2 contracts / L3 adapters).",
-  "version": "0.1.0",
-  "skills": ["./adapters/claude-code"]
+  "description": "Portable orchestration mode — a commander judges, decomposes, and dispatches; tiered workers execute through file contracts (L1 doctrine / L2 contracts / L3 adapters). v2: write-shape topology, three-axis grading, advisor primitive, precedent & eval loop.",
+  "version": "0.2.0",
+  "skills": [
+    "./adapters/claude-code"
+  ]
 }
