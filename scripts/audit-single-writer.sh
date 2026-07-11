@@ -2,6 +2,13 @@
 # audit-single-writer.sh — post-hoc single-writer audit (spec AC-10, portable half).
 # Input: a run-journal JSONL; each line {"phase","worker","action","path"}.
 # Violation: any action=="write" on a phase=="parallel" line.
+# 0/1-worker degenerate semantics (v2 REQ-1): an inline or 1-worker run's
+# journal typically contains no parallel lines at all; AUDIT CLEAN then means
+# "trivially clean — single-writer held by construction". The audit surface
+# that remains for such runs is the v2 run journal's judgment stream
+# (audit-judgment-flow.py), not this script. disjoint-write runs DO exercise
+# this audit: each write surface is one pen, and the merge-back is a
+# single-threaded phase.
 set -u
 [ $# -eq 1 ] || { echo "usage: audit-single-writer.sh <journal.jsonl>"; exit 2; }
 python3 - "$1" <<'PYEOF'
