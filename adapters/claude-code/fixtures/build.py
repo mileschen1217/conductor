@@ -110,6 +110,13 @@ def main():
             [{"type": "assistant", "message": {"role": "assistant",
                                                "content": "plain string"}}])])
 
+    # a marker the commander decorated (backticks/bold): the token captured is
+    # `t-alpha` not t-alpha, so it names no declared task -> fatal, never a
+    # silent miscount. Guards the SKILL.md template against re-growing markup.
+    write(root, "decorated-marker",
+          [dispatch("toolu_1", "Task contract: `t-alpha`\n")],
+          [("a1", meta("toolu_1"), [advisor()])])
+
     # no subagents dir at all, yet the caller names dispatched tasks
     write(root, "no-subagents-dir",
           [dispatch("toolu_1", "Task contract: t-alpha\n")], None)

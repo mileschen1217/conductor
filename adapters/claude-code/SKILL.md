@@ -52,8 +52,13 @@ Per contract file, launch ONE worker with the Agent tool:
   explicit `model:` equal to the binding-resolved model — never rely on the
   default. The SAME resolved id goes into the journal `dispatch` line
   (`resolved_model`) before the call; `audit-model-conformance.py` joins
-  journal vs telemetry after the run. Worker prompt template (fill both paths):
+  journal vs telemetry after the run. Worker prompt template (fill both paths;
+  **line 1 is not decoration — see below**):
 
+  > Task contract: \<task_id\>   ← literal line, NO backticks, NO bold, no
+  > other markup: the marker is matched as raw text and any decoration you add
+  > lands inside the captured token and voids the attribution.
+  >
   > You are a worker under orchestration mode. Read the task contract at
   > `<contract-path>`; it is the single home of your duties — obey its
   > implementer behavioral contract in full and produce its Expected Output
@@ -61,7 +66,17 @@ Per contract file, launch ONE worker with the Agent tool:
   > `${CLAUDE_PLUGIN_ROOT}/contract/task-result.schema.json` — fill as an
   > absolute path). Your final message: one line — the result.json path.
 
+- **`Task contract: <task_id>` marker (§ Dispatch primitive → Attributability):**
+  the prompt is the only commander-authored channel CC preserves in its
+  execution record — the worker's own id is minted by the harness at call time,
+  so the commander cannot journal it in advance. That marker line is therefore
+  the ONLY thing joining a worker's advisor calls back to its task. A dispatch
+  without it is not "slightly less tidy": `advisor-observations.py` refuses to
+  certify the whole session, and the undisclosed-use audit reports UNVERIFIABLE.
+  Exact whole line, exactly the `task_id` used in the journal `dispatch` line.
+
 - [ ] Each dispatch record notes agent type (read-only or write-capable), model, contract path.
+- [ ] Every dispatch prompt carries its `Task contract: <task_id>` marker line.
 
 ## Phase 4 — Harvest
 

@@ -171,6 +171,15 @@ and validate it with the contract checker. Only the middle step is
 harness-bound (adapter territory); the first and last steps are pure file
 operations, identical everywhere.
 
+**Attributability (a duty of every dispatch, not a nicety):** what starts the
+worker must carry its `task_id` in a form the harness's own execution record
+preserves — so that after the run, anything the worker did can be joined back
+to the task it did it for. Without that carrier the worker's advisor use
+cannot be attributed to any task, and the disclosure audit is UNVERIFIABLE by
+construction: not "probably fine", *unauditable*. The concrete carrier is
+adapter territory (a marker line in the worker's brief, a structured field,
+whatever the harness records); the duty is not.
+
 ## Dispatch contract
 
 Every dispatch carries four elements, mapped to task-contract fields. A

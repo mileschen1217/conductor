@@ -50,6 +50,7 @@ check no-meta           1 0 'no agent-a1.meta.json' no-meta
 check unknown-tooluseid 1 0 'matches no Agent dispatch' unknown-tooluseid
 check malformed-line    1 0 'not valid JSON' malformed-line
 check bad-content-shape 1 0 'non-list content' bad-content-shape
+check decorated-marker  1 0 'not among --task-ids' decorated-marker
 check no-subagents-dir  1 0 'no subagents directory' no-subagents-dir
 
 exit "$fail"

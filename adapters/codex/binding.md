@@ -37,3 +37,15 @@ digest 封套：commander 把該判斷時刻的完整 context 濃縮為 digest �
 `$conductor/contract/advisor-ruling.schema.json`）。與 CC 側差異＝傳輸形
 （digest 上行 vs full-context 上行）；可移植性保證只及 schema 層，ruling
 內容 parity 明文不保證（spec REQ-8）。
+
+### Attributability（doctrine § Dispatch primitive 的 codex 面）
+
+codex worker 是 commander 直接叫起的 subprocess——invocation 由 commander 完全
+掌握，task_id 於呼叫當下即可寫入 journal 與該 worker 的輸出路徑，attribution
+結構上成立，**不需要 CC 那種 prompt marker**（CC 需要它，是因為 worker id 由
+harness 於呼叫時鑄造，commander 事前無從記錄）。
+
+worker→advisor 的 undisclosed-use 面：codex worker 跑在獨立 sandbox，其工具面
+不含本 mode 的 advisor primitive，故該路徑**推定不存在**——但這是**推理，非實測**
+（CC 側正是在此處推錯過一次：把 session 級缺席讀成 worker 級隔離）。在有 probe
+之前，codex 臂的 undisclosed-use 檢查應視為 UNVERIFIABLE，不得報 CLEAN。
