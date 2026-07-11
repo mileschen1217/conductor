@@ -127,4 +127,3 @@ must match (both pass or both fail) for every ac_id. On mismatch: first
 rule out instruction divergence (byte-identical instruction = ruled out),
 then read the divergence against flip-trigger FT-1 (invocation-semantics
 fork → reopen the architecture decision, ADR 0001).
-</content>
