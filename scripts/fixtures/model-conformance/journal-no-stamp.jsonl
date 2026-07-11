@@ -1,0 +1,2 @@
+{"event":"dispatch","task_id":"t1","tier":"frontier","resolved_model":"frontier-model-1","read_only":true,"wave":1,"contract":"t1/task-contract.md"}
+{"event":"dispatch","task_id":"t2","tier":"cheap","resolved_model":"cheap-model-1","read_only":false,"wave":2,"contract":"t2/task-contract.md"}
