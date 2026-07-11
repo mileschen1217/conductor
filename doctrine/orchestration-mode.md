@@ -100,7 +100,11 @@ is *mechanical* iff a runnable check (pattern match / exit code) is actually
 written for it. Claiming mechanical without the check artifact is a grading
 defect. The default direction is taste (fail-safe): an AC without a check
 artifact routes to a named verifier — fresh-context worker, commander, or
-human — recorded in the contract.
+human — recorded in the contract. Grading is an authoring act: where
+a runnable check is writable, the grader writes it at grading time and
+the criterion is mechanical — a criterion never passes as mechanical on
+promise alone. Taste is the terminal grade only where no runnable check
+can be written (the judgment itself is the acceptance).
 
 ## Advisor primitive
 
