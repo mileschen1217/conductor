@@ -19,4 +19,7 @@ check no-stamp        1 '^VIOLATION: .*first event'  $A "$F/journal-no-stamp.jso
 check no-stamp-empty-telemetry 1 '^VIOLATION: .*first event' $A "$F/journal-no-stamp.jsonl" "$F/telemetry-empty.jsonl"
 check empty-telemetry 2 '^UNVERIFIABLE: '           $A "$F/journal-clean.jsonl" "$F/telemetry-empty.jsonl"
 check missing-telemetry 2 '^UNVERIFIABLE: '         $A "$F/journal-clean.jsonl" "$F/telemetry-nonexistent.jsonl"
+check no-stamp-missing-telemetry 1 '^VIOLATION: .*first event' $A "$F/journal-no-stamp.jsonl" "$F/telemetry-nonexistent.jsonl"
+check no-stamp-malformed-telemetry 1 '^VIOLATION: .*first event' $A "$F/journal-no-stamp.jsonl" "$F/telemetry-malformed.jsonl"
+check malformed-telemetry 2 '^UNVERIFIABLE: .*JSON parse error' $A "$F/journal-clean.jsonl" "$F/telemetry-malformed.jsonl"
 exit "$fail"

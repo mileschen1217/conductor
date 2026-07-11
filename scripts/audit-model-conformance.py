@@ -33,8 +33,7 @@ def load_jsonl(path, label):
     try:
         f = open(path, encoding="utf-8")
     except OSError as err:
-        print(f"UNVERIFIABLE: cannot read {label}: {err}")
-        sys.exit(2)
+        return entries, f"cannot read {label}: {err}"
     with f:
         for i, line in enumerate(f, 1):
             line = line.strip()
@@ -43,29 +42,39 @@ def load_jsonl(path, label):
             try:
                 entries.append((i, json.loads(line)))
             except json.JSONDecodeError as err:
-                print(f"UNVERIFIABLE: {label} line {i}: JSON parse error: {err}")
-                sys.exit(2)
-    return entries
+                return entries, f"{label} line {i}: JSON parse error: {err}"
+    return entries, None
 
 
 def main():
     if len(sys.argv) != 3:
         print("usage: audit-model-conformance.py <journal.jsonl> <telemetry.jsonl>")
         sys.exit(2)
-    journal = load_jsonl(sys.argv[1], "journal")
-    telemetry = load_jsonl(sys.argv[2], "telemetry")
+
+    journal, journal_error = load_jsonl(sys.argv[1], "journal")
+    if journal_error is not None:
+        print(f"UNVERIFIABLE: {journal_error}")
+        sys.exit(2)
 
     dispatches = [(ln, e) for ln, e in journal if e.get("event") == "dispatch"]
     stamps = [e for _, e in journal if e.get("event") == "commander_stamp"]
-    agent_models = Counter(e.get("model") for _, e in telemetry if e.get("type") == "agent")
-    session_models = {e.get("model") for _, e in telemetry if e.get("type") == "session"}
 
-    # C0 is telemetry-independent — evaluate before any fail-closed telemetry
-    # return so a genuine C0 violation always outranks UNVERIFIABLE
+    # C0 is telemetry-independent — evaluate before loading telemetry so a
+    # genuine C0 violation always outranks any telemetry fail-closed reason
     # (priority: 1 VIOLATION > 2 UNVERIFIABLE > 0 CLEAN).
     violations = []
     if not journal or journal[0][1].get("event") != "commander_stamp":
         violations.append("journal's first event is not commander_stamp (REQ-4 self-stamp duty)")
+
+    telemetry, telemetry_error = load_jsonl(sys.argv[2], "telemetry")
+    if telemetry_error is not None:
+        for v in violations:
+            print(f"VIOLATION: {v}")
+        print(f"UNVERIFIABLE: {telemetry_error}")
+        sys.exit(1 if violations else 2)
+
+    agent_models = Counter(e.get("model") for _, e in telemetry if e.get("type") == "agent")
+    session_models = {e.get("model") for _, e in telemetry if e.get("type") == "session"}
 
     fail_closed_reason = None
     if not telemetry:
