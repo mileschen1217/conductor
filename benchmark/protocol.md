@@ -40,17 +40,19 @@ cell appends one ledger row AND one precedent/v1 line to
 by the R3 formula (quality not-worse AND cost lower — § Quality rubric).
 This protocol still contains NO automatic pass logic.
 
-**Harness constraint (2026-07-12, cc 2.1.205):** the CC Agent tool's
-`model` param is currently inert — every dispatched worker executes the
-default mid-tier model regardless of the requested one (three-witness
-evidence: smoke/ac-14). Until fixed upstream: (1) non-default WORKER
-models cannot be pinned in-session — matrix cells requiring them run
-their commander as a separately-launched session (`claude --model X`,
-the main-loop selector works) with workers on the default tier only;
-(2) every cell's models are verified post-run by
-`audit-model-conformance.py` (journal × telemetry), never assumed from
-the plan; (3) the R1 human ruling confirms the reachable cell set
-before any cell runs.
+**Model pinning is verified, never assumed (standing rule):**
+operator-level configuration can silently re-pin dispatched workers — the
+2026-07-12 incident: a forgotten `CLAUDE_CODE_SUBAGENT_MODEL` env override
+in the operator's settings pinned every worker to the mid tier regardless
+of the requested model; the M8 conformance audit caught it
+(smoke/ac-14 — planned-vs-actual VIOLATION), root-caused to config, fixed
+by removing the override + session restart. Therefore: (1) every cell's
+models are verified post-run by `audit-model-conformance.py`
+(journal × telemetry), never assumed from the plan; (2) the R1 human
+ruling confirms the reachable cell set against the CURRENT session's
+verified dispatch behavior (one probe dispatch per distinct model before
+the matrix starts); (3) any planned-vs-actual mismatch voids the cell's
+tier claim, whatever its cause.
 
 ## Isolation invariants (all four hold per cell; violation voids the arm)
 
