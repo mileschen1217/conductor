@@ -1,0 +1,3 @@
+{"event":"commander_stamp","model":"mid-model-1","doctrine_rev":"abc1234"}
+{"event":"judgment_moment","moment_id":1,"decision_type":"grading-dispute","disposition":"advisor"}
+{"event":"advisor_unavailable","moment_id":1,"note":"transport not attached — commander proceeds on own judgment, confidence degraded"}

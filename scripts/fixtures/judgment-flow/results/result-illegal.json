@@ -1,0 +1,3 @@
+{"task_id": "w-illegal", "judgment_events": [
+  {"type": "advisor_call", "decision_type": "contract-interpretation", "summary": "asked what the contract's Scope really means"}
+]}

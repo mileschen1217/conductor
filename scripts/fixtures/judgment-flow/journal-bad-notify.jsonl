@@ -1,0 +1,2 @@
+{"event":"commander_stamp","model":"mid-model-1","doctrine_rev":"abc1234"}
+{"event":"calibration_notify","calibration_id":"cal-aa11bb22cc33","channel":"report-only","status":"queued","error":null}
