@@ -1,4 +1,4 @@
-# Benchmark protocol — single high-end inline vs conductor mode
+# Benchmark protocol v2 — commander×topology matrix
 
 One-shot comparative acceptance procedure (NOT standing eval infrastructure).
 Human-governed: the human selects the task, adjudicates quality, and rules
@@ -11,15 +11,70 @@ heterogeneous; quality is decidable by tests and/or severity-graded review.
 The selection (task, repo, why it meets each criterion) is recorded in the
 run ledger entry (`task_ref`).
 
-## Run procedure
+## Matrix (v2 — supersedes the single inline-vs-conductor pair)
 
-Same task, two runs:
-- **inline side** — one high-end model does everything in a single context.
-- **conductor side** — orchestration mode per `doctrine/orchestration-mode.md`
-  through one adapter. This run doubles as the audit subject for the spec's
-  tiering AC (AC-2) and single-writer audit (AC-10): the conductor side keeps
-  a run journal (JSONL shape defined by `scripts/audit-single-writer.sh`,
-  derived from the adapter's dispatch records) and feeds it through that audit.
+Commander models (4, human-confirmable at R1): fable / opus / sonnet / haiku
+(CC binding table 2026-07-11). Cells: 4 commander models × {inline, v2-form}
+plus ONE bare-inline ablation cell = **9 cells / 9 ledger rows**.
+
+- **matrix inline cell** = the mode's 0-worker form: contract + entry gate +
+  journal + checker + result.json discipline, pen stays with the commander.
+- **v2-form cell** = topology per the entry gate's own output for the task.
+- **bare-inline ablation cell** (the 9th): prompt-only, NO mode machinery, on
+  the mid-tier commander model (sonnet — the tier the gate's refusal
+  threshold serves).
+
+**Ablation pair (discipline unit price):** the 9th cell vs the matrix's own
+mid-tier inline cell (REUSED, not rerun). The ledger records, as separate
+fields on the ablation ruling row: `discipline_unit_price_usd` (cost delta)
+and `quality_delta` (what mechanical acceptance caught that bare inline
+missed) — never folded into topology comparisons.
+
+**Staged execution:** inline row first (4 cells), then v2-form row, ablation
+cell last. Cell 2 (opus-inline) may reuse the 2026-07-10 ledger data ONLY if
+the task is identical to v1's; else rerun (+cost accepted). Every completed
+cell appends one ledger row AND one precedent/v1 line to
+`.conductor/precedent.jsonl`.
+
+**Adjudication:** the commander-vs-inline face is human-ruled per cell pair
+by the R3 formula (quality not-worse AND cost lower — § Quality rubric).
+This protocol still contains NO automatic pass logic.
+
+**Harness constraint (2026-07-12, cc 2.1.205):** the CC Agent tool's
+`model` param is currently inert — every dispatched worker executes the
+default mid-tier model regardless of the requested one (three-witness
+evidence: smoke/ac-14). Until fixed upstream: (1) non-default WORKER
+models cannot be pinned in-session — matrix cells requiring them run
+their commander as a separately-launched session (`claude --model X`,
+the main-loop selector works) with workers on the default tier only;
+(2) every cell's models are verified post-run by
+`audit-model-conformance.py` (journal × telemetry), never assumed from
+the plan; (3) the R1 human ruling confirms the reachable cell set
+before any cell runs.
+
+## Isolation invariants (all four hold per cell; violation voids the arm)
+
+1. **Worktree per arm** — each cell runs in its own worktree; no shared
+   working tree between arms.
+2. **Shared contract names no directory** — the task contract binds Scope by
+   EXACTLY declaration (the explicit deliverable set) plus a sibling
+   do-not-touch (DNT) declaration; it never names another arm's directory.
+3. **Byte-identical fresh-context judges** — both arms' acceptance judges get
+   the fixed judge text (§ Acceptance-judge instruction), only the two path
+   slots vary; a judge is never its arm's builder.
+4. **Asymmetric contamination voids the arm** — any arm whose inputs contain
+   another arm's outputs is void: no envelope claim from it; void + rerun
+   recorded in the ledger (symmetric contamination is acceptable and noted).
+
+Isolation audit: before adjudication, an audit of each arm's inputs (worktree
+diff provenance + transcript reads) confirms invariant 4; the audit record
+lands beside the ledger rows.
+
+## Validated envelope (adapters/*/README)
+
+One line per validated cell: `validated: <commander>×<topology> — ledger
+<run_id>`. Envelope lines cite ledger rows ONLY — no prose claims; an
+unvalidated cell never appears (claim ≤ evidence).
 
 ## Ledger — `benchmark/ledger.jsonl` (append-only; one run per line; never rewrite)
 
@@ -33,6 +88,13 @@ Same task, two runs:
 
 Cost rules: prefer the side's actual billing/usage surface; when absent,
 tokens × that day's official list price; either way `cost_source` says which.
+
+## Ledger v2 row additions
+
+v1 fields keep their meaning. New: `run_id` unique per row (canonical
+citation key), `cell` (`<commander>x<inline|v2-form|bare-inline>`), and on
+the ablation ruling row `discipline_unit_price_usd` + `quality_delta`.
+v1 rows (2026-07-10) are immutable history in legacy shape.
 
 ## Quality rubric (human adjudication)
 
@@ -65,3 +127,4 @@ must match (both pass or both fail) for every ac_id. On mismatch: first
 rule out instruction divergence (byte-identical instruction = ruled out),
 then read the divergence against flip-trigger FT-1 (invocation-semantics
 fork → reopen the architecture decision, ADR 0001).
+</content>
