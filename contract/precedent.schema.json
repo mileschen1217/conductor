@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "precedent-ledger-line",
+  "x_notes": {
+    "created": "2026-07-11",
+    "ledger": "one per-project append-only JSONL file; this layer defines line formats only — the file path is named by each harness binding",
+    "append_only_enforcement": "two layers: (1) scripts/audit-precedent.py verifies in-line consistency (status evolution by new lines; ts monotonic non-decreasing); (2) history immutability is a version-control audit — the ledger is a tracked file and a diff rewriting an existing line is itself the violation (script capability boundary, stated honestly)",
+    "calibration_id_rule": "stable proposal key, derived: 'cal-' + first 12 hex chars of sha256(kind + '|' + write_surface + '|' + signal.kind + '|' + <signal value canonicalized: JSON, sorted keys, or empty string when the kind matches without value>). Deterministic so a run close can compute it and detect an open proposal (duplicate suppression).",
+    "deviation_signal_consistency": "per-kind match semantics for the calibration trigger: threshold-crossed and precedent-deviation match on kind alone; grade-override matches on value (from→to) equality; checker-reject-pattern matches on value (error signature) equality",
+    "similarity_key": "task_shape.kind + task_shape.write_surface equality — the pre-dispatch cite-or-deviate lookup key and the calibration trigger's same-shape key"
+  },
+  "oneOf": [
+    {
+      "title": "precedent/v1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "ts", "run_id", "task_shape", "decisions", "outcome", "deviation_signal", "lesson"],
+      "properties": {
+        "schema": { "type": "string", "enum": ["precedent/v1"] },
+        "ts": { "type": "string" },
+        "run_id": { "type": "string" },
+        "task_shape": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "units", "corpus_est_tokens", "write_surface", "acceptance_mechanical"],
+          "properties": {
+            "kind": { "type": "string" },
+            "units": { "type": "integer" },
+            "corpus_est_tokens": { "type": "integer" },
+            "write_surface": { "type": "string" },
+            "acceptance_mechanical": { "type": "boolean" }
+          }
+        },
+        "decisions": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["entry", "topology", "grades", "advisor_calls"],
+          "properties": {
+            "entry": { "type": "string" },
+            "topology": { "type": "string" },
+            "grades": { "type": "string" },
+            "advisor_calls": { "type": "integer" }
+          }
+        },
+        "outcome": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["cost_usd", "quality", "retries", "checker_rejects", "verdict"],
+          "properties": {
+            "cost_usd": { "type": "number" },
+            "quality": { "type": "string" },
+            "retries": { "type": "integer" },
+            "checker_rejects": { "type": "integer" },
+            "verdict": { "type": "string" }
+          }
+        },
+        "deviation_signal": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": ["kind", "value"],
+          "properties": {
+            "kind": { "type": "string", "enum": ["threshold-crossed", "grade-override", "checker-reject-pattern", "precedent-deviation"] },
+            "value": { "type": ["string", "object", "null"] }
+          }
+        },
+        "lesson": { "type": "string" }
+      }
+    },
+    {
+      "title": "calibration/v1",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "ts", "calibration_id", "rule", "basis", "status", "supersedes", "decided_by", "decision_reason", "m9_run"],
+      "properties": {
+        "schema": { "type": "string", "enum": ["calibration/v1"] },
+        "ts": { "type": "string" },
+        "calibration_id": { "type": "string" },
+        "rule": { "type": "string" },
+        "basis": { "type": "array", "items": { "type": "string" } },
+        "status": { "type": "string", "enum": ["proposed", "promoted", "rejected"] },
+        "supersedes": { "type": ["string", "null"] },
+        "decided_by": { "type": ["string", "null"] },
+        "decision_reason": { "type": ["string", "null"] },
+        "m9_run": { "type": ["string", "null"] }
+      }
+    }
+  ]
+}
