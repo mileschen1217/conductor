@@ -17,6 +17,7 @@ x_provenance:
     - "Expected Output normalized: schema version stated as 1.1 (source text said '1' while the source schema file is 1.1 — source-internal inconsistency resolved toward the file); 'review.md' → 'review file'"
     - "reversibility_basis example wording: 'git-recoverable' → 'recoverable via version control' (tool-neutral phrasing, same spirit as the seam-sentence modification)"
     - "behavioral-contract rule 5 (result discipline: commands_run recording + failure-still-writes-valid-result) added: the vendor source leaves these worker duties implicit; the single-home requirement moved them from adapter worker prompts into this contract (human ruling D1, 2026-07-10)"
+    - "2026-07-11 (v2 spec REQ-2/REQ-3): AC mechanical/taste marking convention added (taste criterion home: doctrine § Capability tiers); optional Advisor Scope section added (worker tactical consult declaration + disclosure duty)"
 task_id: <id>
 epic: <slug>
 role: <role-name>
@@ -44,9 +45,14 @@ created: YYYY-MM-DD
 ## Acceptance Criteria
 - <testable outcomes; load-bearing source of truth for "done">
 - ACs from the spec/plan; implementer's job is to satisfy these, not to match a file list.
+- Mark each AC `mechanical:` (attach the runnable check — pattern match / exit code; claiming mechanical without a written check is a grading defect) or `taste:` (name the verifier route: fresh-context worker, orchestrator, or human). Unmarked = taste (fail-safe default).
 
 ## Commands to Run
 - <verification commands; exit codes captured in result.json>
+
+## Advisor Scope (worker tactical) (optional)
+- tactical_consults_declared: <n> (omit section entirely when the worker gets no advisor)
+- Worker-layer consults are tactical ONLY. Contract-interpretation or acceptance-interpretation questions escalate through the status protocols (rules 2/3), never through the advisor. Every consult is disclosed in result.json `judgment_events`; disclosed overage beyond <n> is calibration data; undisclosed use is a violation.
 
 ## Owned Files (optional)
 - Use ONLY when you need to pin exact files — e.g., parallel implementer dispatch with non-overlapping ownership, or an intentionally narrow refactor.
