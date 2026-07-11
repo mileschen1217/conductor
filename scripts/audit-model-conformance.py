@@ -60,16 +60,25 @@ def main():
     agent_models = Counter(e.get("model") for _, e in telemetry if e.get("type") == "agent")
     session_models = {e.get("model") for _, e in telemetry if e.get("type") == "session"}
 
-    if not telemetry:
-        print("UNVERIFIABLE: telemetry export is empty — cannot join (never CLEAN on missing evidence)")
-        sys.exit(2)
-    if dispatches and not agent_models:
-        print("UNVERIFIABLE: journal has dispatch lines but telemetry has zero agent rows")
-        sys.exit(2)
-
+    # C0 is telemetry-independent — evaluate before any fail-closed telemetry
+    # return so a genuine C0 violation always outranks UNVERIFIABLE
+    # (priority: 1 VIOLATION > 2 UNVERIFIABLE > 0 CLEAN).
     violations = []
     if not journal or journal[0][1].get("event") != "commander_stamp":
         violations.append("journal's first event is not commander_stamp (REQ-4 self-stamp duty)")
+
+    fail_closed_reason = None
+    if not telemetry:
+        fail_closed_reason = "telemetry export is empty — cannot join (never CLEAN on missing evidence)"
+    elif dispatches and not agent_models:
+        fail_closed_reason = "journal has dispatch lines but telemetry has zero agent rows"
+
+    if fail_closed_reason is not None:
+        for v in violations:
+            print(f"VIOLATION: {v}")
+        print(f"UNVERIFIABLE: {fail_closed_reason}")
+        sys.exit(1 if violations else 2)
+
     for ln, e in dispatches:
         model = e.get("resolved_model")
         if agent_models.get(model, 0) > 0:
