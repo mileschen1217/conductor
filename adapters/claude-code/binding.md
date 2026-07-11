@@ -24,13 +24,21 @@ tier-0 不入表：tier-0 是 script（Bash/Python），不經 Agent tool。
   `digest_ref` 指向它——full-context call 旁的獨立見證，跨 binding 比對用。
 - **Per-worker advisor opt-out：不存在**（probe 1，下）。advisor 是 session
   級的：配對合法時它同時出現在 commander 與**每一個 worker**的工具面，
-  commander 無法只給自己不給工人。故 worker→advisor 只能以**契約宣告
-  （task-contract § Advisor Scope）+ 事後偵測**治理，絕不可假設「工人沒有
-  那個工具」。
-- Observation surface（`audit-judgment-flow.py --advisor-observations` 的
-  producer）：**已驗證存在**（probe 2，下）。producer =
-  `adapters/claude-code/advisor-observations.py`（transcript → observations.jsonl）。
-  未跑 producer 時 undisclosed-use 檢查 UNVERIFIABLE，不報 CLEAN。
+  commander 無法只給自己不給工人。故 worker→advisor 必須以**契約宣告
+  （task-contract § Advisor Scope）+ worker 自身揭露義務**治理，絕不可假設
+  「工人沒有那個工具」。
+- **Observation surface：本 binding 不提供。** CC 未對外提供任何 advisor 使用的
+  介面級觀測面（見 probe 2）——唯一留痕處是 session transcript，那是 CC 的
+  **內部格式**，doctrine § Advisor primitive 明令 mode 不得綁 harness 內部實作。
+  故 CC 側 undisclosed-use 檢查的常態＝**UNVERIFIABLE，永不 CLEAN**；worker→
+  advisor 的治理靠**契約宣告**（task-contract § Advisor Scope）+ worker 自身
+  揭露義務。**harness 若謊報 worker 的執行事實，那是 harness 的缺陷，不是本
+  mode 的威脅模型。**
+- Measurement-bearing run（benchmark cell／parity／ablation——輸出「這份工作由
+  某 tier 完成」這種宣稱的 run）另有要求：那類 run 的數字會被未揭露的 consult
+  無聲汙染，故須一次性查驗。工具與程序在 **`benchmark/`**，不在本 binding：
+  `benchmark/tools/cc-advisor-observations.py`（明載綁 CC 內部、升級即可能失效；
+  失效時正解是 UNVERIFIABLE 或改由 agent 人工讀，不是往內部鑽更深）。
 
 ### Probe 紀錄（2026-07-12 實測；目的＝觀測非 enforcement）
 
@@ -45,40 +53,20 @@ tier-0 不入表：tier-0 是 script（Bash/Python），不經 Agent tool。
     主線程，**且傳播到 worker**（Explore worker 前置載入 `advisor`，實測呼叫
     成功）。
   推論：advisor 的有無由 session 級配對決定，worker 一律繼承。**沒有任何
-  per-worker 開關。**
-- **probe 2（advisor 呼叫可觀測性）：CLOSED — 有觀測面，且涵蓋 worker。**
-  - CC 把 advisor 呼叫記為 caller transcript 裡的 `server_tool_use`
-    （`{"type":"server_tool_use","name":"advisor"}`），**主 session 與 subagent
-    transcript 皆然**；該筆記錄另帶 top-level `advisorModel`、subagent 側帶
-    `agentId`。worker 的 advisor 呼叫**留得下痕跡**——undisclosed use 可偵測。
-  - hook 面不是產出面：advisor 是 server-side tool，PreToolUse/PostToolUse
-    的 matcher 面向 client tool；本 binding 不依賴 hook。
-  - OTel（`claude_code.cost.usage`）**無** advisor 專屬列——不要拿 telemetry
-    當觀測面。
-  - Producer（runnable，有 fixture 套件）：
-    `adapters/claude-code/advisor-observations.py`
-    ＋ `adapters/claude-code/test-advisor-observations.sh`（11 cases）。
-    join 是間接的：subagent 的 `meta.json` 只有 `toolUseId`，沒有 task_id，故
-    `server_tool_use → meta.toolUseId → 主 transcript 的 Agent tool_use →
-    其 prompt 的 marker 行`。
-  - **Commander 的硬性義務（CC 面）：每一次 dispatch 的 prompt 必須含一行
-    `Task contract: <task_id>`**（錨定整行比對；子字串比對會讓「順口提到別的
-    task」的 prompt 偷走歸戶，把真的 undisclosed use 變成別人的乾淨紀錄）。
-    無 marker 的 dispatch 其 advisor 使用**不可稽核**。
-  - **Fail-closed 的實現方式＝不產檔，不是產一個壞檔**：任何一筆 advisor 呼叫
-    歸不了戶（無 marker／marker 指向未宣告的 task／多重 marker／`spawnDepth>1`
-    ／缺 meta／transcript 壞行／content 形變／缺 `subagents/` 目錄），producer
-    **stdout 一行不寫**並非零退出。沒有 observations 檔 → audit 的 undisclosed-use
-    檢查回報 UNVERIFIABLE（絕不 CLEAN）。**部分產出比不產出更危險——它看起來像
-    「沒有呼叫」的證據。**
-  - L2 側同時補上兩道防禦（皆由 codex 審查實跑抓出，本 binding 原本的
-    fail-closed 宣稱是空的）：observations 含**任何 result 未宣告的 task_id**
-    → UNVERIFIABLE（「記在無人認領的 id 底下」不再是藏身處）；帶
-    `--advisor-observations` 卻**沒帶 `--results`** → UNVERIFIABLE（記帳的另一
-    邊不在，什麼都清不掉）。此前兩者都靜默回 CLEAN。
-  - **未證的一格**：以上證明 worker **能**呼叫且呼叫**可見**；worker 是否會
-    **自發**呼叫（無 prompt 指示）未測——而 undisclosed-use 正是針對自發呼叫。
-    觀測面已就位，此格由實跑累積，不由 probe 斷言。
+  per-worker 開關。**這正是 worker→advisor 必須靠契約治理、而非靠「工人沒有
+  那個工具」的原因。
+- **probe 2（advisor 呼叫可觀測性）：CLOSED — 介面級觀測面不存在。**
+  - **hook 面：無。** advisor 是 server-side tool，PreToolUse/PostToolUse 的
+    matcher 面向 client tool。
+  - **OTel（`claude_code.cost.usage`）：無** advisor 專屬列（16032 列中零命中）。
+  - **僅存的痕跡在 session transcript**：呼叫記為 `server_tool_use`
+    （`{"type":"server_tool_use","name":"advisor"}`），主 session 與 subagent
+    transcript 皆然，另帶 `advisorModel`／`agentId`。**但 transcript 是內部格式，
+    不是 CC 對外承諾的介面**——依 doctrine 不得作為 binding 的依賴。此發現的
+    正確歸屬是 benchmark 工具（見上），不是本 binding。
+  - **未證的一格**：以上證明 worker **能**呼叫；worker 是否會**自發**呼叫
+    （無 prompt 指示）未測——而 undisclosed-use 正是針對自發呼叫。此格由
+    measurement-bearing run 的一次性查驗累積，不由 probe 斷言。
 
 ## Precedent ledger（doctrine § Precedent & eval loop 的 CC 綁定）
 

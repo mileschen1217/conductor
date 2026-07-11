@@ -1,13 +1,26 @@
 #!/usr/bin/env python3
-"""L3/CC producer: session transcripts -> observations.jsonl.
+"""Benchmark tool (NOT part of the mode): CC session transcripts -> observations.jsonl.
 
-Emits the observation face consumed by
+**Read this before using it, and before promoting it.**
+
+This script reads Claude Code's session transcripts — an *internal* on-disk
+format that CC never promised to keep stable. Doctrine § Advisor primitive
+forbids the mode from binding a harness's internals, so this cannot live in
+`adapters/` and no binding may depend on it. It lives here because a
+*measurement-bearing* run (a benchmark cell, a parity run, an ablation) makes
+claims that attribute work to a tier, and an undisclosed worker→advisor consult
+would silently falsify exactly those claims. Verifying one such run is a
+bounded, one-off act with a known cost. That is the whole of its warrant.
+
+Expect it to break on a CC upgrade. When it breaks, the correct response is
+UNVERIFIABLE — or an agent reading the sessions by hand — never a deeper
+excavation into CC's internals.
+
+It emits the observation face consumed by
 `scripts/audit-judgment-flow.py --advisor-observations` (line shape:
-`{"event":"advisor_call","task_id":"<id>"}`). Its purpose is the
-undisclosed-use check: observed advisor calls > disclosed judgment_events for
-a task_id is a VIOLATION. Without an observation surface that check degrades
-to UNVERIFIABLE, so CC's advisor governance would otherwise rest on worker
-honesty alone.
+`{"event":"advisor_call","task_id":"<id>"}`): observed advisor calls >
+disclosed `judgment_events` for a task_id is a VIOLATION. That consumer is
+vendor-neutral and stays in the mode; only this producer is CC-internal.
 
 Governance stance: this is a producer for a FALSE-NEGATIVE-hostile check. A
 missed advisor call reads as innocence, so every ambiguity is fatal:
@@ -40,12 +53,12 @@ block named `advisor` — main session and subagents alike (probe 2,
     -> the Agent tool_use with that id in the MAIN transcript
     -> that prompt's `Task contract: <task_id>` marker line
 
-The last hop is a hard requirement on the commander, not an implementation
-detail: **every dispatch prompt must carry a line `Task contract: <task_id>`**
-(exact, anchored — substring matching would let a prompt that merely mentions
-another task steal the attribution, turning a real undisclosed call into a
-clean audit for the wrong worker). A dispatch without the marker cannot be
-audited for advisor use, and this script refuses to pretend otherwise.
+The last hop imposes a requirement — **each dispatch prompt in the run must
+carry a line `Task contract: <task_id>`** (exact, anchored: substring matching
+would let a prompt that merely mentions another task steal the attribution).
+That requirement belongs to the **benchmark protocol's run procedure**, not to
+the mode: an ordinary run owes nothing to this tool. `benchmark/protocol.md`
+§ Isolation invariants carries it for the runs that are measured.
 
 Commander (main-session) advisor calls are NOT emitted: the audit joins
 observations to worker results by task_id, so a commander row is unjoinable by
@@ -53,7 +66,7 @@ construction. The commander's own consults are disclosed in the run journal,
 which is where the audit checks them. The count is reported on stderr.
 
 Usage:
-  python3 adapters/claude-code/advisor-observations.py \
+  python3 benchmark/tools/cc-advisor-observations.py \
       --transcript ~/.claude/projects/<slug>/<session-id>.jsonl \
       --task-ids t1 t2 ... > observations.jsonl
 """

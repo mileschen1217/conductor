@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Fixture suite for adapters/claude-code/advisor-observations.py.
+# Fixture suite for benchmark/tools/cc-advisor-observations.py.
 #
 # The producer feeds a false-negative-hostile check (undisclosed advisor use),
 # so the property under test is not "does it count calls" but "does it ever
@@ -8,10 +8,10 @@
 # written under doubt is the failure mode, not the exit code.
 set -u
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-P="python3 $ROOT/adapters/claude-code/advisor-observations.py"
+P="python3 $ROOT/benchmark/tools/cc-advisor-observations.py"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
-python3 "$ROOT/adapters/claude-code/fixtures/build.py" "$TMP"
+python3 "$ROOT/benchmark/tools/fixtures/build.py" "$TMP"
 fail=0
 
 check() { # <name> <want_rc> <want_stdout_lines> <want_stderr_pattern> <fixture>

@@ -163,6 +163,28 @@ honesty red line, audited post-hoc against the harness's observation surface
 where the binding has one (a binding without one degrades that check to
 UNVERIFIABLE, never CLEAN).
 
+Two limits on that audit, because an honesty rule that overreaches buys
+nothing and costs a great deal:
+
+- **The mode binds a harness's interface, never its internals.** An adapter may
+  build an observation surface only from what its harness *offers* — a
+  documented log, an exported metric, a supported API. It may not reach into
+  formats the harness never promised to keep stable (session transcripts,
+  on-disk state, private files). Such a binding is not portability, it is a
+  guess about someone else's implementation, and it will break silently on
+  their next release. Where no offered surface exists, the correct answer is
+  UNVERIFIABLE — not a cleverer excavation. **A harness that reports a worker
+  ran on tier X while running it on tier Y is that harness's defect, not this
+  mode's threat model.**
+- **The check is scoped to measurement-bearing runs.** Undisclosed advisor use
+  corrupts exactly one thing: a claim that attributes work to a tier. It is
+  therefore REQUIRED for runs whose output is such a claim (benchmark cells,
+  parity runs, ablations — anything whose numbers a reader would trust) and NOT
+  required for ordinary orchestration, where UNVERIFIABLE is a legal resting
+  state and the disclosure duty stands on the contract alone. Verifying a
+  measurement-bearing run is a bounded, one-off act (its cost is known in
+  advance); it does not license a standing mechanism in the mode.
+
 ## Dispatch primitive
 
 **dispatch** := write a task-contract file into the task directory → start
@@ -170,15 +192,6 @@ one worker on it through the harness mechanism → wait for result.json to land
 and validate it with the contract checker. Only the middle step is
 harness-bound (adapter territory); the first and last steps are pure file
 operations, identical everywhere.
-
-**Attributability (a duty of every dispatch, not a nicety):** what starts the
-worker must carry its `task_id` in a form the harness's own execution record
-preserves — so that after the run, anything the worker did can be joined back
-to the task it did it for. Without that carrier the worker's advisor use
-cannot be attributed to any task, and the disclosure audit is UNVERIFIABLE by
-construction: not "probably fine", *unauditable*. The concrete carrier is
-adapter territory (a marker line in the worker's brief, a structured field,
-whatever the harness records); the duty is not.
 
 ## Dispatch contract
 

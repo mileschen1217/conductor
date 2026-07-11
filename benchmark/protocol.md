@@ -54,7 +54,7 @@ verified dispatch behavior (one probe dispatch per distinct model before
 the matrix starts); (3) any planned-vs-actual mismatch voids the cell's
 tier claim, whatever its cause.
 
-## Isolation invariants (all four hold per cell; violation voids the arm)
+## Isolation invariants (all five hold per cell; violation voids the arm)
 
 1. **Worktree per arm** — each cell runs in its own worktree; no shared
    working tree between arms.
@@ -67,6 +67,27 @@ tier claim, whatever its cause.
 4. **Asymmetric contamination voids the arm** — any arm whose inputs contain
    another arm's outputs is void: no envelope claim from it; void + rerun
    recorded in the ledger (symmetric contamination is acceptable and noted).
+
+5. **No undisclosed tier leakage** — a cell's whole point is the claim "this
+   work was done at tier X". A worker that silently consults a frontier advisor
+   makes that claim false while every number still looks clean, so each cell is
+   checked at close: worker advisor calls observed vs disclosed in
+   result.json's `judgment_events`. Mismatch voids the cell's tier claim.
+   Because this is a *measurement* duty and not a mode duty (doctrine
+   § Advisor primitive: the mode binds a harness's interface, never its
+   internals; ordinary runs rest at UNVERIFIABLE), the machinery lives here:
+
+   - CC arms: `benchmark/tools/cc-advisor-observations.py` produces the
+     observation file, and each dispatch prompt in a measured run must carry a
+     literal `Task contract: <task_id>` line for its calls to be attributable.
+     The tool reads CC-internal transcripts and **will break on a CC upgrade**;
+     when it does, verify by having an agent read the run's worker sessions, or
+     record UNVERIFIABLE. Never deepen the excavation.
+   - codex arms: no advisor path is reachable from the worker sandbox
+     (*reasoned*, not probed) — record UNVERIFIABLE, not CLEAN, until probed.
+   - Either way the verdict is joined by
+     `scripts/audit-judgment-flow.py --results … --advisor-observations …`
+     (vendor-neutral; absent observations = UNVERIFIABLE, never CLEAN).
 
 Isolation audit: before adjudication, an audit of each arm's inputs (worktree
 diff provenance + transcript reads) confirms invariant 4; the audit record
