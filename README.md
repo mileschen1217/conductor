@@ -1,9 +1,33 @@
 # conductor
 
-Portable orchestration doctrine for frontier-model commanders — the model judges,
+Portable orchestration doctrine for model commanders — the model judges,
 decomposes, dispatches, and synthesizes; workers execute.
 
-Three-layer shape:
+## The principle
+
+Any finite agent's reliability is a function of one ratio: the size of the
+decision space it faces over the capacity it brings. You cannot make a model
+smarter at runtime — but you can shrink the world it must judge, and you can
+price what happens when reality steps outside that world. conductor is
+institution design applied to models, the same technology human organizations
+have always used to get reliable outcomes from bounded agents:
+
+- **Freeze** — decisions whose inputs exist at plan time are made once, ahead,
+  and carried as contracts (the checklist).
+- **Mechanize** — acceptance that can be written as a check is run as a check,
+  never re-judged (the audit).
+- **Consult** — the residual judgment moments are pulled from a stronger judge
+  on demand, and journaled (the escalation ladder).
+- **Contain** — the moments nobody notices are the irreducible residue; they
+  are not judged but insured: bounded scope, mechanical acceptance nets, cheap
+  recovery, honest failure (the insurance).
+
+Most systems only define in-scope behavior and leave out-of-scope to luck.
+conductor's distinguishing bet is that **out-of-scope events get defined
+behavior too** — a hard stop, an honest `failed`, an escalation to a human,
+never a silent improvisation. Shrink the world; price the exits.
+
+## Three-layer shape
 
 - **L1 Doctrine** (`doctrine/`) — vendor-neutral markdown: commander posture,
   entry economic gate, complexity tiering, dispatch contract, report contract,

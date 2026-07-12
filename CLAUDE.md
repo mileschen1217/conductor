@@ -1,6 +1,6 @@
 # conductor — Project Instructions
 
-Portable orchestration doctrine: a frontier-model commander judges, decomposes,
+Portable orchestration doctrine: a model commander judges, decomposes,
 dispatches, and integrates; workers execute. Three layers, file contracts between
 them (see README.md):
 
@@ -24,3 +24,8 @@ them (see README.md):
 - **Judgment reservation (I3):** permission, contract changes, and quality
   verdicts stay with the commander/human — never delegated to workers.
 - L1/L2 are the single homes; edit them there, never in an adapter.
+- **This file ships.** CLAUDE.md is tracked — it travels with the public repo
+  AND with every plugin install (the install copies all tracked files; no
+  exclusion mechanism exists). It may reference ONLY in-repo tracked paths;
+  local working state (`.touchstone/`, session notes, machine paths) belongs
+  in CLAUDE.local.md, never here. Same rule for every other tracked file.
