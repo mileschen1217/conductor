@@ -9,3 +9,9 @@ CLAUDE.local.md
 .superpowers/
 # Personal Claude Code overrides
 .claude/settings.local.json
+# conductor repo's OWN precedent ledger = dev dogfood state, not product.
+# It ships answers to benchmark scenarios (ST-5 lesson ≈ M9 S6) if tracked —
+# a plugin install copies every tracked file and no exclusion mechanism exists.
+# The "repo-tracked ledger" rule in the binding applies to projects RUNNING
+# the mode; immutability audit for our own rows lives in git history pre-removal.
+.conductor/
