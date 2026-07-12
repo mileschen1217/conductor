@@ -18,6 +18,32 @@ this file.
 **contract checker** — `python3 ${CLAUDE_PLUGIN_ROOT}/contract/check-result.py <result.json>`;
 VALID/exit 0 is the only acceptable worker return.
 
+## Advisor check — forced enumeration (at every `[advisor-check]` item below)
+
+The doctrine's advisor protocol fires on RECOGNIZED judgment moments
+(§ Advisor primitive) — and recognition is the first capability to fail as
+commander tier drops. This adapter therefore does not ask you to recognize;
+it makes the check mechanical. At each `[advisor-check]`, WRITE DOWN (in
+dispatch-plan.md or the journal, one line) your answer to:
+
+> Should I ask the advisor before this step? Test against the five call
+> sites — entry-gate / grading-dispute / worker-blocked /
+> acceptance-ambiguity / scope-change-preview (semantics: § Advisor
+> primitive): **match** (name it → consult), **no-match** (one line saying
+> why), or **misfit-but-uncertain** — no site fits AND I am not sure of my
+> own ruling. **Misfit-but-uncertain IS a consult trigger, not an
+> exemption.**
+
+- "The doctrine covers this / this is deterministic" is not an answer by
+  itself — that is a no-match claim and still owes its one-line why.
+- Consult ≠ escalate: a moment in the reserved set (§ Judgment reservation)
+  terminates at the HUMAN whether or not you consulted first.
+- Vocabulary: the operational word here is *advisor*; the journal line it
+  lands as is `judgment_moment` + disposition (§ Advisor primitive). One
+  consult per `moment_id`.
+- Advisor not attached / pairing illegal → `advisor_unavailable` line,
+  proceed on your own judgment (degradation, never a block).
+
 ## Phase 1 — Entry
 
 Evaluate the L1 entry gate (§ Entry gate) and present the call to the human
@@ -25,6 +51,7 @@ before any dispatch. Record the decision in `dispatch-plan.md` (§ Audit
 surface).
 
 - [ ] journal.jsonl opened in the task directory; FIRST line is `commander_stamp` (self-reported model id + doctrine_rev via `git -C ${CLAUDE_PLUGIN_ROOT} rev-parse --short HEAD` or the installed release stamp).
+- [ ] `[advisor-check]` BEFORE the entry ruling (entry-gate is a named call site).
 - [ ] dispatch-plan.md exists with the entry decision (write shape + execution config + named grounds), the `task-shape:` line, and the `precedent:` line (query `.conductor/precedent.jsonl` first — cite or deviate; § Precedent & eval loop).
 
 ## Phase 2 — Plan the wave
@@ -37,6 +64,7 @@ elements (§ Dispatch contract). Respect the concurrency hard cap
 (§ Complexity tiering).
 
 - [ ] Every subtask row in dispatch-plan.md has grade, tier, resolved model, contract path, wave.
+- [ ] `[advisor-check]` BEFORE freezing the grade/tier table (grading-dispute).
 - [ ] dispatch-plan.md carries per-subtask `why-not-a-script`, the containment-check line, and doubt-surfacing (§ Audit surface).
 
 ## Phase 3 — Dispatch (the harness-bound step)
@@ -70,6 +98,7 @@ escalation ladder (§ Escalation ladder). Non-empty `scope_change_request` →
 escalate to the human (§ Judgment reservation). Acceptance of deliverables
 goes to a fresh-context worker (§ Verification).
 
+- [ ] `[advisor-check]` at EACH worker report intake (worker-blocked — a blocked/failed/boundary/misfit report is the canonical trigger) and BEFORE each acceptance verdict (acceptance-ambiguity); any scope event → scope-change-preview may inform the framing, the ruling stays the human's.
 - [ ] Every harvested result: checker exit code recorded; scope-change requests (if any) escalated, not adjudicated.
 - [ ] Journal audits run: `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/audit-judgment-flow.py <journal>` exits 0; with a telemetry export also `audit-model-conformance.py <journal> <telemetry>` (absent telemetry = UNVERIFIABLE, recorded, never claimed CLEAN).
 
