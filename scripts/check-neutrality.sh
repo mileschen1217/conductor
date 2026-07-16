@@ -13,11 +13,21 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 TERMS='claude|anthropic|codex|openai|gpt|opus|sonnet|haiku|subagent|AGENTS\.md|SKILL\.md|MCP|TOML'
 
 if [ "${1:-}" = "--self-test" ]; then
-  if grep -rnioEH "$TERMS" "$ROOT/scripts/fixtures/neutrality-selfcheck.md" >/dev/null 2>&1; then
-    echo "SELF-TEST OK: planted terms detected"
+  if ! grep -rnioEH "$TERMS" "$ROOT/scripts/fixtures/neutrality-selfcheck.md" >/dev/null 2>&1; then
+    echo "SELF-TEST FAIL: planted terms NOT detected"
+    exit 1
+  fi
+  # Scope proof (v3): the scan must reach contract/roles/ — plant a term
+  # there, expect the real scan to hit it, then clean up.
+  PLANT="$ROOT/contract/roles/.neutrality-selftest-planted.tmp.md"
+  trap 'rm -f "$PLANT"' EXIT
+  rm -f "$PLANT"  # self-heal a leftover from an abnormally killed prior run
+  echo "planted-term-for-selftest: subagent" > "$PLANT"
+  if grep -rnioEH "$TERMS" "$ROOT/doctrine" "$ROOT/contract" 2>/dev/null | grep -q "roles/.neutrality-selftest-planted"; then
+    echo "SELF-TEST OK: planted terms detected (regex + contract/roles/ scope)"
     exit 0
   fi
-  echo "SELF-TEST FAIL: planted terms NOT detected"
+  echo "SELF-TEST FAIL: contract/roles/ is outside the scan scope"
   exit 1
 fi
 
