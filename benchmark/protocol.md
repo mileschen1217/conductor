@@ -65,8 +65,9 @@ tier claim, whatever its cause.
    the fixed judge text (§ Acceptance-judge instruction), only the two path
    slots vary; a judge is never its arm's builder.
 4. **Asymmetric contamination voids the arm** — any arm whose inputs contain
-   another arm's outputs is void: no envelope claim from it; void + rerun
-   recorded in the ledger (symmetric contamination is acceptable and noted).
+   another arm's outputs is void: no verification-record line from it; void +
+   rerun recorded in the ledger (symmetric contamination is acceptable and
+   noted).
 
 5. **No undisclosed tier leakage** — a cell's whole point is the claim "this
    work was done at tier X". A worker that silently consults a frontier advisor
@@ -93,11 +94,15 @@ Isolation audit: before adjudication, an audit of each arm's inputs (worktree
 diff provenance + transcript reads) confirms invariant 4; the audit record
 lands beside the ledger rows.
 
-## Validated envelope (adapters/*/README)
+## Verification record (adapters/*/README)
 
-One line per validated cell: `validated: <commander>×<topology> — ledger
-<run_id>`. Envelope lines cite ledger rows ONLY — no prose claims; an
-unvalidated cell never appears (claim ≤ evidence).
+One line per cell that completed a protocol run: `verified-run:
+<commander>×<topology> — ledger <run_id>`. Lines cite ledger rows ONLY —
+no prose claims; a cell without run evidence never appears (claim ≤
+evidence). **A verification record is not a capability claim** (miles
+ruling 2026-07-13): each line asserts only that the combination ran
+validly under this protocol; comparative verdicts (R3) live in the
+ledger's ruling rows, including negative ones.
 
 ## Ledger — `benchmark/ledger.jsonl` (append-only; one run per line; never rewrite)
 

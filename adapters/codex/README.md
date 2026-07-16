@@ -5,6 +5,13 @@ Doctrine: `doctrine/orchestration-mode.md` (cite, never restate). Tier→model:
 `binding.md` beside this file. Codex-as-commander is documented at the end —
 documentation only, not an acceptance surface (flip-trigger FT-2).
 
+## Verification record
+
+No `verified-run:` lines yet — no benchmark cell has been executed through
+this adapter (run + audit procedure: `benchmark/protocol.md`). A line
+appears here only when a commander×topology combination completes a
+protocol run; a verification record is not a capability claim.
+
 ## AGENTS.md load fragment (worker side)
 
 Paste into the task workspace's AGENTS.md so a Codex worker session picks up
