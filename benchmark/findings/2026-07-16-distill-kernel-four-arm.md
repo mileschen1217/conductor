@@ -106,9 +106,10 @@ The isolated pair, `inline` → `inline-v2form` (fan-out held out on both):
 |---|---|---|---|---|---|
 | `inline` | $11.38 | 37.5 min | 76 | 325k | 94k |
 | `inline-v2form` | $16.07 | 32.3 min | 74 | 581k | 140k |
-| **delta** | **+$4.68 (+41%)** | **−14% (no time penalty)** | flat | **+79%** | +49% |
+| **delta** | **+$4.68 (+41%)** | ~~−14% (no time penalty)~~ *(wall-clock claim retracted — did not reproduce; see ADDENDUM)* | flat | **+79%** | +49% |
 
-**~$5 and no wall-clock penalty bought spec fidelity.** On this one run the mechanism made
+**~$5 bought spec fidelity** *(the original "no wall-clock penalty" half of this
+headline is retracted — r2 measured +44%; see ADDENDUM)*. On this one run the mechanism made
 the commander *read the contract more carefully*, not work faster or split work up:
 `inline-v2form` honoured the AC-47 clause (its `vaultio.py:106` cites AC-47 by name) where
 the floor polluted the vault, and it shipped no undisclosed deviation under a
@@ -308,3 +309,34 @@ The distill kernel task is retained as a baseline. To re-test v3:
    yes to both, `conductor` and `inline-v2form` should converge toward the floor's cost while
    keeping the +correctness the discipline bought. If they don't, the discipline is not
    paying its way on tasks this size and should default off below the size threshold.
+
+---
+
+## ADDENDUM — confirm re-run (2026-07-16, same day): the discipline finding REPRODUCED
+
+Overturn condition (1) from "Honest caveats" was executed: `inline` and
+`inline-v2form` re-run once each as fresh arms (`inline-r2`, `inline-v2form-r2`),
+same frozen `arm-base` (a43c48a), same harness, commander pinned opus, advisor
+absent, one at a time. Results in distill `benchmark/results/<arm>-r2/`.
+
+| arm | suite | real defect (AC-47) | AC-42 (grader artifact) | cost | wall | subagents |
+|---|---|---|---|---|---|---|
+| `inline-r2` | 131/135 | **FAILED again — vault polluted 2/2** | failed (= faithful to frozen rule) | $11.91 | 32.6 min | 0 |
+| `inline-v2form-r2` | 132/135 | **clean again — 2/2** | failed (same) | $16.33 | 47.1 min | 1 (opus general-purpose) |
+
+- **The load-bearing pair holds at n=2 per side**: the floor pollutes
+  `<vault>/.distill/` in 2/2 runs; the v2-form commander honours the clause in
+  2/2 runs. Overturn condition (1) did NOT fire.
+- **The discipline price reproduced almost exactly: +$4.42 / +37%** (r1:
+  +$4.68 / +41%).
+- **The wall-clock claim did NOT reproduce**: r1 showed −14% (v2form faster);
+  r2 shows +44% (v2form slower, 47.1 vs 32.6 min). Wall clock is noisy across
+  runs — drop "no time penalty" from the sellable claim; the stable claims are
+  the price and the fidelity.
+- Behavioral variance note: the floor's ad-hoc delegation is itself unstable
+  (r1: 1 sonnet reviewer, 39% of output; r2: zero subagents). The mechanism's
+  behavior was comparatively stable across runs.
+- Cross-check: one WARN on `inline-v2form-r2` num_turns (clocked 66 vs CLI 91;
+  clocked value ranked). All other instruments agree.
+- AC-42 failed in 3 of these 4 re-run/original cells — further reinforcing the
+  synthesis ruling that AC-42 is the ruler's defect, not the arms'.
