@@ -51,13 +51,29 @@ check "no-family: reason names family" 1 "$(python3 -c "import json;print(1 if '
 python3 "$COL" "$FIX/does-not-exist.jsonl" --binding claude-code --out "$TMP/t5.jsonl" 2>/dev/null
 check "missing journal: exit 2" 2 $?
 
-# 6. append-only: second run appends a second line, first line unchanged
+# 6. append-only + state machine: first row measured (bootstrap, consumable);
+#    a second same-key collector row lands proposed (not consumable) until a
+#    human promotes; first line never rewritten
 out="$TMP/t6.jsonl"
 python3 "$COL" "$FIX/journal-full.jsonl" --binding claude-code --out "$out" >/dev/null
 first="$(head -1 "$out")"
 python3 "$COL" "$FIX/journal-full.jsonl" --binding claude-code --out "$out" >/dev/null
 check "append: 2 lines" 2 "$(wc -l < "$out" | tr -d ' ')"
 check "append: line 1 unchanged" "$first" "$(head -1 "$out")"
+check "state machine: first row measured" measured "$(python3 -c "import json;print(json.loads(open('$out').readline())['status'])")"
+check "state machine: second same-key row proposed" proposed "$(python3 -c "import json;print(json.loads(list(open('$out'))[1])['status'])")"
+# different key (family) in the same table still bootstraps measured
+python3 "$COL" "$FIX/journal-total-proxy.jsonl" --binding claude-code --out "$out" >/dev/null
+check "state machine: different key bootstraps measured" measured "$(python3 -c "import json;print(json.loads(list(open('$out'))[2])['status'])")"
+# a promoted row for the key also blocks new measured rows
+out="$TMP/t6b.jsonl"
+python3 - "$out" <<'PYEOF'
+import json,sys
+row={"schema":"constants/v1","kind":"constants","key":{"family":"read-heavy","harness":"claude-code","model_gen":"g2026.07"},"const":{"C_fresh":1,"C_brief_cmd":1,"C_brief_worker":1,"C_reread":1},"unit":"tok-eq","burner":{"C_fresh":"worker","C_brief_cmd":"commander","C_brief_worker":"worker","C_reread":"commander"},"status":"promoted","fidelity":"seed","provenance":{"run_id":"seed","project":"t","ts":"2026-07-16T00:00:00Z"}}
+open(sys.argv[1],"w").write(json.dumps(row)+"\n")
+PYEOF
+python3 "$COL" "$FIX/journal-full.jsonl" --binding claude-code --out "$out" >/dev/null
+check "state machine: promoted row forces proposed" proposed "$(python3 -c "import json;print(json.loads(list(open('$out'))[1])['status'])")"
 
 # 8. corrupt journal LINE -> UNVERIFIABLE exit 0 (degrade, never block; nonzero = usage errors only)
 out="$TMP/t8.jsonl"

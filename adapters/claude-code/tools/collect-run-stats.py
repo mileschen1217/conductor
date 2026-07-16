@@ -82,17 +82,52 @@ def load_journal(path):
     return events
 
 
-def append_row(out_path, row):
-    """flock-serialized single-line O_APPEND (cross-project concurrency safe)."""
-    data = (json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n").encode("utf-8")
+def has_consumable_row(out_path, key):
+    """True iff the table already holds a consumable (measured|promoted)
+    constants row for this exact key — the reading state machine's bootstrap
+    test (first measured row per key is consumable; later changes land
+    proposed until a human promotes)."""
+    if not os.path.isfile(out_path):
+        return False
+    with open(out_path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                r = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if (
+                r.get("kind") == "constants"
+                and r.get("key") == key
+                and r.get("status") in ("measured", "promoted")
+            ):
+                return True
+    return False
+
+
+def append_row(out_path, row, resolve_status=False):
+    """flock-serialized single-line O_APPEND (cross-project concurrency safe).
+
+    resolve_status=True (constants rows): the state-machine decision runs
+    UNDER the lock — "first row" = first in file order = first lock holder;
+    a concurrent same-key writer that arrives second automatically lands on
+    the proposed (changed-value) path, per the schema's race rule."""
     os.makedirs(os.path.dirname(os.path.abspath(out_path)) or ".", exist_ok=True)
-    fd = os.open(out_path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o644)
+    fd = os.open(out_path, os.O_RDWR | os.O_CREAT | os.O_APPEND, 0o644)
     try:
         fcntl.flock(fd, fcntl.LOCK_EX)
+        if resolve_status:
+            row["status"] = (
+                "proposed" if has_consumable_row(out_path, row["key"]) else "measured"
+            )
+        data = (json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n").encode("utf-8")
         os.write(fd, data)
     finally:
         fcntl.flock(fd, fcntl.LOCK_UN)
         os.close(fd)
+    return row
 
 
 def main():
@@ -225,6 +260,10 @@ def main():
             surface="in-channel-worker-usage",
         )
 
+    # State machine (spec AC-4): first row per key = measured (bootstrap,
+    # consumable); once a consumable row exists, later collector output lands
+    # proposed — NOT consumable — until a human promotes (supersede-by-append).
+    # The decision itself runs under the append lock (append_row).
     row = {
         "schema": "constants/v1",
         "kind": "constants",
@@ -242,12 +281,12 @@ def main():
             "C_brief_worker": "worker",
             "C_reread": "commander",
         },
-        "status": "measured",
+        "status": "measured",  # placeholder — resolved under the append lock
         "fidelity": f"in-channel-worker-usage({'+'.join(sorted(set(fresh_sources)))})+journal-estimate",
         "provenance": provenance,
     }
-    append_row(args.out, row)
-    print(f"constants row appended: {json.dumps(row['const'])} key={json.dumps(key)}")
+    row = append_row(args.out, row, resolve_status=True)
+    print(f"constants row appended (status={row['status']}): {json.dumps(row['const'])} key={json.dumps(key)}")
     for d in drifts:
         print(json.dumps(d, ensure_ascii=False))
     return 0
