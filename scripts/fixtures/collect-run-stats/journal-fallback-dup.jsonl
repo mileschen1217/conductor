@@ -1,0 +1,5 @@
+{"event":"commander_stamp","model":"mid-model-1","doctrine_rev":"abc1234","run_id":"fixture-run-6"}
+{"event":"judgment_moment","moment_id":1,"decision_type":"entry-gate","disposition":"frozen","family":"read-heavy"}
+{"event":"dispatch","task_id":"t1","tier":"mid","resolved_model":"m","read_only":true,"wave":1,"contract":"c1.md","brief_tokens_est":1000,"w_est":2000}
+{"event":"dispatch_result","task_id":"t1","checker":"VALID","usage":{"input_tokens":40000,"output_tokens":9999},"reread_tokens_est":2000}
+{"event":"dispatch_result","task_id":"t1","checker":"VALID","usage":{"input_tokens":40000,"output_tokens":1000},"reread_tokens_est":2000}

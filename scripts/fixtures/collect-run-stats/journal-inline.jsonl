@@ -1,0 +1,2 @@
+{"event":"commander_stamp","model":"mid-model-1","doctrine_rev":"abc1234","run_id":"fixture-run-3"}
+{"event":"judgment_moment","moment_id":1,"decision_type":"entry-gate","disposition":"frozen","family":"write-heavy"}

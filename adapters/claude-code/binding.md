@@ -13,6 +13,62 @@ Claude Code 官方文件的現行模型 ID（操作者本機 dispatch 慣例檔�
 
 tier-0 不入表：tier-0 是 script（Bash/Python），不經 Agent tool。
 
+## 價格比 r 與單位權重（doctrine § Amortization brake 的 CC 綁定）
+
+粗比例（數量級精度；年校；變更記入本節 changelog）。取值基礎：Anthropic
+官方牌價的跨代穩定結構比（output $/Mtok 比值：frontier:mid ≈ 5:1、
+mid:cheap ≈ 3.75:1），釘 2026-07-16；下次校對照當日官方 pricing 頁。
+
+| r[worker-tier←cmd-tier] | frontier cmd | mid cmd |
+|---|---|---|
+| worker = frontier | 1.0 | —（升階派工非 offload 省錢形） |
+| worker = mid | 0.2 | 1.0 |
+| worker = cheap | 0.05 | 0.3 |
+
+同 tier r=1.0 是定義（doctrine § Amortization brake），不入 changelog。
+
+單位權重（token 種類換算成 output-token 等值；同為牌價結構比：
+input:output = 1:5，cache-write = 1.25×input）：
+`weight[output]=1, weight[cache-write]=0.25, weight[input]=0.2`
+
+changelog：
+- 2026-07-16 初版（v3 build）。捨入註記：r 收斂到一位有效數字且非同向
+  （0.267→0.3 上捨、0.053→0.05 下捨）——數量級精度的宣告下不追同向捨入；
+  brake 消費端以表值為準，不回推導式。
+
+## model_gen 正規化（constants 表 key 與 role card 戳記用）
+
+現行 gen-tag：**`g2026.07`**。正規化規則：上表三 tier 的現行模型集合不變
+＝同一 tag；任一 tier 換代（表列模型 id 更換主版本）＝ tag 換新（格式
+`gYYYY.MM`，取換代當月）。minor id 漂移（如 dated snapshot 更新）不換 tag。
+
+## User-level 常數表（doctrine § Precedent & eval loop 的 CC 綁定）
+
+- 路徑：`~/.claude/conductor/constants.jsonl`（operator-local；不 ship；
+  安裝起始為空——每 family 起始即 `[pending-measurement]`）。
+- 行 schema：`contract/constants.schema.json`（L2 單一 home）。
+- Append 一律 flock＋單行 O_APPEND（`tools/collect-run-stats.py` 內建）。
+- Offered surfaces（collector 的合法量測源，依 doctrine「介面非內部」）：
+  1. `in-channel-worker-usage` — Agent tool 頻道內回報的 worker token 用量，
+     commander 原樣記入 journal `dispatch_result.usage`；
+  2. `headless-json` — headless 執行的 JSON 輸出（run 總量；帳單級）；
+  3. `journal-estimate` — commander 對 brief／re-read 體積的 tok-eq 估計
+     （journal additive 欄位 `brief_tokens_est`／`reread_tokens_est`）。
+  session transcript／on-disk 內部格式非法源（doctrine 明令）。
+
+## Role card 綁定（doctrine § Complexity tiering — Role cards 的 CC 面）
+
+三張 L2 卡（`contract/roles/`）各對應一個先鑄 agent 定義
+（`agents/<role>.md`，由卡值生成：model←tier 本表解析、tools←
+capability_surface，動詞映射：read→Read、search→Grep+Glob、edit→
+Edit+Write（含 result artifact 的建檔）、run-contracted-*→Bash；
+戳記與來源卡同 `graded_under`，任一不符＝agent 檔與卡同時失效）。使用法：把 `agents/*.md` 安裝到專案 `.claude/agents/`
+（或經 plugin agents 目錄載入）後，dispatch 以該 agent type 起 worker；
+未安裝時回退泛用 agent type＋顯式 `model:` 參數（Phase 3 規則不變）。
+doctrine_rev 的取得：`git log -1 --format=%h -- <doctrine 檔路徑>`
+（doctrine 檔自身的最後變更 commit，非 repo HEAD——HEAD 隨任意 commit
+變動會令卡永遠過期）；plugin 安裝以 release 戳記代替。
+
 ## Advisor transport（doctrine § Advisor primitive 的 CC 綁定）
 
 - 傳輸 = CC 內建 advisor tool。前置：人一次性 `/advisor <model>`（session 級

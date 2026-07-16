@@ -50,9 +50,11 @@ Evaluate the L1 entry gate (§ Entry gate) and present the call to the human
 before any dispatch. Record the decision in `dispatch-plan.md` (§ Audit
 surface).
 
-- [ ] journal.jsonl opened in the task directory; FIRST line is `commander_stamp` (self-reported model id + doctrine_rev via `git -C ${CLAUDE_PLUGIN_ROOT} rev-parse --short HEAD` or the installed release stamp).
+- [ ] journal.jsonl opened in the task directory; FIRST line is `commander_stamp` (self-reported model id + doctrine_rev = the doctrine FILE's own last-change commit, `git -C ${CLAUDE_PLUGIN_ROOT} log -1 --format=%h -- doctrine/orchestration-mode.md`, or the installed release stamp — never repo HEAD, which moves on every commit and would strand role cards stale).
 - [ ] `[advisor-check]` BEFORE the entry ruling (entry-gate is a named call site).
-- [ ] dispatch-plan.md exists with the entry decision (write shape + execution config + named grounds), the `task-shape:` line, and the `precedent:` line (query `.conductor/precedent.jsonl` first — cite or deviate; § Precedent & eval loop).
+- [ ] Task family declared from the write surface (§ Entry gate) and written as an additive `family` field on the entry-gate `judgment_moment` line (the collector's key input).
+- [ ] Price-row lookup against `~/.claude/conductor/constants.jsonl` (reading state machine: § Precedent & eval loop): cite the row BY ROW IDENTITY in the entry decision, or annotate `[pending-measurement]`. Refusal → light path (§ Entry gate): minimal journal, no plan, no precedent line — stop here.
+- [ ] dispatch-plan.md exists with the three mandatory fields (§ Audit surface): entry decision (incl. family + cited row), shape & precedent line (query `.conductor/precedent.jsonl` first — cite or deviate), subtask table. Conditional fields only when their triggers fire; append-per-wave, never rewrite an earlier wave's section.
 
 ## Phase 2 — Plan the wave
 
@@ -63,19 +65,27 @@ one task-contract file per subtask from
 elements (§ Dispatch contract). Respect the concurrency hard cap
 (§ Complexity tiering).
 
-- [ ] Every subtask row in dispatch-plan.md has grade, tier, resolved model, contract path, wave.
+- [ ] Every subtask row in dispatch-plan.md has grade OR a valid card citation (`card=<role>@<graded_under>` — check the card's `graded_under` against this run's `commander_stamp.doctrine_rev` and `binding.md`'s current gen-tag first; mismatch = `card=none(<stale reason>)` + full grading), tier, resolved model, contract path, wave.
+- [ ] Brake line written BEFORE any offload launches (§ Amortization brake; constants + r cited by row identity / `r_rev`; economics-fail without a necessity ground = do not launch).
 - [ ] `[advisor-check]` BEFORE freezing the grade/tier table (grading-dispute).
-- [ ] dispatch-plan.md carries per-subtask `why-not-a-script`, the containment-check line, and doubt-surfacing (§ Audit surface).
+- [ ] Per-subtask `why-not-a-script`; conditional fields per trigger (§ Audit surface): containment-check (any write-role dispatch), doubt-surfacing (entry/grading disposition ≠ frozen), deviation log (opens at the first deviation event — escalation / scope-change ruling / threshold crossing / advisor-unavailable).
 
 ## Phase 3 — Dispatch (the harness-bound step)
 
 Per contract file, launch ONE worker with the Agent tool:
 
+- Card-cited dispatch: use the pre-cast agent type from
+  `adapters/claude-code/agents/<role>.md` when installed (binding.md § Role
+  card 綁定); otherwise fall back to the generic types below with an explicit
+  `model:`.
 - Read-only fan-out (search/research/review lenses): `subagent_type:
   "Explore"` — its toolset has no Write/Edit (§ Single-writer rule — this is
   its CC preventive binding; must appear in the dispatch record).
 - Writing work (implementation): `subagent_type: "general-purpose"`, ONE at a
   time (§ Single-writer rule — this is its CC preventive binding).
+- Journal `dispatch` line additive fields: `card` (role or none),
+  `brief_tokens_est` (contract+prompt size estimate), `w_est` (expected
+  offloaded output) — the brake audit and the collector read these.
 - **Model param (ST-5 regression point):** every Agent call MUST carry an
   explicit `model:` equal to the binding-resolved model — never rely on the
   default. The SAME resolved id goes into the journal `dispatch` line
@@ -99,7 +109,7 @@ escalate to the human (§ Judgment reservation). Acceptance of deliverables
 goes to a fresh-context worker (§ Verification).
 
 - [ ] `[advisor-check]` at EACH worker report intake (worker-blocked — a blocked/failed/boundary/misfit report is the canonical trigger) and BEFORE each acceptance verdict (acceptance-ambiguity); any scope event → scope-change-preview may inform the framing, the ruling stays the human's.
-- [ ] Every harvested result: checker exit code recorded; scope-change requests (if any) escalated, not adjudicated.
+- [ ] Every harvested result: checker exit code recorded; a `dispatch_result` journal line lands per task (checker verdict + the harness's in-channel `usage` verbatim + `reread_tokens_est`); scope-change requests (if any) escalated, not adjudicated.
 - [ ] Journal audits run: `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/audit-judgment-flow.py <journal>` exits 0; with a telemetry export also `audit-model-conformance.py <journal> <telemetry>` (absent telemetry = UNVERIFIABLE, recorded, never claimed CLEAN).
 
 ## Phase 5 — Close
@@ -114,7 +124,13 @@ notification via the binding-named channel, and journal `calibration_notify`.
 Promotion/rejection is the human's (§ Precedent & eval loop) — never
 auto-promote.
 
-- [ ] Precedent line appended; calibration check run; any TRIGGER surfaced, not self-ruled.
+At precedent-append time, run the constants collector (degradation never
+blocks close):
+`python3 ${CLAUDE_PLUGIN_ROOT}/adapters/claude-code/tools/collect-run-stats.py <journal> --binding claude-code --out ~/.claude/conductor/constants.jsonl`
+— journal any `estimate-drift` lines it prints as typed deviation signals
+before appending the precedent line.
+
+- [ ] Precedent line appended; collector run (constants row or UNVERIFIABLE row appended); calibration check run; any TRIGGER surfaced, not self-ruled.
 
 ## Related
 
