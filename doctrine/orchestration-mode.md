@@ -354,6 +354,14 @@ result.json — summary, files_changed, commands_run (with exit codes), risks,
 observations, and (when the contract declares an advisor scope)
 judgment_events.
 
+One named exception: where a binding's read-only worker type structurally
+cannot write files, its report rides the harness channel and the commander
+persists it VERBATIM into the task directory, provenance-noted — the channel
+is a carrier, never a second home; the task directory remains the record of
+record. The transcription is mechanical for findings; worker-self-reported
+doctrine-vocabulary fields (e.g. judgment_events) enter the record only
+after the commander's own judgment.
+
 ## Escalation ladder
 
 Escalation is signal-driven: the contract checker's INVALID, a failed
