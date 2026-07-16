@@ -20,6 +20,45 @@
 | mid | `gpt-5.4`，reasoning effort `medium` | 規格清楚的實作、搜尋、研究 | models_cache 描述："Strong model for everyday coding"；`config.toml` 的 `[notice.model_migrations]` 標示 `gpt-5.4`→`gpt-5.5` 升級建議，但 models_cache 仍列 `gpt-5.4` 為 `visibility: list`（現行可用，非棄用）。定性：中費率檔 |
 | cheap | `gpt-5.4-mini`，reasoning effort `low` | 已解模式批次套用、機械枚舉 | models_cache 描述："Small, fast, and cost-efficient model for simpler coding tasks"。定性：最低費率檔 |
 
+## 價格比 r 與單位權重（doctrine § Amortization brake 的 codex 綁定）
+
+**本 binding 目前無 r 表**：Codex 無公開 token 成本係數（上節成本備註、
+spec deferred D-1），粗比例無誠實取值基礎。依 doctrine § Amortization
+brake 的 cold-start 規則：economics leg 不可計算 → fan-out 經濟面
+conservative-closed，僅必要理由（wall-clock／corpus／disjoint-write）可派，
+缺值記入 deviation log。benchmark 實測產生費率證據後回填本節（變更記
+changelog）。
+
+changelog：
+- 2026-07-16 建節，記缺值（v3 build）。
+
+## model_gen 正規化
+
+現行 gen-tag：**`g2026.07`**（gpt-5.5 世代，models_cache fetched
+2026-07-09）。規則同 CC binding：tier 表任一模型換主版本＝tag 換新
+（`gYYYY.MM`）；minor 漂移不換。
+
+## User-level 常數表
+
+路徑與 schema 同 mode 慣例：`~/.codex/conductor/constants.jsonl`（operator-
+local，不 ship，起始為空），行 schema = `contract/constants.schema.json`。
+**本 binding 尚無 collector**：offered surface 待盤點（codex exec 的 JSON
+輸出面）；在那之前 codex-side run 的常數一律 UNVERIFIABLE 行（手記或缺）。
+
+## Role card 綁定（doctrine § Complexity tiering — Role cards 的 codex 面）
+
+三張 L2 卡（`contract/roles/`）的 codex 配方——sandbox flag 由卡的
+`capability_surface.read_only` 機械映射；AGENTS.md fragment 貼入 worker
+workspace（承本 adapter README §「AGENTS.md load fragment (worker side)」
+的既有配方，外加該卡職責一行引用）。戳記失效規則同 CC：卡 `graded_under` 與現行 doctrine rev／
+gen-tag 任一不符＝配方同卡失效。
+
+| 卡 | sandbox flag | model（tier 本表解析） | AGENTS.md fragment 附加行 |
+|---|---|---|---|
+| read-scout | `--sandbox read-only` | `gpt-5.4`（mid） | `Role card: contract/roles/read-scout.md — read-only; findings cited file:line, delivered in the result summary.` |
+| mech-writer | `--sandbox workspace-write` | `gpt-5.4-mini`（cheap） | `Role card: contract/roles/mech-writer.md — recipe application inside Owned Files only; record every contracted command's exit code.` |
+| fresh-verifier | `--sandbox read-only` | `gpt-5.4`（mid） | `Role card: contract/roles/fresh-verifier.md — fresh context, no builder state; per-criterion pass/fail with file:line evidence.` |
+
 ## Advisor transport（doctrine § Advisor primitive 的 codex 綁定）
 
 digest 封套：commander 把該判斷時刻的完整 context 濃縮為 digest 檔
