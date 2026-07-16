@@ -86,6 +86,27 @@ python3 "$COL" "$FIX/journal-empty.jsonl" --binding claude-code --out "$out" >/d
 check "empty journal: exit 0" 0 $?
 check "empty journal: kind unverifiable" unverifiable "$(python3 -c "import json;print(json.loads(open('$out').readline())['kind'])")"
 
+# 12. total_tokens-only usage -> total-proxy fallback leg, fidelity named
+out="$TMP/t12.jsonl"
+python3 "$COL" "$FIX/journal-total-proxy.jsonl" --binding claude-code --out "$out" >/dev/null
+check "total-proxy: exit 0" 0 $?
+check "total-proxy: C_fresh (32000 x 0.25)" 8000 "$(python3 -c "import json;print(json.loads(open('$out').readline())['const']['C_fresh'])")"
+check "total-proxy: fidelity names source" 1 "$(python3 -c "import json;print(1 if 'total-proxy' in json.loads(open('$out').readline())['fidelity'] else 0)")"
+
+# 13. Agent-tool subagent_tokens shape (live-run finding) -> total-proxy leg
+out="$TMP/t13.jsonl"
+python3 "$COL" "$FIX/journal-subagent-tokens.jsonl" --binding claude-code --out "$out" >/dev/null
+check "subagent-tokens: exit 0" 0 $?
+check "subagent-tokens: kind constants" constants "$(python3 -c "import json;print(json.loads(open('$out').readline())['kind'])")"
+check "subagent-tokens: C_fresh (47061 x 0.25 -> int)" 11765 "$(python3 -c "import json;print(json.loads(open('$out').readline())['const']['C_fresh'])")"
+check "subagent-tokens: fidelity names total-proxy" 1 "$(python3 -c "import json;print(1 if 'total-proxy' in json.loads(open('$out').readline())['fidelity'] else 0)")"
+
+# 14. heterogeneous usage shapes -> fidelity names ALL sources used
+out="$TMP/t14.jsonl"
+python3 "$COL" "$FIX/journal-mixed-source.jsonl" --binding claude-code --out "$out" >/dev/null
+check "mixed-source: exit 0" 0 $?
+check "mixed-source: fidelity lists both sources" "in-channel-worker-usage(cache-creation+total-proxy)+journal-estimate" "$(python3 -c "import json;print(json.loads(open('$out').readline())['fidelity'])")"
+
 # 7. unknown binding -> UNVERIFIABLE (degrade, never block)
 out="$TMP/t7.jsonl"
 python3 "$COL" "$FIX/journal-full.jsonl" --binding no-such-harness --out "$out" >/dev/null

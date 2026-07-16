@@ -16,6 +16,9 @@ Structural checks (both modes):
   History immutability (rewriting an existing line) is a version-control
   audit, outside this script's capability — stated, not pretended.
 
+Plan mode is a PRE-DISPATCH check: run it BEFORE the run's own precedent
+append. Post-close it self-matches the run's freshly appended line and
+reports a spurious VIOLATION (two independent witness runs hit this).
 Plan mode (cite-or-deviate; similarity key = task_shape.kind + write_surface):
   reads `task-shape: kind=<k>, write_surface=<w>` and `precedent: ...` from
   the dispatch plan. Matching ledger line + neither citation nor deviation =
@@ -25,7 +28,8 @@ Plan mode (cite-or-deviate; similarity key = task_shape.kind + write_surface):
 --calibration-check (run-close tier-0 trigger): >=3 same-shape runs with a
   consistent deviation_signal (per-kind semantics: threshold-crossed /
   precedent-deviation match on kind; grade-override / checker-reject-pattern
-  match on canonicalized value) -> TRIGGER with derived calibration_id,
+  / estimate-drift / constants-drift match on canonicalized value) ->
+  TRIGGER with derived calibration_id,
   unless the LATEST calibration line with that id is status=proposed (an open
   proposal suppresses duplicates); a promoted/rejected latest status does NOT
   suppress — the trigger notes the prior ruling and a re-proposal supersedes
@@ -38,7 +42,7 @@ import json
 import re
 import sys
 
-SIGNAL_KINDS = {"threshold-crossed", "grade-override", "checker-reject-pattern", "precedent-deviation"}
+SIGNAL_KINDS = {"threshold-crossed", "grade-override", "checker-reject-pattern", "precedent-deviation", "estimate-drift", "constants-drift"}
 KIND_ONLY = {"threshold-crossed", "precedent-deviation"}
 CAL_STATUS = {"proposed", "promoted", "rejected"}
 PRECEDENT_REQ = ["schema", "ts", "run_id", "task_shape", "decisions", "outcome", "deviation_signal", "lesson"]

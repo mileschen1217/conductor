@@ -114,3 +114,16 @@ doctrine_rev 的取得：`git log -1 --format=%h -- <doctrine 檔路徑>`
 read breadth 一律以唯讀 agent type（`Explore`——工具集無 Write/Edit）派出，
 宣告記入 dispatch 記錄；write worker（`general-purpose`）每個 write surface
 同時至多一個（disjoint-write shape：面不相交、各面單筆、merge 合流單筆）。
+
+Explore 型 worker **寫不出 result.json**（無 Write 工具，結構性）：唯讀契約
+的 Expected Output 以頻道內報告為主要交付；commander 將報告逐字持久化為
+task-dir 的 result.json（機械轉錄，provenance 註記 commander-persisted）——
+write shape 為 inline/1-worker 時不破 single-writer。逐字 artifact 要緊時
+改派 task-dir-scoped 的 write worker。（實測：MR9 witness run，4/5 Explore
+worker 交付被此擋下；承 sonnet-v2form precedent lesson。）
+
+轉錄界線：findings 內容機械逐字；但 worker 自報的 `judgment_events` 等
+doctrine 詞彙欄位須經 commander 自行核判才入 artifact——worker 環境可能帶
+與 mode Advisor Scope 無關的 harness 層 advisor 工具，其誤標自報若被盲信
+轉錄即污染 ledger（實測：MR9 partition-1 廢稿自報 2 筆禁區
+acceptance-interpretation consult，實為環境工具誤標）。

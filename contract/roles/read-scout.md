@@ -12,7 +12,9 @@ grade:
     dispatch
   context: fresh small context over a contract-bounded corpus subset; no
     path-dependent exploration
-tier: mid
+tier: mid  # not cheap despite the cheap-leaning axes: finding classification
+  # needs reading comprehension, not pattern match (why-not-a-script's answer
+  # is also why-not-cheap); search/inventory is the tier table's mid row
 capability_surface:
   read_only: true
   tools: [read, search, list, run-contracted-read-only-commands]
@@ -29,7 +31,7 @@ when_not:
     is fresh-verifier's shape, or the doctrine's reserved set)
   - any duty in the doctrine's reserved set (§ Judgment reservation)
 graded_under:
-  doctrine_rev: "1a6a0e0"
+  doctrine_rev: "33ec134"
   model_gen: "g2026.07"
 ---
 

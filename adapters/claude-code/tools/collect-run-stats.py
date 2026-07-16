@@ -174,13 +174,23 @@ def main():
         return unverifiable("no offload in run (zero dispatch/dispatch_result pairs) — nothing to measure")
 
     fresh, briefs, rereads, drifts = [], [], [], []
+    fresh_sources = []
     for r in results:
         usage = r.get("usage") or {}
-        cc = usage.get("cache_creation_input_tokens")
-        if cc is None:  # absent OR explicit null both fall back
-            cc = usage.get("input_tokens")
-        if cc is not None:
-            fresh.append(cc)
+        # fallback chain, best fidelity first; the chosen source is named in
+        # the row's fidelity mark (a total is only a PROXY upper bound for the
+        # fresh-context load — CC's in-channel report often offers totals only)
+        for ukey, tag in (
+            ("cache_creation_input_tokens", "cache-creation"),
+            ("input_tokens", "input"),
+            ("total_tokens", "total-proxy"),
+            ("subagent_tokens", "total-proxy"),  # the Agent tool's actual in-channel key (live-run finding, calib-r1)
+        ):
+            cc = usage.get(ukey)
+            if cc is not None:
+                fresh.append(cc)
+                fresh_sources.append(tag)  # per-worker; heterogeneous shapes all named in fidelity
+                break
         rr = r.get("reread_tokens_est")
         if rr is not None:
             rereads.append(rr)
@@ -233,7 +243,7 @@ def main():
             "C_reread": "commander",
         },
         "status": "measured",
-        "fidelity": "in-channel-worker-usage+journal-estimate",
+        "fidelity": f"in-channel-worker-usage({'+'.join(sorted(set(fresh_sources)))})+journal-estimate",
         "provenance": provenance,
     }
     append_row(args.out, row)

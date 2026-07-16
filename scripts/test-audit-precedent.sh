@@ -21,6 +21,8 @@ check ts-regress       1 '^VIOLATION: .*ts regression' $A --calibration-check "$
 check no-proposed      1 '^VIOLATION: .*without a prior proposed' $A --calibration-check "$F/ledger-promoted-no-proposed.jsonl"
 check no-m9run         1 '^VIOLATION: .*m9_run'     $A --calibration-check "$F/ledger-promoted-no-m9run.jsonl"
 check trigger          0 '^TRIGGER: calibration_id=' $A --calibration-check "$F/ledger-trigger.jsonl"
+check constants-drift  0 '^TRIGGER: .*signal=constants-drift' $A --calibration-check "$F/ledger-constants-drift-trigger.jsonl"
+check estimate-drift   0 '^TRIGGER: .*signal=estimate-drift' $A --calibration-check "$F/ledger-estimate-drift-trigger.jsonl"
 check mixed-signal     0 '^NO-TRIGGER'              $A --calibration-check "$F/ledger-mixed-signal.jsonl"
 check below-threshold  0 '^NO-TRIGGER'              $A --calibration-check "$F/ledger-below-threshold.jsonl"
 check suppressed       0 '^SUPPRESSED: '            $A --calibration-check "$F/ledger-suppressed.jsonl"

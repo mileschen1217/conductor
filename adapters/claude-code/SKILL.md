@@ -50,7 +50,7 @@ Evaluate the L1 entry gate (§ Entry gate) and present the call to the human
 before any dispatch. Record the decision in `dispatch-plan.md` (§ Audit
 surface).
 
-- [ ] journal.jsonl opened in the task directory; FIRST line is `commander_stamp` (self-reported model id + doctrine_rev = the doctrine FILE's own last-change commit, `git -C ${CLAUDE_PLUGIN_ROOT} log -1 --format=%h -- doctrine/orchestration-mode.md`, or the installed release stamp — never repo HEAD, which moves on every commit and would strand role cards stale).
+- [ ] journal.jsonl opened in the task directory; FIRST line is `commander_stamp` (self-reported model id + doctrine_rev = the doctrine FILE's own last-change commit, `git -C ${CLAUDE_PLUGIN_ROOT} log -1 --format=%h -- doctrine/orchestration-mode.md`, or the installed release stamp — never repo HEAD, which moves on every commit and would strand role cards stale). Include an additive `run_id` field — the collector's provenance key falls back to "unknown-run" without it.
 - [ ] `[advisor-check]` BEFORE the entry ruling (entry-gate is a named call site).
 - [ ] Task family declared from the write surface (§ Entry gate) and written as an additive `family` field on the entry-gate `judgment_moment` line (the collector's key input).
 - [ ] Price-row lookup against `~/.claude/conductor/constants.jsonl` (reading state machine: § Precedent & eval loop): cite the row BY ROW IDENTITY in the entry decision, or annotate `[pending-measurement]`. Refusal → light path (§ Entry gate): minimal journal, no plan, no precedent line — stop here.

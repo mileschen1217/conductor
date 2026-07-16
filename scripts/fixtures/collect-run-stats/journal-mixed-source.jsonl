@@ -1,0 +1,6 @@
+{"event":"commander_stamp","model":"m","doctrine_rev":"abc1234","run_id":"r-z"}
+{"event":"judgment_moment","moment_id":1,"decision_type":"entry-gate","disposition":"frozen","family":"write-heavy"}
+{"event":"dispatch","task_id":"t1","tier":"mid","resolved_model":"m","read_only":true,"wave":1,"contract":"c1","brief_tokens_est":1000,"w_est":500}
+{"event":"dispatch","task_id":"t2","tier":"mid","resolved_model":"m","read_only":true,"wave":1,"contract":"c2","brief_tokens_est":1000,"w_est":500}
+{"event":"dispatch_result","task_id":"t1","checker":"VALID","usage":{"cache_creation_input_tokens":20000},"reread_tokens_est":400}
+{"event":"dispatch_result","task_id":"t2","checker":"VALID","usage":{"subagent_tokens":40000},"reread_tokens_est":400}
