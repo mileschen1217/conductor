@@ -104,6 +104,57 @@ ruling 2026-07-13): each line asserts only that the combination ran
 validly under this protocol; comparative verdicts (R3) live in the
 ledger's ruling rows, including negative ones.
 
+## v3 regression — distill kernel 4+1 arms (acceptance protocol for doctrine v3)
+
+Harness single home: the distill repo's `benchmark/` (run-arm / summarize /
+cost scripts and the cross-check rule in its README — cite, never restate).
+Frozen inputs: distill arm-base `a43c48a`, byte-identical spec per arm (plus
+each arm's own methodology paragraph only), same main model on every arm,
+headless, arms run serially, worktree isolation per arm (invariants above
+apply unchanged).
+
+Arms (5): `inline` (floor) / `inline+v3form` (the mode's 0-worker form under
+v3 doctrine) / `anvil-sdd` (incumbent) / `conductor-v3` (gate's own topology)
+/ `forced-1-worker` (commander never holds the pen; the forcing is the
+doctrine's human-veto mechanism — who/changed-to/why recorded in the arm
+brief, so the conformance audit reads it as governed, not violating).
+
+Acceptance targets (these numbers live ONLY here and in the v3 spec's AC
+layer — never in doctrine/adapter text; a fresh operator's table starts
+empty):
+
+- conductor-v3 arm on the kernel task: no fan-out (brake-line refusal on the
+  record), or gate refusal → the arm completes via the light path and its
+  cost criterion becomes same order as the floor arm.
+- 0-worker arm discipline price ≤ **+3,500 tok-eq** (v2 baseline +5,800);
+  cache-write/output ratio ≤ **3.0×** (v2 baseline 4.14×, floor 2.09×).
+- spec-fidelity held: single check home = distill held-out suite
+  `test_ac47_lock_dir_is_injectable_and_the_vault_stays_clean`, both mode
+  arms.
+- Comparison verdicts come from a fresh-context judge (producer ≠ judge,
+  doctrine § Verification); an arm's executor never self-rules.
+
+Every arm lands one ledger row; each completed cell adds a `verified-run:`
+line to the adapter README **stamped with the doctrine rev it ran under**
+(judgment claims do not cross doctrine revisions).
+
+### v2 → v3 dispatch-plan field mapping (journal/plan comparability)
+
+| v2 mandatory field (7) | v3 home |
+|---|---|
+| 1. Entry decision | mandatory 1 — Entry decision (+ family + price-row citation) |
+| 2. Task-shape declaration | mandatory 2 — Shape & precedent (merged) |
+| 3. Precedent line | mandatory 2 — Shape & precedent (merged) |
+| 4. Subtask table | mandatory 3 — Subtask table (card citation may replace grade columns) |
+| 5. Containment check | conditional — owed iff any write-role dispatch |
+| 6. Doubt surfacing | conditional — owed iff entry/grading disposition ≠ frozen |
+| 7. Deviation log | conditional — opens at first deviation event |
+| — (new) | conditional — brake line, owed iff any offload planned/executed |
+
+Journal events: v2 vocabulary unchanged (zero-shrink); v3 adds
+`dispatch_result` (checker verdict + in-channel worker usage) and additive
+`dispatch` fields (`card`, `brief_tokens_est`, `w_est`).
+
 ## Ledger — `benchmark/ledger.jsonl` (append-only; one run per line; never rewrite)
 
 ```json
