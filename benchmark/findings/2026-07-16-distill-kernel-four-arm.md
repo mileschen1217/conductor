@@ -13,8 +13,12 @@ conductor** — it carries the numbers, the analysis, and the direction for v3. 
 deliberately: **the distill kernel task is now a regression baseline. When conductor v3
 exists, re-run the same four arms against the same frozen spec and compare.**
 
-Everything below is n=1 per arm. Confidence in the ranking is **low** by the synthesizer's
-own ruling. Read it as a direction-finder, not a verdict.
+Everything below is n=1 per arm — EXCEPT the load-bearing `inline` /
+`inline-v2form` pair, which is n=2 after the same-day confirm re-run (see
+ADDENDUM; the discipline-price and AC-47 fidelity findings reproduced, the
+wall-clock claim did not). Confidence in the four-arm ranking itself is still
+**low** by the synthesizer's own ruling. Read it as a direction-finder, not a
+verdict.
 
 ---
 
@@ -115,8 +119,9 @@ the commander *read the contract more carefully*, not work faster or split work 
 the floor polluted the vault, and it shipped no undisclosed deviation under a
 "full conformance" commit message. Same judge quality (4), same invariant sheet.
 
-**This is a real and cheap effect — and it is n=1, with an effect size of one minor defect
-plus one honesty finding.** Do not over-read it.
+**This is a real and cheap effect — and it was n=1 at first writing, with an effect size
+of one minor defect plus one honesty finding** (now n=2 for exactly this pair — the confirm
+re-run reproduced both the price and the fidelity split; see ADDENDUM). Do not over-read it.
 
 ---
 
@@ -275,9 +280,11 @@ context with an explicit "discard-and-reopen past threshold N" rule, or it becom
 
 ## Honest caveats
 
-- **n=1 per arm. This run does not settle anything.** The whole discipline-price finding
-  rests on one minor defect (AC-47) plus one commit-message honesty flag, in a single pair of
-  runs.
+- **n=1 per arm at first writing. This run alone does not settle anything.** The whole
+  discipline-price finding rests on one minor defect (AC-47) plus one commit-message honesty
+  flag — originally in a single pair of runs; the inline/inline-v2form pair is now n=2 after
+  the same-day confirm re-run (ADDENDUM), which reproduced the price and the fidelity split
+  and retracted the wall-clock half.
 - **Two observations would overturn the ranking:** (1) re-run `inline` and `inline-v2form`
   once each — if the floor lands AC-47-clean or v2form lands polluted, the $4.68 bought
   nothing measurable and the ranking collapses to pure cost order (floor on top). (2) A spec
@@ -336,6 +343,19 @@ absent, one at a time. Results in distill `benchmark/results/<arm>-r2/`.
 - Behavioral variance note: the floor's ad-hoc delegation is itself unstable
   (r1: 1 sonnet reviewer, 39% of output; r2: zero subagents). The mechanism's
   behavior was comparatively stable across runs.
+- **"subagents" column semantics (investigated 2026-07-17 after a review
+  flag):** the counter (`cost.py` → `subagents_spawned`) counts ANY Task-tool
+  spawn with no read/write distinction. The v2form arms' "1" in BOTH runs is
+  the mode-mandated fresh-context acceptance verifier (opus; used only
+  Read/Bash in both runs — r1 via the tool-restricted `Explore` type, r2 via
+  `general-purpose` that simply didn't write, i.e. r2's read-only-ness is
+  behavioral, not type-enforced; the arm spec itself states — zh-TW original,
+  translated — 0-worker means no *write* worker, not a ban on all
+  subagents) — the
+  commander kept the pen, so the 0-worker framing stands, and the verifier's
+  tokens were always inside the billed totals (no understated delegation).
+  The floor r1's counted subagent, by contrast, was an ad-hoc sonnet
+  code-reviewer.
 - Cross-check: one WARN on `inline-v2form-r2` num_turns (clocked 66 vs CLI 91;
   clocked value ranked). All other instruments agree.
 - AC-42 failed in 3 of these 4 re-run/original cells — further reinforcing the
