@@ -224,7 +224,7 @@ epic's deferred log.
 - Judge/synthesis spend (this run): $10.89 + synthesis, billed outside
   every arm's account (neutral working directories).
 
-## AC discharge (v3 spec, pending human acceptance)
+## AC discharge (v3 spec — ACCEPTED by miles, 2026-07-18; ledger ruling row, run_id v3-regression-2026-07-17)
 
 | AC | verdict | evidence |
 |---|---|---|
