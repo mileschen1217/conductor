@@ -23,7 +23,25 @@ verified-run: opus×inline — ledger bench-audit-002-2026-07-12
 verified-run: fable×v2-form — ledger bench-audit-002-2026-07-12
 verified-run: opus×v2-form — ledger bench-audit-002-2026-07-12
 verified-run: sonnet×v2-form — ledger bench-audit-002-2026-07-12
+verified-run: opus×inline+v3form — doctrine 33ec134 — ledger v3-regression-2026-07-17
+verified-run: opus×conductor-v3 — doctrine 33ec134 — ledger v3-regression-2026-07-17
+verified-run: opus×forced-1-worker — doctrine 33ec134 — ledger v3-regression-2026-07-17
 ```
+
+The three v3 lines (arm names as in `benchmark/protocol.md` § v3
+regression) ran a write-heavy task family (distill kernel build, frozen
+spec) under plugin 0.3.0 installed from the published marketplace;
+judgment claims do not cross doctrine revisions, hence the explicit rev
+stamp. Stamp provenance disclosed: the runs' own commander_stamp lines
+recorded the plugin version (`0.3.0`), not the doctrine commit — the
+installed plugin carries no git history, a known binding gap queued in
+the run's findings; `33ec134` was resolved from the publishing repo's
+history and byte-matches the doctrine file the plugin shipped. The
+1-worker line is a veto-forced topology (governed operator override
+recorded in the run's brief and in its dispatch-plan deviation log,
+entry DEV-2), verified as a run record like any other — its
+fresh-context judge verdict (flawed: one gaming finding in the worker's
+output) ships with the ledger row, not hidden by the line.
 
 haiku appears in no line: both haiku cells failed acceptance on this run,
 and the M9 judgment-parity matrix independently placed it outside the
