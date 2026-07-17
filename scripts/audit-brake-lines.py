@@ -8,7 +8,19 @@ arithmetic is consistent with the line's own W/r and the cited row's C_*.
 
 Usage:
   audit-brake-lines.py <dispatch-plan.md> --table <constants.jsonl> \
-      [--r-values 1.0,0.2,0.05,0.3]
+      [--r-values 1.0,0.4,0.2,0.1,0.5] [--commander-r 0.2,0.1]
+
+--commander-r narrows the legal set to the given commander's OWN column of
+the binding's per-pair table (plus 1.0, always legal for same-model). Without
+it the audit can only check set membership, not pair correctness — a live
+witness run (MR7) wrote r=0.2 for a same-model offload (true value 1.0) and
+set-membership alone passed it. CAVEAT: even with --commander-r the
+protection is commander-dependent, not general pair-correctness — the
+offload's tier label is not cross-checked against r, so a mislabeled r that
+coincides with another legitimate value in the SAME commander's column
+(e.g. 0.2 under an opus commander, where 0.2 is the legitimate haiku rate)
+still passes. Full pair verification needs the worker's resolved model,
+which brake lines do not carry.
 
 Per-line verdicts:
   CONFORMANT — parses, r values allowed, citation resolves, arithmetic checks
@@ -78,13 +90,17 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("plan")
     ap.add_argument("--table", required=True)
-    ap.add_argument("--r-values", default="1.0,0.2,0.05,0.3")
+    ap.add_argument("--r-values", default="1.0,0.4,0.2,0.1,0.5")
+    ap.add_argument("--commander-r", default=None,
+                    help="the commander's own column of the per-pair r table; narrows the legal set (1.0 stays legal)")
     args = ap.parse_args()
 
     if not os.path.isfile(args.plan):
         print(f"usage error: plan not found: {args.plan}", file=sys.stderr)
         return 2
     allowed_r = {float(x) for x in args.r_values.split(",")}
+    if args.commander_r:
+        allowed_r = {1.0} | {float(x) for x in args.commander_r.split(",")}
     rows = load_table(args.table)
 
     plan = open(args.plan, encoding="utf-8").read()

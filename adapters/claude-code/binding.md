@@ -15,26 +15,30 @@ tier-0 不入表：tier-0 是 script（Bash/Python），不經 Agent tool。
 
 ## 價格比 r 與單位權重（doctrine § Amortization brake 的 CC 綁定）
 
-粗比例（數量級精度；年校；變更記入本節 changelog）。取值基礎：Anthropic
-官方牌價的跨代穩定結構比（output $/Mtok 比值：frontier:mid ≈ 5:1、
-mid:cheap ≈ 3.75:1），釘 2026-07-16；下次校對照當日官方 pricing 頁。
+**Per-pair 列，非 tier 粒度**：frontier tier 內部有 2× 價差（fable output
+$50 vs opus $25，官方 pricing 頁實查 2026-07-17），tier 級單一 r 對 opus
+commander 會高估省項一倍。r = worker output 牌價 ÷ commander output 牌價。
 
-| r[worker-tier←cmd-tier] | frontier cmd | mid cmd |
-|---|---|---|
-| worker = frontier | 1.0 | —（升階派工非 offload 省錢形） |
-| worker = mid | 0.2 | 1.0 |
-| worker = cheap | 0.05 | 0.3 |
+| r[worker←cmd] | fable cmd（$50/Mtok out） | opus cmd（$25） | sonnet cmd（$10, intro） |
+|---|---|---|---|
+| worker = sonnet（$10） | 0.2 | 0.4 | 1.0 |
+| worker = haiku（$5） | 0.1 | 0.2 | 0.5 |
 
-同 tier r=1.0 是定義（doctrine § Amortization brake），不入 changelog。
+同 model r=1.0 是定義（doctrine § Amortization brake）；表中對角線的
+1.0 僅為一眼可讀而列出，非牌價推導。
 
-單位權重（token 種類換算成 output-token 等值；同為牌價結構比：
-input:output = 1:5，cache-write = 1.25×input）：
+單位權重（token 種類換算成 output-token 等值；官方牌價結構比在各 model
+內部一致：input:output = 1:5、5m cache-write = 1.25×input）：
 `weight[output]=1, weight[cache-write]=0.25, weight[input]=0.2`
 
 changelog：
-- 2026-07-16 初版（v3 build）。捨入註記：r 收斂到一位有效數字且非同向
-  （0.267→0.3 上捨、0.053→0.05 下捨）——數量級精度的宣告下不追同向捨入；
-  brake 消費端以表值為準，不回推導式。
+- **2026-07-17 per-pair 修正（miles 質疑觸發，官方 pricing 頁實查）**：
+  fable≠opus（2×），原 frontier 折疊列作廢；r[mid←opus] 0.2→0.4、
+  r[cheap←mid] 0.3→0.5、r[cheap←fable] 0.05→0.1。sonnet 現行為
+  introductory pricing（$2/$10，至 2026-08-31）；**排程 re-pin：
+  2026-09-01** sonnet 恢復 $3/$15 → 全表 sonnet 相關列位移
+  （r[sonnet←fable]→0.3、r[haiku←sonnet]→0.33 等）。
+- 2026-07-16 初版（v3 build）：跨代結構比推估，已被上列實查值取代。
 
 ## model_gen 正規化（constants 表 key 與 role card 戳記用）
 

@@ -18,5 +18,10 @@ check bad-r         1 'outside the allowed binding set'   "$F/plan-bad-r.md" --t
 check coldstart     0 '^DEVIATION line 1: .*cold-start|pending-measurement' "$F/plan-coldstart.md" --table "$F/table.jsonl"
 check none          0 '^NO-BRAKE-LINES'                   "$F/plan-none.md" --table "$F/table.jsonl"
 check missing-plan  2 'usage error'                       "$F/does-not-exist.md" --table "$F/table.jsonl"
+# --commander-r narrowing (MR7 regression): a same-model offload mislabeled
+# r=0.2 passes bare set-membership but FAILS under the sonnet commander's
+# narrowed column {1.0, 0.5}
+check mislabel-loose  0 '^CONFORMANT|^DEVIATION'            "$F/plan-same-model-mislabel.md" --table "$F/table.jsonl"
+check mislabel-narrow 1 'outside the allowed binding set'   "$F/plan-same-model-mislabel.md" --table "$F/table.jsonl" --commander-r 0.5
 [ "$fail" -eq 0 ] || exit 1
 exit 0

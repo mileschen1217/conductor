@@ -1,1 +1,1 @@
-brake: offload=[{tier:mid,W≈900,r=0.4}] save=540 pay=8240 verdict=fail ground=none constants_row=family:write-heavy,harness:claude-code,model_gen:g2026.07@wit-boot-1/2026-07-16T10:00:00Z r_rev=2026-07-16
+brake: offload=[{tier:mid,W≈900,r=0.7}] save=270 pay=10460 verdict=fail ground=none constants_row=family:write-heavy,harness:claude-code,model_gen:g2026.07@wit-boot-1/2026-07-16T10:00:00Z r_rev=2026-07-16
