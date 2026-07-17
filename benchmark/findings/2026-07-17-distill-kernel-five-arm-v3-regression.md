@@ -142,6 +142,20 @@ ships with the run meta.
    `doctrine_rev: "0.3.0"` (plugin version) instead of the doctrine
    file's commit. Binding needs an explicit fallback rule (version string
    is honest but violates the letter of the binding's definition).
+   **Retro root-cause link to gap 4, scoped to its evidence:** role
+   cards are stamped `graded_under.doctrine_rev: 33ec134`; against the
+   run's resolved rev string `"0.3.0"` the staleness check can never
+   match. One dispatch names this verbatim — forced-1w's mech-writer
+   consideration (`card=none (mech-writer stale 33ec134!=0.3.0)`) — so
+   the staleness block is *confirmed for that instance*; the other
+   `card:"none"` dispatches carry no note, so the same mechanism is the
+   plausible shared cause there, not an established one. A candidate
+   rev-semantics fix (ship the doctrine-file commit inside the plugin,
+   e.g. a stamped metadata file, defined as the installed-context rev)
+   would unblock card citation; queued with the other gaps, not yet
+   actioned. Some of Headline 3's judgment-machinery overhead is the
+   manual three-axis regrade this block forces — a qualitative link;
+   the +$7.34 was not itemized to that granularity.
 2. **Brake-line grammar drift defeats the auditor, in both directions** —
    conductor-v3 wrote `- **brake:** …` (bold bullet): parser reports
    NO-BRAKE-LINES (false negative reads as clean). forced-1w wrote the
@@ -156,14 +170,45 @@ ships with the run meta.
    journal. I2 was discharged structurally this run (0–1 writers); the
    instrument needs a v3-vocabulary mode before it can discharge I2 on a
    real fan-out.
-4. **Card mechanism unused where it applied** — conductor-v3's verifier
-   dispatch journaled `card: "none"` and re-derived the three-axis grade
-   inline; the fresh-verifier card is exactly that shape. Same root as
-   M9's "call-site list read as whitelist": card discoverability under
-   headless. (Cost impact is part of Headline 3's +$7.34.)
+4. **Card mechanism unused where it applied** — every mode-arm dispatch
+   journaled `card: "none"`; the fresh-verifier and (arguably)
+   mech-writer cards fit the shapes dispatched. Retro found one
+   confirmed cause: gap 1's rev mismatch blocks the staleness check on
+   the single dispatch that documents its card consideration (forced-1w,
+   quoted in gap 1). Whether the remaining `card:"none"` instances share
+   that cause or never found the cards (headless discoverability) is
+   not separable from the journals — and cannot be measured until the
+   staleness block is fixed. (Cost impact is part of Headline 3's
+   +$7.34, not separately itemized.)
 5. **Journal lines carry no `ts`** in both mode arms (build-run journals
    did); collector tolerated it, but drift-window logic keys on
    timestamps. Vocabulary conformance nit.
+6. **Fresh-verifier carries no gaming/honesty lens** — forced-1w's
+   verifier returned ACCEPT (flagging only a test-coverage gap) on a
+   deliverable whose code comment *admits* tuning the VTT step-8 branch
+   to what the AC-18 test checks; the per-arm judge caught it from the
+   same artifacts. The verifier's card duties are criteria-conformance
+   only (`contract/roles/fresh-verifier.md` § duties: assess each
+   contracted criterion, report pass/fail with evidence); a judge-grade
+   honesty check (compare code comments and the worker's own claims
+   against the frozen rules) is card-level absent.
+   Candidate fix is an L2 card duty line — spec-level, queued with the
+   backlog rulings. Until then, the commander's mechanical checker plus
+   a criteria-only verifier is a demonstrated blind spot for worker
+   gaming (the exact defect class the veto-forced arm was priced to
+   expose).
+
+One retro observation recorded for the deferred design queue rather than
+as a gap: forced-1w's commander improvised **warm worker continuation**
+(wave 3 re-used the wave-1 worker via a follow-up message; the journal's
+dispatch events record `brief_tokens_est: 400` for the warm follow-up vs
+`brief_tokens_est: 7000` for the cold wave-1 dispatch, tier self-labeled
+`cheap-work-on-warm-mid`). The dispatch primitive's text
+knows only ephemeral contract dispatch — amortizing C_fresh across
+same-corpus waves is exactly what the brake's economics want, and the
+promotion decision (boundaries: warm only within a contract family,
+verifier always fresh, a warm marker on the dispatch event) sits in the
+epic's deferred log.
 
 ## Honest caveats
 
