@@ -51,7 +51,9 @@ local，不 ship，起始為空），行 schema = `contract/constants.schema.jso
 `capability_surface.read_only` 機械映射；AGENTS.md fragment 貼入 worker
 workspace（承本 adapter README §「AGENTS.md load fragment (worker side)」
 的既有配方，外加該卡職責一行引用）。戳記失效規則同 CC：卡 `graded_under` 與現行 doctrine rev／
-gen-tag 任一不符＝配方同卡失效。
+gen-tag 任一不符＝配方同卡失效。rev 來源同 CC binding：git checkout 用
+doctrine 檔最後變更 commit；安裝態讀出貨的 `doctrine/REV`，絕不用 release
+版號（版號對不上卡戳，staleness 永 miss）。
 
 | 卡 | sandbox flag | model（tier 本表解析） | AGENTS.md fragment 附加行 |
 |---|---|---|---|

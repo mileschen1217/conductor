@@ -41,6 +41,7 @@ created: YYYY-MM-DD
 - <hard safety boundary; off-limits even if technically reachable>
 - Stronger than Read-Only — implementer should not even read these for context.
 - Category: `.git/`, sibling-team directories, vendored deps outside Scope.
+- Always in force: build artifacts and caches (egg-info, __pycache__, dist/, coverage files) are never part of the delivery — do not commit them, whatever the write surface says.
 
 ## Acceptance Criteria
 - <testable outcomes; load-bearing source of truth for "done">

@@ -71,7 +71,11 @@ Edit+Write（含 result artifact 的建檔）、run-contracted-*→Bash；
 未安裝時回退泛用 agent type＋顯式 `model:` 參數（Phase 3 規則不變）。
 doctrine_rev 的取得：`git log -1 --format=%h -- <doctrine 檔路徑>`
 （doctrine 檔自身的最後變更 commit，非 repo HEAD——HEAD 隨任意 commit
-變動會令卡永遠過期）；plugin 安裝以 release 戳記代替。
+變動會令卡永遠過期）；**plugin 安裝（無 `.git`）讀出貨的 `doctrine/REV`
+戳記檔**——絕不用 plugin 版號：版號與卡上 `graded_under` 的 git rev 永不
+相等，staleness 檢查永遠 miss、card 機制靜默失效（v3 回歸實測缺口 1/4）。
+REV 新鮮度由 `scripts/check-doctrine-rev.sh` 在 repo 端把關（doctrine 變更
+後的 follow-up commit 更新 REV，與卡 re-key 同車）。
 
 ## Advisor transport（doctrine § Advisor primitive 的 CC 綁定）
 

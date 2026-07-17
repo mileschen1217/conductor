@@ -111,7 +111,12 @@ cost scripts and the cross-check rule in its README — cite, never restate).
 Frozen inputs: distill arm-base `a43c48a`, byte-identical spec per arm (plus
 each arm's own methodology paragraph only), same main model on every arm,
 headless, arms run serially, worktree isolation per arm (invariants above
-apply unchanged).
+apply unchanged). Operator constants table: isolate per arm (HOME-level
+override or per-arm table path) — the 2026-07-17 run showed serial arms
+couple through the shared table (a later arm's brake consumed an earlier
+arm's appended row); harmless there (topologies were pinned or pre-dated
+the row) but it is an arm-order variance channel. The at-start snapshot
+into run meta stays required either way.
 
 Arms (5): `inline` (floor) / `inline+v3form` (the mode's 0-worker form under
 v3 doctrine) / `anvil-sdd` (incumbent) / `conductor-v3` (gate's own topology)

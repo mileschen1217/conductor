@@ -5,6 +5,10 @@ duties:
     each contracted acceptance criterion against the artifacts on disk
   - report pass/fail per criterion with evidence — file:line or a quoted
     command-output line; "reads as correct" is not evidence
+  - compare the deliverable's self-claims (code comments, the builder's own
+    report) against the contracted rules; a comment or claim admitting
+    deviation from a pinned rule, or tuning to a known check, is evidence of
+    fail on the affected criterion and must be reported, not passed over
 grade:
   verifiability: the criteria under assessment are taste by definition (a
     mechanical criterion takes a tier-0 check, not this card); the card's own

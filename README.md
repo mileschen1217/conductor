@@ -64,8 +64,11 @@ The commander-side forwarder recipe lives in `adapters/codex/README.md`.
 
 **What the scripts are** — `scripts/` holds the repo's own quality gates, not
 runtime dependencies: `check-neutrality.sh` (vendor-neutrality scan over
-doctrine/ + contract/), `test-check-result.sh` (validator fixture suite),
-`audit-single-writer.sh` (post-hoc single-writer audit for live runs). Nothing
+doctrine/ + contract/), `check-role-cards.sh` (judgment-face scan over the L2
+role cards), `check-doctrine-rev.sh` (guards that the shipped `doctrine/REV`
+stamp matches the doctrine file's last-change commit), `test-check-result.sh`
+(validator fixture suite), `audit-single-writer.sh` (post-hoc single-writer
+audit for live runs; v1+v3 journal dialects). Nothing
 in `scripts/` needs installing; the pieces adapters call at runtime are
 `contract/check-result.py` and `contract/make-fallback-result.py`, which
 travel with the repo/plugin copy.

@@ -1,7 +1,7 @@
 {
   "name": "conductor",
   "description": "Portable orchestration mode — a commander judges, decomposes, and dispatches; tiered workers execute through file contracts (L1 doctrine / L2 contracts / L3 adapters). v3: measured gate economics (family-indexed discipline price), fan-out amortization brake, role cards as cached grading, two-tier ledger with a tier-0 collector and a human-gated calibration loop.",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "skills": [
     "./adapters/claude-code"
   ]
