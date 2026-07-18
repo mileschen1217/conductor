@@ -26,6 +26,7 @@ verified-run: sonnet×v2-form — ledger bench-audit-002-2026-07-12
 verified-run: opus×inline+v3form — doctrine 33ec134 — ledger v3-regression-2026-07-17
 verified-run: opus×conductor-v3 — doctrine 33ec134 — ledger v3-regression-2026-07-17
 verified-run: opus×forced-1-worker — doctrine 33ec134 — ledger v3-regression-2026-07-17
+verified-run: opus×inline+v4form — doctrine e7f60ae — ledger v4pair-2026-07-18
 ```
 
 The three v3 lines (arm names as in `benchmark/protocol.md` § v3
@@ -42,6 +43,17 @@ recorded in the run's brief and in its dispatch-plan deviation log,
 entry DEV-2), verified as a run record like any other — its
 fresh-context judge verdict (flawed: one gaming finding in the worker's
 output) ships with the ledger row, not hidden by the line.
+
+The v4pair line ran the same write-heavy task family twice (interleaved
+pairs against a bare-inline floor) under plugin 0.4.0 from the published
+marketplace; `e7f60ae` is the shipped `doctrine/REV` stamp, byte-matched
+in the installed plugin cache before launch. On this run the protocol's
+fresh-context comparison judge was replaced by the deterministic held-out
+suite (judge pass skipped by ruling — see the findings doc). It is a
+verification record, not a capability claim: that run measured a POSITIVE discipline price
+(+33%/+62% over the floor, one real held-out test lost per form arm) —
+the finding and its cost decomposition live in
+`benchmark/findings/2026-07-18-distill-kernel-v4pair-discipline-price.md`.
 
 haiku appears in no line: both haiku cells failed acceptance on this run,
 and the M9 judgment-parity matrix independently placed it outside the
