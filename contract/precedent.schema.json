@@ -7,7 +7,8 @@
     "append_only_enforcement": "two layers: (1) scripts/audit-precedent.py verifies in-line consistency (status evolution by new lines; ts monotonic non-decreasing); (2) history immutability is a version-control audit — the ledger is a tracked file and a diff rewriting an existing line is itself the violation (script capability boundary, stated honestly)",
     "calibration_id_rule": "stable proposal key, derived: 'cal-' + first 12 hex chars of sha256(kind + '|' + write_surface + '|' + signal.kind + '|' + <signal value canonicalized: JSON, sorted keys, or empty string when the kind matches without value>). Deterministic so a run close can compute it and detect an open proposal (duplicate suppression).",
     "deviation_signal_consistency": "per-kind match semantics for the calibration trigger: threshold-crossed and precedent-deviation match on kind alone; grade-override matches on value (from→to) equality; checker-reject-pattern matches on value (error signature) equality; estimate-drift and constants-drift (v3 additive) match on value equality — value carries the drifting quantity and sign ONLY (e.g. {\"constant\":\"C_fresh\",\"sign\":\"+\"}), never the magnitude (per-run magnitudes would defeat grouping); the recording threshold (commander records the signal only when drift is material — >=20% same-sign vs the consumable table row for constants, >3x for W estimates) is enforced at record time, evidence in the run journal/collector output",
-    "similarity_key": "task_shape.kind + task_shape.write_surface equality — the pre-dispatch cite-or-deviate lookup key and the calibration trigger's same-shape key"
+    "similarity_key": "task_shape.kind + task_shape.write_surface equality — the pre-dispatch cite-or-deviate lookup key and the calibration trigger's same-shape key",
+    "calibration_target": "calibration/v1 'target' (v3.1 additive, optional): 'anchor' = the proposal targets a binding-owned conversion-anchor rate (evidence + binding changelog path; a promoted line owes NO m9_run); 'doctrine-default' = the proposal targets a doctrine default (Maintenance rule applies in full; a promoted line without m9_run is a VIOLATION). Absent field = 'doctrine-default' (pre-v3.1 rows predate the split and were all doctrine-scoped)"
   },
   "oneOf": [
     {
@@ -81,7 +82,8 @@
         "supersedes": { "type": ["string", "null"] },
         "decided_by": { "type": ["string", "null"] },
         "decision_reason": { "type": ["string", "null"] },
-        "m9_run": { "type": ["string", "null"] }
+        "m9_run": { "type": ["string", "null"] },
+        "target": { "type": "string", "enum": ["anchor", "doctrine-default"] }
       }
     }
   ]

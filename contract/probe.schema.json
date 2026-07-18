@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "boot-probe-record-line",
+  "x_notes": {
+    "created": "2026-07-18 (v3.1 build)",
+    "record": "one per-project append-only JSONL file (path named by each harness binding; project-local, never shipped). Sole writer = the binding's probe procedure; a run's own measurements NEVER write back (doctrine § Amortization brake — cache semantics, never calibration)",
+    "selection": "consumable row = latest row (file order) matching current harness + config_hash + model_gen — three axes, equal weight; no match = deterministic re-probe (append a new row, never edit or delete old ones); malformed line or unreadable file = ERROR, conservative-closed (a suspicious row is never consumed). Tier-0 selector: scripts/probe-select.py",
+    "config_hash_inputs": "the hash's input list is binding-declared and binding-changelog-governed; the hash value is opaque at this layer",
+    "boot_tokens": "the harness's fixed context-establishment overhead measured by the binding's probe procedure (first-request input plus any cache-population tokens the binding's telemetry reports), in raw tokens; tier-agnostic (same tokenizer surface)"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "key", "boot_tokens", "config_hash", "provenance"],
+  "properties": {
+    "schema": { "type": "string", "enum": ["boot-probe/v1"] },
+    "key": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["harness", "model_gen"],
+      "properties": {
+        "harness": { "type": "string" },
+        "model_gen": { "type": "string" }
+      }
+    },
+    "boot_tokens": { "type": "integer", "minimum": 0 },
+    "config_hash": { "type": "string" },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ts"],
+      "properties": {
+        "ts": { "type": "string" }
+      }
+    }
+  }
+}

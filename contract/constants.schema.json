@@ -3,6 +3,7 @@
   "title": "constants-table-line",
   "x_notes": {
     "created": "2026-07-16 (v3 build)",
+    "deprecated": "as of 0.4.0 (v3.1) this table has NO producers and NO consumers: the entry gate weighs no price, brake inputs are computed per-dispatch or read from the boot-probe record (contract/probe.schema.json), and the collector no longer appends constants rows. Existing files remain valid history and still validate against this schema — the oneOf branches below are retained solely as the legal basis for historical rows. The notes that follow (row_identity, reading_state_machine, producers) describe the retired mechanism, kept for reading those rows",
     "table": "one per-operator append-only JSONL file keyed task_family × harness × model_gen; the file path is named by each harness binding at the operator level; ships empty (no seeded values)",
     "row_identity": "constants rows are cited as <key>@<provenance.run_id>/<provenance.ts>; discipline-price rows as <key>@<pair_run_ids joined with +>/<provenance.ts> — consumers cite row identity, never bare keys (append-only tables hold many rows per key)",
     "reading_state_machine": "per key: first measured row is consumable (bootstrap); later changes land proposed (not consumable) until a human promotes (supersede-by-append). discipline-price rows have no proposed state: each ablation pair appends measured directly; a re-measurement supersedes only on human promote. unverifiable rows are never consumable — they exist for degradation counting and audit only",
