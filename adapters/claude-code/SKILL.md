@@ -1,6 +1,6 @@
 ---
 name: orchestration-mode
-description: Use when a task warrants commander-mode dispatch on Claude Code — the orchestrator grades subtasks and routes them to tiered workers through task-contract files. Skip when the L1 entry gate says not-open — run the light path instead.
+description: Use when a task warrants commander-mode dispatch on Claude Code — the orchestrator grades subtasks and routes them to tiered workers through task-contract files. The entry gate outputs a declaration + topology (no refusal branch); the trivial-task form is the 0-worker inline pen.
 ---
 
 # orchestration-mode — Claude Code adapter
@@ -46,16 +46,17 @@ dispatch-plan.md or the journal, one line) your answer to:
 
 ## Phase 1 — Entry
 
-Evaluate the L1 entry gate (§ Entry gate) and present the call to the human
-before any dispatch. Record the decision in `dispatch-plan.md` (§ Audit
-surface).
+Evaluate the L1 entry gate (§ Entry gate) and present the declaration to the
+human before any dispatch. The journal is the sole record of record
+(§ Audit surface); dispatch-plan.md is an OPTIONAL human-readable render
+with no audit standing.
 
-- [ ] journal.jsonl opened in the task directory; FIRST line is `commander_stamp` (self-reported model id + doctrine_rev = the doctrine FILE's own last-change commit, `git -C ${CLAUDE_PLUGIN_ROOT} log -1 --format=%h -- doctrine/orchestration-mode.md`, or — installed plugin, no `.git` — the shipped `${CLAUDE_PLUGIN_ROOT}/doctrine/REV` stamp. NEVER the plugin version (it can never equal a card's `graded_under` git rev, so staleness always misses and card citation silently dies) and never repo HEAD (moves on every commit, strands cards stale). Include an additive `run_id` field — the collector's provenance key falls back to "unknown-run" without it.
+- [ ] journal.jsonl opened in the task directory; FIRST line is `commander_stamp` (self-reported model id + doctrine_rev = the doctrine FILE's own last-change commit, `git -C ${CLAUDE_PLUGIN_ROOT} log -1 --format=%h -- doctrine/orchestration-mode.md`, or — installed plugin, no `.git` — the shipped `${CLAUDE_PLUGIN_ROOT}/doctrine/REV` stamp. NEVER the plugin version (it can never equal a card's `graded_under` git rev, so staleness always misses and card citation silently dies) and never repo HEAD (moves on every commit, strands cards stale). Include an additive `run_id` field AND the `vocab: 2` stamp — auditors key their dialect on `vocab`, and a 0.4.0 run without it is audited as visible-LEGACY (a stamping duty miss, § Audit surface).
 - [ ] Every journal line carries `ts` (ISO8601 UTC) — drift-window logic keys on timestamps.
+- [ ] Boot-probe hook: run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/probe-select.py .conductor/probe.jsonl --harness claude-code --config-hash <hex> --model-gen <gen>` (hash inputs + probe procedure: binding.md § Boot 探針). HIT → journal `probe` event `action:"hit"` citing the row. REPROBE/absent → run the binding's probe procedure, append the new row, journal `action:"probed"|"reprobed"`. ERROR → journal `action:"failed"` + deviation event; brake economics become not-computable (conservative-closed) — entry NEVER blocks on the probe.
 - [ ] `[advisor-check]` BEFORE the entry ruling (entry-gate is a named call site).
-- [ ] Task family declared from the write surface (§ Entry gate) and written as an additive `family` field on the entry-gate `judgment_moment` line (the collector's key input).
-- [ ] Price-row lookup against `~/.claude/conductor/constants.jsonl` (reading state machine: § Precedent & eval loop): cite the row BY ROW IDENTITY in the entry decision, or annotate `[pending-measurement]`. Refusal → light path (§ Entry gate): minimal journal, no plan, no precedent line — stop here.
-- [ ] dispatch-plan.md exists with the three mandatory fields (§ Audit surface): entry decision (incl. family + cited row), shape & precedent line (query `.conductor/precedent.jsonl` first — cite or deviate), subtask table. Conditional fields only when their triggers fire; append-per-wave, never rewrite an earlier wave's section.
+- [ ] Typed `entry` event journaled (§ Audit surface): family (declared from the write surface, § Entry gate) + write_shape + read_breadth + config + grounds; human veto (who/changed-to/why) in the `veto` field when one lands.
+- [ ] Typed `precedent` event journaled BEFORE the first dispatch: query `.conductor/precedent.jsonl` for the declared task shape — `cited <run_id>` | `deviation` + reason | `no-match`.
 
 ## Phase 2 — Plan the wave
 
@@ -66,10 +67,10 @@ one task-contract file per subtask from
 elements (§ Dispatch contract). Respect the concurrency hard cap
 (§ Complexity tiering).
 
-- [ ] Every subtask row in dispatch-plan.md has grade OR a valid card citation (`card=<role>@<graded_under>` — check the card's `graded_under` against this run's `commander_stamp.doctrine_rev` and `binding.md`'s current gen-tag first; mismatch = `card=none(<stale reason>)` + full grading), tier, resolved model, contract path, wave.
-- [ ] Brake line written BEFORE any offload launches (§ Amortization brake; constants + r cited by row identity / `r_rev`; economics-fail without a necessity ground = do not launch).
+- [ ] Every dispatch line carries grade (3 axes) OR a valid card citation (`card:"<role>@<graded_under>"` — check the card's `graded_under` against this run's `commander_stamp.doctrine_rev` and `binding.md`'s current gen-tag first; mismatch = `card:"none(<stale reason>)"` + full grading) plus `why_not_script`, tier, resolved model, contract path, wave.
+- [ ] Typed `brake` event journaled BEFORE any offload launches (§ Audit surface computed-term shape): commander-side inputs (C_brief_cmd/C_reread) and per-offload worker-side terms (C_brief_worker/corpus) computed from artifact bytes via `scripts/estimate-tokens.py --anchors <binding anchors>` (values live ONLY in binding.md § 換算錨表 — never restate them here); `boot` from the probe row (`probe_ref` resolvable); `anchor_rev`/`r_rev` cite the binding changelog; W is the ONLY on-the-spot estimate. Economics-fail without a necessity ground = do not launch; probe unavailable ⇒ `verdict:"not-computable"`, necessity grounds only.
 - [ ] `[advisor-check]` BEFORE freezing the grade/tier table (grading-dispute).
-- [ ] Per-subtask `why-not-a-script`; conditional fields per trigger (§ Audit surface): containment-check (any write-role dispatch), doubt-surfacing (entry/grading disposition ≠ frozen), deviation log (opens at the first deviation event — escalation / scope-change ruling / threshold crossing / advisor-unavailable).
+- [ ] Conditional typed events per trigger (§ Audit surface): `containment_check` (any write-role dispatch), `doubt` (entry/grading disposition ≠ frozen), `deviation` (first deviation event — escalation / scope-change ruling / threshold crossing / advisor-unavailable / estimate-drift / warm-fallback).
 
 ## Phase 3 — Dispatch (the harness-bound step)
 
@@ -84,9 +85,13 @@ Per contract file, launch ONE worker with the Agent tool:
   its CC preventive binding; must appear in the dispatch record).
 - Writing work (implementation): `subagent_type: "general-purpose"`, ONE at a
   time (§ Single-writer rule — this is its CC preventive binding).
-- Journal `dispatch` line additive fields: `card` (role or none),
-  `brief_tokens_est` (contract+prompt size estimate), `w_est` (expected
-  offloaded output) — the brake audit and the collector read these.
+- Journal `dispatch` line additive fields: `card` (role@rev or none),
+  `brief_tokens_est` (contract+prompt size, anchor-computed), `w_est`
+  (expected offloaded output), `contract_family` (stable id shared by
+  same-family waves), `warm` + `warm_prior` (warm continuation: binding.md
+  § Warm channel; a warm dispatch also carries `staleness_note`),
+  `write_surface` (Owned Files digest, or `read-only`) — the brake audit
+  and the semantic audit read these.
 - **Model param (ST-5 regression point):** every Agent call MUST carry an
   explicit `model:` equal to the binding-resolved model — never rely on the
   default. The SAME resolved id goes into the journal `dispatch` line
@@ -110,8 +115,8 @@ escalate to the human (§ Judgment reservation). Acceptance of deliverables
 goes to a fresh-context worker (§ Verification).
 
 - [ ] `[advisor-check]` at EACH worker report intake (worker-blocked — a blocked/failed/boundary/misfit report is the canonical trigger) and BEFORE each acceptance verdict (acceptance-ambiguity); any scope event → scope-change-preview may inform the framing, the ruling stays the human's.
-- [ ] Every harvested result: checker exit code recorded; a `dispatch_result` journal line lands per task (checker verdict + the harness's in-channel `usage` verbatim + `reread_tokens_est`); scope-change requests (if any) escalated, not adjudicated.
-- [ ] Journal audits run: `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/audit-judgment-flow.py <journal>` exits 0; with a telemetry export also `audit-model-conformance.py <journal> <telemetry>` (absent telemetry = UNVERIFIABLE, recorded, never claimed CLEAN).
+- [ ] Every harvested result: checker exit code recorded; a `dispatch_result` journal line lands per task (checker verdict + `usage` as the typed ENUM — the harness's in-channel token counts verbatim, or `"unavailable"`; a prose pointer is a semantic VIOLATION — + `reread_tokens_est`); scope-change requests (if any) escalated, not adjudicated.
+- [ ] Journal audits run: `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/audit-judgment-flow.py <journal>` exits 0 (vocab 2 dialect: semantic rules S1-S3 on); `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/audit-brake-lines.py <journal> --anchors <binding anchors> --probe .conductor/probe.jsonl` exits 0; with a telemetry export also `audit-model-conformance.py <journal> <telemetry>` (absent telemetry = UNVERIFIABLE, recorded, never claimed CLEAN).
 
 ## Phase 5 — Close
 
@@ -125,13 +130,15 @@ notification via the binding-named channel, and journal `calibration_notify`.
 Promotion/rejection is the human's (§ Precedent & eval loop) — never
 auto-promote.
 
-At precedent-append time, run the constants collector (degradation never
+At precedent-append time, run the estimate-drift emitter (degradation never
 blocks close):
-`python3 ${CLAUDE_PLUGIN_ROOT}/adapters/claude-code/tools/collect-run-stats.py <journal> --binding claude-code --out ~/.claude/conductor/constants.jsonl`
-— journal any `estimate-drift` lines it prints as typed deviation signals
-before appending the precedent line.
+`python3 ${CLAUDE_PLUGIN_ROOT}/adapters/claude-code/tools/collect-run-stats.py <journal>`
+— journal any `estimate-drift` lines it prints as typed `deviation` events
+before appending the precedent line. The tool writes nothing anywhere: the
+operator constants table is HISTORY (binding.md § User-level 常數表) and
+stays byte-identical through close.
 
-- [ ] Precedent line appended; collector run (constants row or UNVERIFIABLE row appended); calibration check run; any TRIGGER surfaced, not self-ruled.
+- [ ] Precedent line appended; drift emitter run (its output journaled, no table rows appended anywhere); calibration check run; any TRIGGER surfaced (calibration target = the binding's conversion anchors), not self-ruled.
 
 ## Related
 

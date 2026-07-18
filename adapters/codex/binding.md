@@ -22,15 +22,25 @@
 
 ## 價格比 r 與單位權重（doctrine § Amortization brake 的 codex 綁定）
 
-**本 binding 目前無 r 表**：Codex 無公開 token 成本係數（上節成本備註、
-spec deferred D-1），粗比例無誠實取值基礎。依 doctrine § Amortization
-brake 的 cold-start 規則：economics leg 不可計算 → fan-out 經濟面
-conservative-closed，僅必要理由（wall-clock／corpus／disjoint-write）可派，
-缺值記入 deviation log。benchmark 實測產生費率證據後回填本節（變更記
-changelog）。
+**本 binding 目前無 r 表、無換算錨表、無 boot 探針程序**：Codex 無公開
+token 成本係數（上節成本備註、spec deferred D-1），粗比例無誠實取值基礎；
+錨率與探針程序亦未盤點。依 doctrine § Amortization brake 的 cold-start
+規則（v3.1 觸發條件 = 無探針/無錨）：economics leg 不可計算 → brake
+verdict=not-computable，offload 僅必要理由（wall-clock／corpus／
+disjoint-write）可派，缺值記入 deviation log。benchmark 實測產生費率證據
+後回填本節（變更記 changelog）。
 
 changelog：
+- 2026-07-18 v3.1：cold-start 觸發條件改綁探針/錨缺席（doctrine 同步）；
+  明文本 binding 三缺（r 表／錨表／探針）。
 - 2026-07-16 建節，記缺值（v3 build）。
+
+## Warm channel（doctrine § Dispatch primitive「warm continuation」的 codex 綁定）
+
+**本 binding 明文宣告：無 warm channel。** `codex exec` 每次派工起獨立
+sandbox process，無同 run 續話機制——codex 側全部派工一律冷啟記帳
+（宣告缺席的合法降級，非缺文；doctrine 能力宣告制）。若未來 codex 提供
+session 續接介面，回填本節並記 changelog。
 
 ## model_gen 正規化
 
@@ -38,12 +48,13 @@ changelog：
 2026-07-09）。規則同 CC binding：tier 表任一模型換主版本＝tag 換新
 （`gYYYY.MM`）；minor 漂移不換。
 
-## User-level 常數表
+## User-level 常數表【歷史檔，0.4.0 起退役】
 
-路徑與 schema 同 mode 慣例：`~/.codex/conductor/constants.jsonl`（operator-
-local，不 ship，起始為空），行 schema = `contract/constants.schema.json`。
-**本 binding 尚無 collector**：offered surface 待盤點（codex exec 的 JSON
-輸出面）；在那之前 codex-side run 的常數一律 UNVERIFIABLE 行（手記或缺）。
+`~/.codex/conductor/constants.jsonl`——自 0.4.0（v3.1）起無生產者也無消費者
+（doctrine § Precedent & eval loop：gate 不秤價、brake 輸入逐次計算＋探針
+取得）。本 binding 從未有 collector，故實務上此檔多半不存在；若存在則留檔
+作歷史，行 schema（`contract/constants.schema.json`）保留 deprecated 註記
+作歷史行法源。
 
 ## Role card 綁定（doctrine § Complexity tiering — Role cards 的 codex 面）
 

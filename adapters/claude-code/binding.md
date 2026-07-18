@@ -40,24 +40,109 @@ changelog：
   （r[sonnet←fable]→0.3、r[haiku←sonnet]→0.33 等）。
 - 2026-07-16 初版（v3 build）：跨代結構比推估，已被上列實查值取代。
 
-## model_gen 正規化（constants 表 key 與 role card 戳記用）
+## 換算錨表（doctrine § Amortization brake「conversion anchors」的 CC 綁定）
+
+Brake 的計算輸入（C_brief_cmd／C_brief_worker／C_reread／C_fresh corpus 項）
+一律「實物 bytes → tok-eq」換算；錨值只住本節（L1 名機制不載值），變更走
+calibration promote（target=anchor，人裁）＋本節 changelog——與 r 表同構。
+粗比例（數量級精度）；estimate-drift 訊號軌是收斂機制。
+
+| class | 錨率（chars per tok-eq） | 依據 |
+|---|---|---|
+| prose | 4 | 業界慣用 ~4 chars/tok（英文散文） |
+| code | 3 | 程式碼 token 密度較高 |
+| cjk | 1.5 | CJK 1–1.8 chars/tok band 取中 |
+| 修正係數 | ×1.3 | tokenizer 實測偏高修正（v3.1 assay 研究） |
+
+- **計算工具**：`scripts/estimate-tokens.py --anchors prose=4,code=3,cjk=1.5,correction=1.3 <file>...`
+  （tier-0 純算術；錨值全由 CLI 傳入，腳本零內嵌值）。副檔名→class 分類規則
+  內嵌於該腳本（code = py/sh/js/ts/json/yaml/toml/…，其餘 = prose；CJK 字元
+  按內容逐字入 cjk 桶——混排檔自動分桶，tok 值已含 CJK 貢獻）。
+- **brake event 的 `basis.class` 宣告**：tok 值一律取工具實算（上行）；
+  `class` 是稽核 band 用的粗類宣告，由 commander 判：單類檔照副檔名
+  （prose/code）、CJK 佔比過半 → `cjk`、跨類多檔合併 basis → `mixed`
+  （auditor 對 mixed 取三類 band 聯集，doctrine computed-term 稽核容差）。
+- **W 估計錨**：實作類 W ≈ code 錨 × 預估行數 × 平均行寬（~60 chars/行級）；
+  以人有手感的單位（檔數/行數）估，經同一套錨換算入 brake。
+- **稽核**：`scripts/audit-brake-lines.py <journal> --anchors prose=4,code=3,cjk=1.5,correction=1.3`
+  以 basis.bytes 重算 band 核對（journal 方言）。
+
+changelog：
+- 2026-07-18 建節（v3.1 build）：首版值承 assay 研究（prose~4／code~3／
+  CJK 1–1.8 取中 1.5／修正 ×1.3）。
+
+## Boot 探針（doctrine § Amortization brake「boot-probe record」的 CC 綁定）
+
+C_fresh 的 boot 項（harness 固定 context-establishment 開銷）由一次性探針
+量得，記錄行落 `<project-root>/.conductor/probe.jsonl`（project-local，
+gitignored，不 ship；schema = `contract/probe.schema.json`；唯一 writer =
+本探針程序，run 量測永不回寫）。
+
+- **程序（cheap-tier 一問一答）**：專案根目錄執行
+  `claude -p "Reply with exactly: ok" --model claude-haiku-4-5-20251001 --output-format json`，
+  取回傳 JSON `usage` 的 `input_tokens + cache_creation_input_tokens` 為
+  `boot_tokens`（首 request 的 context-establishment 總量；量值跨 tier 通用
+  ——同一 tokenizer 面）。
+- **config_hash 輸入清單（首版，變更記本節 changelog）**——可執行配方，
+  兩個具名輸入：(1) tier 表全部解析後 model id，字典序排序、逗號連接；
+  (2) 本節 changelog 最新條目日期（YYYY-MM-DD）。兩者以 `|` 連接成 UTF-8
+  字串取 sha256（取前 12 hex 作 config_hash）。現行值的計算命令：
+  ```
+  printf 'claude-fable-5,claude-haiku-4-5-20251001,claude-opus-4-8,claude-sonnet-5|2026-07-18' | shasum -a 256 | cut -c1-12
+  ```
+  model 集合換代或探針程序版本（=本節 changelog 日期）任一變動＝hash 變
+  ＝確定性重探。清單過寬的 thrash 訊號軌：probe event 連續 `reprobed` ≥3
+  → deviation（doctrine Error Handling）。
+- **選行**：`scripts/probe-select.py .conductor/probe.jsonl --harness claude-code --config-hash <hex> --model-gen <gen>`
+  → `HIT`（直接消費）｜`REPROBE`（跑探針、append 新行）｜`ERROR`
+  （conservative-closed：brake verdict=not-computable，necessity ground only）。
+- 首次 mode entry 自動探（SKILL Phase 1 hook）；entry 永不因探針失敗 block。
+
+changelog：
+- 2026-07-18 建節（v3.1 build）：首版程序＋hash 輸入清單（model id 集合＋
+  本節版本）。
+
+## Warm channel（doctrine § Dispatch primitive「warm continuation」的 CC 綁定）
+
+**本 binding 宣告有 warm channel。** 機制 = 同一 commander session 內以
+SendMessage 對既有具名 worker agent 續派（Agent tool 起的 worker 在完成後
+保留 transcript，後續 wave 可循名續話——同 run 內有效）。記帳：warm hop
+pay = r_i × C_brief_worker（boot、corpus 項為零，doctrine § Amortization
+brake）。
+
+- **Staleness 判定的機械面（紅線 (3) 的證據基）**：查本 run journal 中
+  該 worker 快取 corpus 所在 write surface 的他筆紀錄——其他 dispatch 行的
+  `write_surface` 欄與 commander 自身 inline 編輯紀錄；warm 派工必帶
+  `staleness_note`（查了哪些面）。不確定＝保守 fresh（fail-safe 方向，
+  doctrine 明文）。
+- 紅線 (1)(2) 與 verifier-always-fresh 照 doctrine；fresh-context verifier
+  一律新 agent，永不續話。
+- Worker 死亡/無回應 → 冷退（fresh dispatch）＋ deviation event
+  `kind=warm-fallback`；brake event 以實跑形（warm=false）記帳。
+
+## model_gen 正規化（role card 戳記與 probe 記錄 key 用）
 
 現行 gen-tag：**`g2026.07`**。正規化規則：上表三 tier 的現行模型集合不變
 ＝同一 tag；任一 tier 換代（表列模型 id 更換主版本）＝ tag 換新（格式
 `gYYYY.MM`，取換代當月）。minor id 漂移（如 dated snapshot 更新）不換 tag。
 
-## User-level 常數表（doctrine § Precedent & eval loop 的 CC 綁定）
+## User-level 常數表【歷史檔，0.4.0 起退役】
 
-- 路徑：`~/.claude/conductor/constants.jsonl`（operator-local；不 ship；
-  安裝起始為空——每 family 起始即 `[pending-measurement]`）。
-- 行 schema：`contract/constants.schema.json`（L2 單一 home）。
-- Append 一律 flock＋單行 O_APPEND（`tools/collect-run-stats.py` 內建）。
-- Offered surfaces（collector 的合法量測源，依 doctrine「介面非內部」）：
+- 路徑：`~/.claude/conductor/constants.jsonl`——**自 0.4.0（v3.1）起無生產者
+  也無消費者**：gate 不秤價（doctrine § Entry gate）、brake 輸入逐次計算＋
+  探針取得（上兩節）、collector 不再 append 任何行（`tools/collect-run-stats.py`
+  只餘 estimate-drift 訊號）。檔案留檔作歷史，永不刪改；行 schema
+  （`contract/constants.schema.json`）保留 deprecated 註記作歷史行法源。
+- Offered surfaces（journal 記錄面的合法量測源，依 doctrine「介面非內部」，
+  與常數表退役無關、照舊有效）：
   1. `in-channel-worker-usage` — Agent tool 頻道內回報的 worker token 用量，
-     commander 原樣記入 journal `dispatch_result.usage`；
-  2. `headless-json` — headless 執行的 JSON 輸出（run 總量；帳單級）；
-  3. `journal-estimate` — commander 對 brief／re-read 體積的 tok-eq 估計
-     （journal additive 欄位 `brief_tokens_est`／`reread_tokens_est`）。
+     commander 原樣記入 journal `dispatch_result.usage`（typed enum：數值
+     物件 | `"unavailable"`）；
+  2. `headless-json` — headless 執行的 JSON 輸出（run 總量；帳單級；boot
+     探針即用此面）；
+  3. `journal-estimate` — commander 對 brief／re-read 體積的 tok-eq 計算
+     （journal additive 欄位 `brief_tokens_est`／`reread_tokens_est`，經
+     換算錨表）。
   session transcript／on-disk 內部格式非法源（doctrine 明令）。
 
 ## Role card 綁定（doctrine § Complexity tiering — Role cards 的 CC 面）
