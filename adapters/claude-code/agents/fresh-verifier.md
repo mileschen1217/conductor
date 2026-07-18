@@ -4,7 +4,7 @@ description: Orchestration-mode worker — fresh-context taste-criterion assessm
 tools: Read, Grep, Glob, Bash
 model: sonnet
 graded_under:
-  doctrine_rev: "33ec134"
+  doctrine_rev: "e7f60ae"
   model_gen: "g2026.07"
 ---
 
