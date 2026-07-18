@@ -104,11 +104,14 @@ changelog：
 
 ## Warm channel（doctrine § Dispatch primitive「warm continuation」的 CC 綁定）
 
-**本 binding 宣告有 warm channel。** 機制 = 同一 commander session 內以
-SendMessage 對既有具名 worker agent 續派（Agent tool 起的 worker 在完成後
-保留 transcript，後續 wave 可循名續話——同 run 內有效）。記帳：warm hop
-pay = r_i × C_brief_worker（boot、corpus 項為零，doctrine § Amortization
-brake）。
+**本 binding 宣告有 warm channel——限頂層 commander session。** 機制 = 同一
+commander session 內以 SendMessage 對既有具名 worker agent 續派（Agent tool
+起的 worker 在完成後保留 transcript，後續 wave 可循名續話——同 run 內有效）。
+記帳：warm hop pay = r_i × C_brief_worker（boot、corpus 項為零，doctrine
+§ Amortization brake）。**位置邊界（v3.1 witness 實測）**：巢狀 agent
+（被派出的 mini-commander）無法 spawn 具名可續話 worker（roster 扁平），
+故 warm channel 對其不可用——該位置一律冷啟記帳（宣告缺席的合法降級，
+doctrine 能力宣告制；witness：wt5-warm 誠實 blocked，2026-07-18）。
 
 - **Staleness 判定的機械面（紅線 (3) 的證據基）**：查本 run journal 中
   該 worker 快取 corpus 所在 write surface 的他筆紀錄——其他 dispatch 行的
