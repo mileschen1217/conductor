@@ -68,6 +68,9 @@ calibration promote（target=anchor，人裁）＋本節 changelog——與 r �
   以 basis.bytes 重算 band 核對（journal 方言）。
 
 changelog：
+- 2026-07-18 promote `cal-anchor-cjk-0001`：CJK 1.5 **re-affirmed**（值不動；
+  AC-11 promote-channel paperwork witness，人裁 miles——ledger 零 drift 證據，
+  見證對象是通道非量測）。
 - 2026-07-18 建節（v3.1 build）：首版值承 assay 研究（prose~4／code~3／
   CJK 1–1.8 取中 1.5／修正 ×1.3）。
 
