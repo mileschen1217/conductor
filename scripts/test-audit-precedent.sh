@@ -30,4 +30,11 @@ check missing-outcome  1 '^VIOLATION: .*outcome missing field' $A --calibration-
 check retrigger-reject 0 '^TRIGGER: .*prior rejected' $A --calibration-check "$F/ledger-retrigger-after-reject.jsonl"
 check supersede-chain  0 '^NO-TRIGGER|^SUPPRESSED'  $A --calibration-check "$F/ledger-supersede-chain.jsonl"
 check missing-ledger   2 '^UNVERIFIABLE: '          $A --calibration-check "$F/nonexistent.jsonl"
+# --- v3.1 calibration target split (REQ-5 / AC-11): anchor promotes owe no
+#     m9_run; doctrine-default promotes still do; enum guarded ---
+check anchor-no-m9run  0 '^NO-TRIGGER'              $A --calibration-check "$F/ledger-promoted-anchor-no-m9run.jsonl"
+check dd-no-m9run      1 '^VIOLATION: .*target=doctrine-default.*m9_run' $A --calibration-check "$F/ledger-promoted-dd-no-m9run.jsonl"
+check bad-target       1 '^VIOLATION: .*not in enum anchor' $A --calibration-check "$F/ledger-bad-target.jsonl"
+# estimate-drift trigger names its proposal object (binding conversion anchors)
+check drift-target     0 'target=anchor \(proposal object: the binding' $A --calibration-check "$F/ledger-estimate-drift-trigger.jsonl"
 exit "$fail"

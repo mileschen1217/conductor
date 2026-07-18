@@ -17,7 +17,7 @@ check() { # <name> <want_rc> <want_pattern> <cmd...>
   fi
 }
 check clean            0 '^CALIBRATION: attention threshold' $A "$F/journal-clean.jsonl"
-check unavailable      0 '^CLEAN$'                           $A "$F/journal-unavailable.jsonl"
+check unavailable      0 '^LEGACY: '                         $A "$F/journal-unavailable.jsonl"
 check no-precall       1 '^VIOLATION: .*pre-call'            $A "$F/journal-no-precall.jsonl"
 check double-consult   1 '^VIOLATION: .*consulted twice'     $A "$F/journal-double-consult.jsonl"
 check underc-advisor   1 '^VIOLATION: .*UNDER-CONSULTATION'  $A "$F/journal-underconsult-advisor.jsonl"
@@ -40,4 +40,15 @@ check overage          0 '^CALIBRATION: disclosed overage'   $A "$F/journal-clea
 check orphan-obs       2 '^UNVERIFIABLE: observed .* no result file discloses' $A "$F/journal-clean.jsonl" --results "$F/results/result-disclosed.json" --advisor-observations "$F/observations.jsonl"
 # observations with no results = the accounting side is missing; every call is orphaned
 check obs-no-results   2 '^UNVERIFIABLE: --advisor-observations given without --results' $A "$F/journal-unavailable.jsonl" --advisor-observations "$F/observations.jsonl"
+# --- v3.1 semantic face (REQ-8 / AC-18): vocab-keyed dialect, three drift forms
+#     (quality-spine-p2 blueprints) + warm referential legs + visible LEGACY ---
+check sem-clean        0 '^CLEAN$'                             $A "$F/journal-semantic-clean.jsonl"
+check sem-moment-reuse 1 '^VIOLATION: semantic rule S1'        $A "$F/journal-semantic-moment-reuse.jsonl"
+check sem-broken-pair  1 '^VIOLATION: semantic rule S2 .*dispatch_result' $A "$F/journal-semantic-broken-pairing.jsonl"
+check sem-usage-prose  1 '^VIOLATION: semantic rule S3'        $A "$F/journal-semantic-usage-prose.jsonl"
+check warm-dangling    1 '^VIOLATION: semantic rule S2 .*warm dispatch' $A "$F/journal-warm-dangling.jsonl"
+check warm-family      1 '^VIOLATION: semantic rule S2 .*cross-family'  $A "$F/journal-warm-family-mismatch.jsonl"
+# legacy journal: drift forms PRESENT but vocab absent -> no false VIOLATION,
+# named LEGACY line (polar pair: honest old journals pass, downgrade is visible)
+check legacy-visible   0 '^LEGACY: '                           $A "$F/journal-legacy-no-vocab.jsonl"
 exit "$fail"

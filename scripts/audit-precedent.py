@@ -12,7 +12,11 @@ Structural checks (both modes):
      fields present; enums legal (deviation_signal.kind, calibration status)
   L2 ts monotonic non-decreasing (append-only in-line consistency)
   L3 a promoted/rejected calibration line requires an EARLIER proposed line
-     with the same calibration_id; promoted requires non-null m9_run
+     with the same calibration_id; a promoted line's m9_run duty splits on
+     its `target` field (v3.1 additive; absent = doctrine-default):
+     target=doctrine-default -> non-null m9_run required (Maintenance rule);
+     target=anchor -> exempt (binding values change through the calibration
+     loop's evidence + changelog path, never a regression-run levy)
   History immutability (rewriting an existing line) is a version-control
   audit, outside this script's capability — stated, not pretended.
 
@@ -117,6 +121,10 @@ def structural(lines):
             status = e.get("status")
             if status not in CAL_STATUS:
                 violations.append(f"ledger line {i}: status {status!r} not in enum")
+            target = e.get("target", "doctrine-default")
+            if target not in ("anchor", "doctrine-default"):
+                violations.append(f"ledger line {i}: calibration target {target!r} not in enum anchor|doctrine-default")
+                target = "doctrine-default"
             cid = e.get("calibration_id")
             if status == "proposed":
                 proposed_ids.add(cid)
@@ -124,8 +132,10 @@ def structural(lines):
                 if cid not in proposed_ids:
                     violations.append(
                         f"ledger line {i}: {status} calibration {cid} without a prior proposed line (supersede-by-append broken)")
-                if status == "promoted" and not e.get("m9_run"):
-                    violations.append(f"ledger line {i}: promoted calibration {cid} has null m9_run (regression citation required)")
+                if status == "promoted" and target == "doctrine-default" and not e.get("m9_run"):
+                    violations.append(
+                        f"ledger line {i}: promoted calibration {cid} (target=doctrine-default) has null m9_run "
+                        "(Maintenance rule: regression citation required; target=anchor promotes are exempt)")
         else:
             violations.append(f"ledger line {i}: unknown schema {schema!r}")
         ts = e.get("ts", "")
@@ -192,15 +202,17 @@ def calibration_check(lines):
         sample_value = rows[0]["deviation_signal"].get("value")
         cid = derive_calibration_id(kind, surface, sig_kind, sample_value if vkey else None)
         basis = [r.get("run_id") for r in rows]
+        target_hint = (" target=anchor (proposal object: the binding's conversion-anchor rates)"
+                       if sig_kind in ("estimate-drift", "constants-drift") else "")
         if cal_ids.get(cid) == "proposed":
             # ONLY an open (unruled) proposed line suppresses; promoted/rejected
             # are human rulings, not open proposals — a re-trigger after them
             # re-proposes by append (supersedes field carries the lineage)
             notes.append(f"SUPPRESSED: open proposal {cid} already covers shape={kind}/{surface} signal={sig_kind}")
         elif cid in cal_ids:
-            notes.append(f"TRIGGER: calibration_id={cid} shape={kind}/{surface} signal={sig_kind} basis={basis} (prior {cal_ids[cid]} line exists — a new proposal supersedes by append)")
+            notes.append(f"TRIGGER: calibration_id={cid} shape={kind}/{surface} signal={sig_kind} basis={basis}{target_hint} (prior {cal_ids[cid]} line exists — a new proposal supersedes by append)")
         else:
-            notes.append(f"TRIGGER: calibration_id={cid} shape={kind}/{surface} signal={sig_kind} basis={basis}")
+            notes.append(f"TRIGGER: calibration_id={cid} shape={kind}/{surface} signal={sig_kind} basis={basis}{target_hint}")
         triggered = True
     if not triggered:
         notes.append("NO-TRIGGER")

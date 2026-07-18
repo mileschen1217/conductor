@@ -1,0 +1,5 @@
+{"event":"commander_stamp","model":"mid-model-1","doctrine_rev":"abc1234","run_id":"fx-legacy"}
+{"event":"judgment_moment","moment_id":1,"decision_type":"entry-gate","disposition":"frozen"}
+{"event":"judgment_moment","moment_id":1,"decision_type":"acceptance-ambiguity","disposition":"frozen"}
+{"event":"dispatch","task_id":"t1","tier":"mid","resolved_model":"mid-model-1","read_only":true,"wave":1,"contract":"c/t1.md"}
+{"event":"dispatch_result","task_id":"t1","checker":"VALID","usage":"see-transcript"}

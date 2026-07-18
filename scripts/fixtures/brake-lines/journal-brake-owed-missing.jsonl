@@ -1,0 +1,3 @@
+{"event":"commander_stamp","model":"mid-model-1","doctrine_rev":"abc1234","vocab":2,"run_id":"fx-brake-owed"}
+{"event":"dispatch","task_id":"t1","tier":"mid","resolved_model":"mid-model-1","read_only":true,"wave":1,"contract":"c/t1.md","contract_family":"famA","warm":false,"warm_prior":null}
+{"event":"dispatch_result","task_id":"t1","checker":"VALID","usage":{"output_tokens":1800}}

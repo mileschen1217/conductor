@@ -10,7 +10,9 @@
 # Exit: 0 = clean (or self-test positive); 1 = hits found (or self-test failed).
 set -u
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-TERMS='claude|anthropic|codex|openai|gpt|opus|sonnet|haiku|subagent|AGENTS\.md|SKILL\.md|MCP|TOML'
+# v3.1 expansion (spec 2026-07-18 § Scope — banned-term changes are spec-level
+# decisions): headless|SendMessage|count_tokens|Agent tool|OTel.
+TERMS='claude|anthropic|codex|openai|gpt|opus|sonnet|haiku|subagent|AGENTS\.md|SKILL\.md|MCP|TOML|headless|SendMessage|count_tokens|Agent tool|OTel'
 
 if [ "${1:-}" = "--self-test" ]; then
   if ! grep -rnioEH "$TERMS" "$ROOT/scripts/fixtures/neutrality-selfcheck.md" >/dev/null 2>&1; then

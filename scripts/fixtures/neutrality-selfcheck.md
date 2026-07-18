@@ -5,3 +5,4 @@ can prove the scanner is alive. It lives under `scripts/fixtures/`, OUTSIDE
 the scan scope (doctrine/ + contract/). Never move it into scan scope.
 
 claude anthropic codex openai gpt opus sonnet haiku subagent AGENTS.md SKILL.md MCP TOML
+headless SendMessage count_tokens Agent tool OTel

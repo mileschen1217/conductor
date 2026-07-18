@@ -7,6 +7,29 @@ Usage:
   python3 scripts/audit-judgment-flow.py <journal.jsonl> [--threshold N]
       [--results <result.json> ...] [--advisor-observations <observations.jsonl>]
 
+Dialect keying (v3.1 REQ-8): the journal's dialect is decided by
+commander_stamp.vocab — an integer stamp, NEVER inferred from event presence
+(presence inference would let a drifting commander escape full audit by
+writing old-form events). vocab >= 2 → semantic rules S1-S3 below enforced in
+full; vocab absent → legacy audit only, with a named LEGACY output line
+(visible degradation: an honest old journal never eats a false VIOLATION,
+and the downgrade is never silent).
+
+Semantic face (vocab >= 2 only; kills semantic drift that typed carriers
+alone cannot — fixture blueprints: the quality-spine-p2 live-run drift forms):
+  S1 moment_id uniqueness   one judgment_moment per moment_id per journal
+                            (paired intent/ruling/blocked references echoing
+                            a moment are not re-uses)
+  S2 referential pairing    every dispatch_result.task_id and every warm
+                            dispatch's warm_prior must resolve to an EARLIER
+                            dispatch line in the SAME journal; a warm_prior
+                            target's contract_family must equal the referring
+                            line's (cross-run warm = necessarily dangling;
+                            same-run cross-family warm = equally VIOLATION)
+  S3 usage enum             dispatch_result.usage is a token-count object or
+                            the typed marker "unavailable"; prose pointers
+                            (e.g. "see-transcript") are illegal
+
 Journal face (always on; pairing is by moment_id, NEVER adjacency; covers
 RECOGNIZED moments only — decision_type within the five call sites):
   J1 pre-call order    every advisor_ruling has an EARLIER advisor_intent, same moment_id
@@ -117,8 +140,17 @@ def main():
               encoding="utf-8") as f:
         ruling_schema = json.load(f)
 
-    violations, calibrations, unverifiables = [], [], []
+    violations, calibrations, unverifiables, legacy_notes = [], [], [], []
     events = load_jsonl(args.journal, "journal")
+
+    stamp = next((e for _, e in events if e.get("event") == "commander_stamp"), None)
+    vocab = (stamp or {}).get("vocab")
+    semantic = isinstance(vocab, int) and not isinstance(vocab, bool) and vocab >= 2
+    if not semantic:
+        legacy_notes.append(
+            "LEGACY: commander_stamp carries no vocab stamp (or vocab < 2) — "
+            "semantic rules S1-S3 are not applicable to this journal dialect; "
+            "legacy audit only (visible degradation, never a false VIOLATION)")
 
     moments, intents, rulings, unavailables, blockeds = {}, {}, {}, {}, {}
     intent_order = []
@@ -193,6 +225,42 @@ def main():
                 if e.get("decision_type") != idt:
                     violations.append(
                         f"decision_type echo broken: advisor_ruling line {lineno} (moment_id {mid}) says {e.get('decision_type')!r}, its advisor_intent says {idt!r}")
+    # Semantic face (vocab >= 2 dialect only)
+    if semantic:
+        # S1 — moment_id uniqueness
+        for mid, lst in moments.items():
+            if len(lst) > 1:
+                lines = ", ".join(str(ln) for ln, _ in lst)
+                violations.append(
+                    f"semantic rule S1 (moment_id uniqueness): moment_id {mid} declared by {len(lst)} judgment_moment lines ({lines})")
+        dispatch_by_line = [(ln, e) for ln, e in events if e.get("event") == "dispatch"]
+        result_by_line = [(ln, e) for ln, e in events if e.get("event") == "dispatch_result"]
+        # S2 — referential pairing
+        for ln, e in result_by_line:
+            tid = e.get("task_id")
+            if not any(ln2 < ln and d.get("task_id") == tid for ln2, d in dispatch_by_line):
+                violations.append(
+                    f"semantic rule S2 (referential pairing): dispatch_result line {ln} task_id {tid!r} resolves to no earlier dispatch line in this journal")
+        for ln, e in dispatch_by_line:
+            if e.get("warm") is True:
+                wp = e.get("warm_prior")
+                target = None
+                if wp:
+                    target = next((d for ln2, d in dispatch_by_line
+                                   if ln2 < ln and d.get("task_id") == wp), None)
+                if target is None:
+                    violations.append(
+                        f"semantic rule S2 (referential pairing): warm dispatch line {ln} warm_prior {wp!r} resolves to no earlier dispatch in this journal (a cross-run warm reference is necessarily dangling)")
+                elif e.get("contract_family") is None or target.get("contract_family") != e.get("contract_family"):
+                    violations.append(
+                        f"semantic rule S2 (referential pairing): warm dispatch line {ln} contract_family {e.get('contract_family')!r} != warm_prior target's {target.get('contract_family')!r} (same-run cross-family warm is a VIOLATION)")
+        # S3 — usage enum
+        for ln, e in result_by_line:
+            u = e.get("usage")
+            if not (isinstance(u, dict) or u == "unavailable"):
+                violations.append(
+                    f"semantic rule S3 (usage enum): dispatch_result line {ln} usage {u!r} is not a token-count object or \"unavailable\" (prose pointers are illegal)")
+
     # J6 — threshold accounting
     consults = len(intent_order)
     if consults > args.threshold:
@@ -275,11 +343,13 @@ def main():
         print(f"CALIBRATION: {c}")
     for u in unverifiables:
         print(f"UNVERIFIABLE: {u}")
+    for n in legacy_notes:
+        print(n)
     if violations:
         sys.exit(1)
     if unverifiables:
         sys.exit(2)
-    if not calibrations:
+    if not calibrations and not legacy_notes:
         print("CLEAN")
     sys.exit(0)
 
