@@ -1,0 +1,3 @@
+{"event":"commander_stamp","model":"m","doctrine_rev":"abc1234","vocab":2,"run_id":"fx-prec-cited"}
+{"event":"precedent","query":"kind=audit,write_surface=task-dir","result":"cited run-0001","reason":"same shape"}
+{"event":"dispatch","task_id":"t1","tier":"mid","resolved_model":"m","read_only":false,"wave":1,"contract":"c"}

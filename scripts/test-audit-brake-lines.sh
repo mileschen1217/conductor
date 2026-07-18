@@ -35,5 +35,10 @@ check j-legacy      0 '^LEGACY'                                "$F/journal-legac
 # malformed --anchors = usage error (exit 2), never an uncaught crash
 check j-bad-anchors 2 'usage error: anchor'                    "$F/journal-brake-conformant.jsonl" --anchors 'code=3'
 check j-zero-anchor 2 'usage error: anchor .prose. must be positive' "$F/journal-brake-conformant.jsonl" --anchors 'prose=0,code=3,cjk=1.5'
+# fail-open holes (batch cross-vendor catch, 2026-07-18): cold offload with
+# boot=0 and no probe_ref on a computed verdict must FAIL, and a malformed
+# probe record must make probe_ref unverifiable (conservative-closed)
+check j-cold-boot0  1 'probe_ref is null/absent'               "$F/journal-brake-cold-boot0-no-ref.jsonl"
+check j-probe-malformed 1 'malformed line.*unverifiable|suspicious record' "$F/journal-brake-conformant.jsonl" --probe "$F/probe-malformed.jsonl"
 [ "$fail" -eq 0 ] || exit 1
 exit 0

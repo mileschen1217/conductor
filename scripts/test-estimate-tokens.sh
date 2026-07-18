@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # test-estimate-tokens.sh — fixture suite for the tier-0 conversion helper (v3.1 AC-5).
-# Expected tok-eq values are HAND-COMPUTED from the fixture byte contents and the
-# test anchors (prose=4, code=3, cjk=1.5 chars/tok, correction=1.3) — never derived
-# by running the helper (a checker written only to be passed would pass).
+# Expected tok-eq values are HAND-COMPUTED from the fixtures' CHARACTER counts
+# (per-class buckets: ASCII chars at the file-class rate, CJK chars at the cjk
+# rate — chars==bytes only for pure ASCII) and the test anchors (prose=4,
+# code=3, cjk=1.5 chars/tok, correction=1.3) — never derived by running the
+# helper (a checker written only to be passed would pass).
 #   prose.md   45 bytes ASCII prose  -> round(1.3*45/4)            = 15
 #   code.py    32 bytes ASCII code   -> round(1.3*32/3)            = 14
 #   cjk-mixed  30 bytes (9 ASCII + 7 CJK chars) -> round(1.3*(9/4 + 7/1.5)) = 9

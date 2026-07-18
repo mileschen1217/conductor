@@ -28,9 +28,13 @@ Journal-dialect per-event checks:
   - with --anchors prose=<r>,code=<r>,cjk=<r>[,correction=<f>]: each
     computed term's tok is band-checked against basis.bytes through the
     anchor rates (order-of-magnitude tolerance — anchor-table precision)
-  - cold offloads with boot>0 owe a non-null probe_ref; with --probe
-    <probe.jsonl> the reference must resolve to a row (config_hash@ts);
-    anchor_rev and r_rev must be present (bad-ref FAIL otherwise)
+  - EVERY cold offload on a computed verdict (pass|fail) owes a non-null
+    probe_ref — boot:0 without one is an invented zero (the honest no-probe
+    state is verdict=not-computable); with --probe <probe.jsonl> the
+    reference must resolve to a row (config_hash@ts), and ANY malformed
+    line in the probe record makes every probe_ref unverifiable
+    (whole-record suspicion, conservative-closed); anchor_rev and r_rev
+    must be present (bad-ref FAIL otherwise)
   - verdict=not-computable with a non-empty offload and ground=none = FAIL
     (conservative-closed: economics leg uncomputable ⇒ necessity ground only)
 
@@ -183,20 +187,25 @@ def check_term(name, term, anchors, problems):
 
 
 def load_probe_rows(path):
-    rows = []
+    """Returns (rows, malformed_lines). A malformed line in the probe record
+    makes every probe_ref against it unverifiable — conservative-closed: the
+    caller flags it, never silently skips (a suspicious record is never
+    consumed; same polarity as probe-select's ERROR state)."""
+    rows, malformed = [], []
     if not path or not os.path.isfile(path):
-        return rows
+        return rows, malformed
     with open(path, encoding="utf-8") as f:
-        for line in f:
+        for n, line in enumerate(f, 1):
             line = line.strip()
             if not line:
                 continue
             try:
                 r = json.loads(line)
             except json.JSONDecodeError:
+                malformed.append(n)
                 continue
             rows.append(r)
-    return rows
+    return rows, malformed
 
 
 def journal_dialect(events, args, allowed_r):
@@ -205,7 +214,7 @@ def journal_dialect(events, args, allowed_r):
     except ValueError as err:
         print(f"usage error: {err}", file=sys.stderr)
         return 2
-    probe_rows = load_probe_rows(args.probe)
+    probe_rows, probe_malformed = load_probe_rows(args.probe)
     probe_ids = {
         f"{r.get('config_hash')}@{(r.get('provenance') or {}).get('ts')}"
         for r in probe_rows
@@ -261,7 +270,11 @@ def journal_dialect(events, args, allowed_r):
                 boot = 0
             if warm and (boot != 0 or (isinstance(corpus, int) and corpus != 0)):
                 problems.append(f"offload[{i}]: warm=true but boot={boot}, corpus.tok={corpus} — warm zeroes both terms")
-            if not warm and boot > 0:
+            if not warm and verdict in ("pass", "fail"):
+                # EVERY cold offload on a computed verdict owes a probe-cited
+                # boot value — boot:0 without a probe_ref would be a free pass
+                # for an invented zero (fail-open); the honest no-probe state
+                # is verdict=not-computable, never a computed verdict.
                 needs_probe_ref = True
             if cbw is None or corpus is None:
                 pay_computable = False
@@ -270,7 +283,10 @@ def journal_dialect(events, args, allowed_r):
         if needs_probe_ref:
             pref = e.get("probe_ref")
             if not pref:
-                problems.append("cold offload with boot>0 but probe_ref is null/absent — bad-ref (boot value has no cited source)")
+                problems.append("cold offload on a computed verdict but probe_ref is null/absent — bad-ref (the boot value has no cited source; no-probe economics is verdict=not-computable)")
+            elif args.probe and probe_malformed:
+                problems.append(
+                    f"probe record has malformed line(s) {probe_malformed} — suspicious record, probe_ref {pref!r} unverifiable (conservative-closed)")
             elif args.probe and pref not in probe_ids:
                 problems.append(f"probe_ref {pref!r} does not resolve in the probe record — bad-ref")
         for ref_field in ("anchor_rev", "r_rev"):

@@ -134,9 +134,13 @@ At precedent-append time, run the estimate-drift emitter (degradation never
 blocks close):
 `python3 ${CLAUDE_PLUGIN_ROOT}/adapters/claude-code/tools/collect-run-stats.py <journal>`
 — journal any `estimate-drift` lines it prints as typed `deviation` events
-before appending the precedent line. The tool writes nothing anywhere: the
-operator constants table is HISTORY (binding.md § User-level 常數表) and
-stays byte-identical through close.
+before appending the precedent line. Its `w_actual_source` is a named proxy
+(in-channel output count); the doctrine-canonical drift basis is delivered
+diff bytes through the anchors — when the delivered files are on disk,
+compute that basis with `scripts/estimate-tokens.py --anchors <binding
+anchors>` over them and journal it in the same deviation event. The tool
+writes nothing anywhere: the operator constants table is HISTORY (binding.md
+§ User-level 常數表) and stays byte-identical through close.
 
 - [ ] Precedent line appended; drift emitter run (its output journaled, no table rows appended anywhere); calibration check run; any TRIGGER surfaced (calibration target = the binding's conversion anchors), not self-ruled.
 

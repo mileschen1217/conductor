@@ -82,6 +82,13 @@ def main():
                 "task_id": r.get("task_id"),
                 "w_est": w_est,
                 "w_actual": w_act,
+                # doctrine's canonical drift basis is delivered diff bytes
+                # through the anchors; the in-channel output count is a PROXY
+                # this journal-only tool can reach — named so the calibration
+                # reader never mistakes it for a bytes measurement. The
+                # commander computes the bytes-basis drift at close via
+                # estimate-tokens.py on the delivered files (SKILL Phase 5).
+                "w_actual_source": "usage-output-tokens(proxy)",
                 "ratio": round(w_act / w_est, 2),
             }, ensure_ascii=False))
     if not emitted:

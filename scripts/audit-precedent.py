@@ -20,14 +20,23 @@ Structural checks (both modes):
   History immutability (rewriting an existing line) is a version-control
   audit, outside this script's capability — stated, not pretended.
 
-Plan mode is a PRE-DISPATCH check: run it BEFORE the run's own precedent
-append. Post-close it self-matches the run's freshly appended line and
-reports a spurious VIOLATION (two independent witness runs hit this).
-Plan mode (cite-or-deviate; similarity key = task_shape.kind + write_surface):
-  reads `task-shape: kind=<k>, write_surface=<w>` and `precedent: ...` from
-  the dispatch plan. Matching ledger line + neither citation nor deviation =
-  VIOLATION; citation of an unknown run_id = VIOLATION; no matching line =
-  vacuous pass ("no precedent match"); missing task-shape line = UNVERIFIABLE.
+Cite-or-deviate mode is a PRE-DISPATCH check: run it BEFORE the run's own
+precedent append. Post-close it self-matches the run's freshly appended line
+and reports a spurious VIOLATION (two independent witness runs hit this).
+The second argument selects the dialect (v3.1 REQ-7: the journal is the sole
+legal home of machine-consumed record fields):
+  - journal.jsonl with commander_stamp.vocab >= 2 → JOURNAL dialect: the
+    typed `precedent` event is the record (query carries the similarity key;
+    result = cited <run_id> | no-match | deviation). A vocab >= 2 journal
+    with dispatch events and NO precedent event = VIOLATION (owed-but-
+    missing). A journal without the vocab stamp → named LEGACY line, exit 0
+    (the prose plan is that run's surface; never a false VIOLATION).
+  - dispatch-plan.md → LEGACY prose dialect (frozen): reads
+    `task-shape: kind=<k>, write_surface=<w>` and `precedent: ...` lines.
+Shared semantics (both dialects; similarity key = task_shape.kind +
+write_surface): matching ledger line + neither citation nor deviation =
+VIOLATION; citation of an unknown run_id = VIOLATION; no matching line =
+vacuous pass ("no precedent match"); missing key = UNVERIFIABLE.
 
 --calibration-check (run-close tier-0 trigger): >=3 same-shape runs with a
   consistent deviation_signal (per-kind semantics: threshold-crossed /
@@ -145,6 +154,81 @@ def structural(lines):
     return violations
 
 
+def try_load_journal(path):
+    """Return list of event-dicts if the file reads as a JSONL journal, else None."""
+    events = []
+    try:
+        with open(path, encoding="utf-8") as f:
+            for raw in f:
+                raw = raw.strip()
+                if not raw:
+                    continue
+                obj = json.loads(raw)
+                if not isinstance(obj, dict):
+                    return None
+                events.append(obj)
+    except (OSError, json.JSONDecodeError):
+        return None
+    return events or None
+
+
+def check_citation(lines, kind, surface, result_text):
+    """Shared cite-or-deviate semantics over a parsed similarity key and a
+    result declaration ('cited <run_id>' | 'no-match' | 'deviation...')."""
+    violations, notes = [], []
+    run_ids = {e.get("run_id") for _, e in lines if e.get("schema") == "precedent/v1"}
+    matches = [e for _, e in lines if e.get("schema") == "precedent/v1"
+               and (e.get("task_shape") or {}).get("kind") == kind
+               and (e.get("task_shape") or {}).get("write_surface") == surface]
+    result_text = (result_text or "").strip()
+    if result_text.startswith("cited"):
+        cited = result_text.split(None, 1)[1].strip() if len(result_text.split(None, 1)) > 1 else ""
+        if cited not in run_ids:
+            violations.append(f"precedent event cites unknown run_id {cited!r}")
+        else:
+            notes.append(f"precedent cited: {cited}")
+    elif result_text.startswith("deviation"):
+        notes.append(f"deviation recorded: {result_text}")
+    elif result_text == "no-match":
+        if matches:
+            violations.append(
+                f"precedent event declares no-match but matching line(s) exist (kind={kind}, write_surface={surface}: {sorted(e.get('run_id') for e in matches)})")
+        else:
+            notes.append(f"no precedent match (kind={kind}, write_surface={surface}) — vacuous pass")
+    else:
+        violations.append(f"precedent result {result_text!r} not in cited|no-match|deviation")
+    return violations, notes
+
+
+def journal_mode(lines, events):
+    violations, unverifiables, notes = [], [], []
+    stamp = next((e for e in events if e.get("event") == "commander_stamp"), None)
+    vocab = (stamp or {}).get("vocab")
+    if not (isinstance(vocab, int) and not isinstance(vocab, bool) and vocab >= 2):
+        notes.append("LEGACY: journal carries no vocab stamp — the prose plan is this run's "
+                     "precedent surface; journal dialect not applicable (visible degradation, "
+                     "never a false VIOLATION)")
+        return violations, unverifiables, notes
+    prec = [e for e in events if e.get("event") == "precedent"]
+    has_dispatch = any(e.get("event") == "dispatch" for e in events)
+    if not prec:
+        if has_dispatch:
+            violations.append("vocab >= 2 journal carries dispatch events but NO typed precedent event — owed-but-missing (cite-or-deviate is a pre-dispatch duty)")
+        else:
+            notes.append("zero-dispatch journal owes no precedent event — vacuous pass")
+        return violations, unverifiables, notes
+    for e in prec:
+        q = e.get("query") or ""
+        m = re.match(r"kind=([^,]+),\s*write_surface=(.+)$", q)
+        if not m:
+            unverifiables.append(f"precedent event query {q!r} not parseable as kind=<k>,write_surface=<w>")
+            continue
+        v, n = check_citation(lines, m.group(1).strip(), m.group(2).strip(), e.get("result"))
+        violations += v
+        notes += n
+    return violations, unverifiables, notes
+
+
 def plan_mode(lines, plan_path):
     violations, unverifiables, notes = [], [], []
     try:
@@ -232,7 +316,11 @@ def main():
     elif len(argv) == 2:
         lines = load_ledger(argv[0])
         violations = structural(lines)
-        pv, unverifiables, notes = plan_mode(lines, argv[1])
+        events = try_load_journal(argv[1])
+        if events is not None:
+            pv, unverifiables, notes = journal_mode(lines, events)
+        else:
+            pv, unverifiables, notes = plan_mode(lines, argv[1])
         violations += pv
     else:
         print("usage: audit-precedent.py <precedent.jsonl> <dispatch-plan.md> | --calibration-check <precedent.jsonl>")

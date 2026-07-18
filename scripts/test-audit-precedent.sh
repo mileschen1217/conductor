@@ -37,4 +37,10 @@ check dd-no-m9run      1 '^VIOLATION: .*target=doctrine-default.*m9_run' $A --ca
 check bad-target       1 '^VIOLATION: .*not in enum anchor' $A --calibration-check "$F/ledger-bad-target.jsonl"
 # estimate-drift trigger names its proposal object (binding conversion anchors)
 check drift-target     0 'target=anchor \(proposal object: the binding' $A --calibration-check "$F/ledger-estimate-drift-trigger.jsonl"
+# --- v3.1 journal dialect (REQ-7: typed precedent event is the record;
+#     plan is legacy — batch cross-vendor catch, 2026-07-18) ---
+check j-cited          0 'precedent cited: run-0001'  $A "$F/ledger-match.jsonl" "$F/journal-precedent-cited.jsonl"
+check j-owed-missing   1 '^VIOLATION: .*owed-but-missing' $A "$F/ledger-match.jsonl" "$F/journal-precedent-owed-missing.jsonl"
+check j-false-nomatch  1 '^VIOLATION: .*declares no-match but matching' $A "$F/ledger-match.jsonl" "$F/journal-precedent-false-nomatch.jsonl"
+check j-legacy         0 '^LEGACY: '                  $A "$F/ledger-match.jsonl" "$F/journal-precedent-legacy.jsonl"
 exit "$fail"
