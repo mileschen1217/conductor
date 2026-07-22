@@ -1,7 +1,7 @@
 {
   "name": "conductor",
   "description": "Portable orchestration mode — a commander judges, decomposes, and dispatches; tiered workers execute through file contracts (L1 doctrine / L2 contracts / L3 adapters). v3.1: declaration-only entry gate, per-dispatch computed brake inputs over binding conversion anchors, boot-probe cold-start record, warm continuation, typed journal (vocab 2) with semantic audits, human-gated anchor calibration.",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "skills": [
     "./adapters/claude-code"
   ]

@@ -33,7 +33,7 @@ when_not:
     this card (§ Judgment reservation)
   - any other duty in the doctrine's reserved set (§ Judgment reservation)
 graded_under:
-  doctrine_rev: "e7f60ae"
+  doctrine_rev: "2434baf"
   model_gen: "g2026.07"
 ---
 
