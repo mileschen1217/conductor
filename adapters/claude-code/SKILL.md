@@ -20,38 +20,33 @@ VALID/exit 0 is the only acceptable worker return.
 
 ## Advisor check — forced enumeration (at every `[advisor-check]` item below)
 
-The doctrine's advisor protocol fires on RECOGNIZED judgment moments
-(§ Advisor primitive) — and recognition is the first capability to fail as
-commander tier drops. This adapter therefore does not ask you to recognize;
-it makes the check mechanical. At each `[advisor-check]`, WRITE DOWN (in
-dispatch-plan.md or the journal, one line) your answer to:
+Recognition is the first capability to fail as commander tier drops
+(§ Advisor primitive); this adapter makes the check mechanical. At each
+`[advisor-check]`, WRITE DOWN (journal or dispatch-plan.md, one line):
 
-> Should I ask the advisor before this step? Test against the five call
-> sites — entry-gate / grading-dispute / worker-blocked /
-> acceptance-ambiguity / scope-change-preview (semantics: § Advisor
-> primitive): **match** (name it → consult), **no-match** (one line saying
-> why), or **misfit-but-uncertain** — no site fits AND I am not sure of my
-> own ruling. **Misfit-but-uncertain IS a consult trigger, not an
-> exemption.**
+> Should I ask the advisor before this step? Test against the five call sites
+> — entry-gate / grading-dispute / worker-blocked / acceptance-ambiguity /
+> scope-change-preview (§ Advisor primitive): **match** (name it → consult),
+> **no-match** (one line why), or **misfit-but-uncertain** — no site fits AND
+> I am unsure of my own ruling. **Misfit-but-uncertain IS a consult trigger.**
 
-- "The doctrine covers this / this is deterministic" is not an answer by
-  itself — that is a no-match claim and still owes its one-line why.
-- Consult ≠ escalate: a moment in the reserved set (§ Judgment reservation)
-  terminates at the HUMAN whether or not you consulted first.
-- Vocabulary: the operational word here is *advisor*; the journal line it
-  lands as is `judgment_moment` + disposition (§ Advisor primitive). One
-  consult per `moment_id`.
+- "The doctrine covers this / deterministic" is a no-match claim, not an
+  answer — it still owes its one-line why.
+- Consult ≠ escalate: a reserved-set moment (§ Judgment reservation)
+  terminates at the HUMAN regardless. Journal line = `judgment_moment` +
+  disposition; one consult per `moment_id`.
 - Advisor not attached / pairing illegal → `advisor_unavailable` line,
-  proceed on your own judgment (degradation, never a block).
+  proceed on own judgment (degradation, never a block).
 
 ## Phase 1 — Entry
 
 Evaluate the L1 entry gate (§ Entry gate) and present the declaration to the
 human before any dispatch. The journal is the sole record of record
-(§ Audit surface); dispatch-plan.md is an OPTIONAL human-readable render
-with no audit standing.
+(§ Audit surface); dispatch-plan.md is an OPTIONAL human-readable render with
+no audit standing — a 0-worker run renders none, and a run that upgrades to a
+dispatch may render one: optional, never mandatory.
 
-- [ ] journal.jsonl opened in the task directory; FIRST line is `commander_stamp` (self-reported model id + doctrine_rev = the doctrine FILE's own last-change commit, `git -C ${CLAUDE_PLUGIN_ROOT} log -1 --format=%h -- doctrine/orchestration-mode.md`, or — installed plugin, no `.git` — the shipped `${CLAUDE_PLUGIN_ROOT}/doctrine/REV` stamp. NEVER the plugin version (it can never equal a card's `graded_under` git rev, so staleness always misses and card citation silently dies) and never repo HEAD (moves on every commit, strands cards stale). Include an additive `run_id` field AND the `vocab: 2` stamp — auditors key their dialect on `vocab`, and a 0.4.0 run without it is audited as visible-LEGACY (a stamping duty miss, § Audit surface).
+- [ ] journal.jsonl opened in the task directory; FIRST line is `commander_stamp` (self-reported model id + doctrine_rev = the doctrine FILE's own last-change commit, `git -C ${CLAUDE_PLUGIN_ROOT} log -1 --format=%h -- doctrine/orchestration-mode.md`, or — installed plugin, no `.git` — the shipped `${CLAUDE_PLUGIN_ROOT}/doctrine/REV` stamp; NEVER the plugin version or repo HEAD, both of which strand card `graded_under` staleness silently). Include an additive `run_id` field AND the `vocab: 2` stamp — auditors key their dialect on `vocab` (a stamp-less 0.4.0 run is audited visible-LEGACY, § Audit surface).
 - [ ] Every journal line carries `ts` (ISO8601 UTC) — drift-window logic keys on timestamps.
 - [ ] Boot-probe hook: run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/probe-select.py .conductor/probe.jsonl --harness claude-code --config-hash <hex> --model-gen <gen>` (hash inputs + probe procedure: binding.md § Boot 探針). HIT → journal `probe` event `action:"hit"` citing the row. REPROBE/absent → run the binding's probe procedure, append the new row, journal `action:"probed"|"reprobed"`. ERROR → journal `action:"failed"` + deviation event; brake economics become not-computable (conservative-closed) — entry NEVER blocks on the probe.
 - [ ] `[advisor-check]` BEFORE the entry ruling (entry-gate is a named call site).
@@ -61,11 +56,13 @@ with no audit standing.
 ## Phase 2 — Plan the wave
 
 Grade each subtask (§ Complexity tiering), assign a capability tier (§
-Capability tiers), resolve the concrete model from `binding.md`, and write
-one task-contract file per subtask from
-`${CLAUDE_PLUGIN_ROOT}/contract/task-contract.md`. Fill all four dispatch
-elements (§ Dispatch contract). Respect the concurrency hard cap
-(§ Complexity tiering).
+Capability tiers), and resolve the concrete model from `binding.md`. Author a
+task-contract file AT the dispatch decision (§ Dispatch primitive — written
+when a worker is about to consume it, not pre-written per subtask): the
+instance carries its task-specific fields plus a one-line citation to
+`${CLAUDE_PLUGIN_ROOT}/contract/task-contract.md § Implementer behavioral
+contract`, never a copy (§ Dispatch contract). Fill all four dispatch
+elements; respect the concurrency hard cap (§ Complexity tiering).
 
 - [ ] Every dispatch line carries grade (3 axes) OR a valid card citation (`card:"<role>@<graded_under>"` — check the card's `graded_under` against this run's `commander_stamp.doctrine_rev` and `binding.md`'s current gen-tag first; mismatch = `card:"none(<stale reason>)"` + full grading) plus `why_not_script`, tier, resolved model, contract path, wave.
 - [ ] Typed `brake` event journaled BEFORE any offload launches (§ Audit surface computed-term shape): commander-side inputs (C_brief_cmd/C_reread) and per-offload worker-side terms (C_brief_worker/corpus) computed from artifact bytes via `scripts/estimate-tokens.py --anchors <binding anchors>` (values live ONLY in binding.md § 換算錨表 — never restate them here); `boot` from the probe row (`probe_ref` resolvable); `anchor_rev`/`r_rev` cite the binding changelog; W is the ONLY on-the-spot estimate. Economics-fail without a necessity ground = do not launch; probe unavailable ⇒ `verdict:"not-computable"`, necessity grounds only.
@@ -78,20 +75,14 @@ Per contract file, launch ONE worker with the Agent tool:
 
 - Card-cited dispatch: use the pre-cast agent type from
   `adapters/claude-code/agents/<role>.md` when installed (binding.md § Role
-  card 綁定); otherwise fall back to the generic types below with an explicit
-  `model:`.
-- Read-only fan-out (search/research/review lenses): `subagent_type:
-  "Explore"` — its toolset has no Write/Edit (§ Single-writer rule — this is
-  its CC preventive binding; must appear in the dispatch record).
-- Writing work (implementation): `subagent_type: "general-purpose"`, ONE at a
-  time (§ Single-writer rule — this is its CC preventive binding).
-- Journal `dispatch` line additive fields: `card` (role@rev or none),
-  `brief_tokens_est` (contract+prompt size, anchor-computed), `w_est`
-  (expected offloaded output), `contract_family` (stable id shared by
-  same-family waves), `warm` + `warm_prior` (warm continuation: binding.md
-  § Warm channel; a warm dispatch also carries `staleness_note`),
-  `write_surface` (Owned Files digest, or `read-only`) — the brake audit
-  and the semantic audit read these.
+  card 綁定); else fall back to the generic types below with explicit `model:`.
+- Read-only fan-out: `subagent_type: "Explore"` (no Write/Edit); writing work:
+  `subagent_type: "general-purpose"`, ONE at a time. Both = the CC preventive
+  binding of § Single-writer rule; note the type in the dispatch record.
+- Journal `dispatch` line additive fields (§ Audit surface, anchor-computed
+  where sized): `card`, `brief_tokens_est`, `w_est`, `contract_family`,
+  `warm`/`warm_prior` (+`staleness_note` when warm, binding.md § Warm
+  channel), `write_surface` — the brake and semantic audits read these.
 - **Model param (ST-5 regression point):** every Agent call MUST carry an
   explicit `model:` equal to the binding-resolved model — never rely on the
   default. The SAME resolved id goes into the journal `dispatch` line
@@ -99,9 +90,10 @@ Per contract file, launch ONE worker with the Agent tool:
   journal vs telemetry after the run. Worker prompt template (fill both paths):
 
   > You are a worker under orchestration mode. Read the task contract at
-  > `<contract-path>`; it is the single home of your duties — obey its
-  > implementer behavioral contract in full and produce its Expected Output
-  > into `<task-dir>` (result schema:
+  > `<contract-path>` for your task-specific duties, and obey the implementer
+  > behavioral contract it cites at
+  > `${CLAUDE_PLUGIN_ROOT}/contract/task-contract.md § Implementer behavioral
+  > contract`; produce its Expected Output into `<task-dir>` (result schema:
   > `${CLAUDE_PLUGIN_ROOT}/contract/task-result.schema.json` — fill as an
   > absolute path). Your final message: one line — the result.json path.
 
@@ -109,9 +101,11 @@ Per contract file, launch ONE worker with the Agent tool:
 
 ## Phase 4 — Harvest
 
-Run the contract checker on each result.json. INVALID → apply the L1
-escalation ladder (§ Escalation ladder). Non-empty `scope_change_request` →
-escalate to the human (§ Judgment reservation). Acceptance of deliverables
+Run the contract checker on each result.json that exists — whether a worker
+wrote it or the commander persisted a read-only worker's report verbatim
+(§ Report contract); per result, not per planned subtask. INVALID → apply the
+L1 escalation ladder (§ Escalation ladder). Non-empty `scope_change_request`
+→ escalate to the human (§ Judgment reservation). Acceptance of deliverables
 goes to a fresh-context worker (§ Verification).
 
 - [ ] `[advisor-check]` at EACH worker report intake (worker-blocked — a blocked/failed/boundary/misfit report is the canonical trigger) and BEFORE each acceptance verdict (acceptance-ambiguity); any scope event → scope-change-preview may inform the framing, the ruling stays the human's.
@@ -130,19 +124,25 @@ notification via the binding-named channel, and journal `calibration_notify`.
 Promotion/rejection is the human's (§ Precedent & eval loop) — never
 auto-promote.
 
+**Artifact reconciliation (owed-when-artifacts):** if the run produced any
+contract or result artifact, run `python3
+${CLAUDE_PLUGIN_ROOT}/scripts/audit-artifact-reconciliation.py <task-dir>` —
+every artifact reconciles to a journal `dispatch`/`dispatch_result` or an
+`aborted-dispatch` deviation, an orphan is a FAIL; a pure 0-worker close
+(zero artifacts) does not call it.
+
 At precedent-append time, run the estimate-drift emitter (degradation never
 blocks close):
 `python3 ${CLAUDE_PLUGIN_ROOT}/adapters/claude-code/tools/collect-run-stats.py <journal>`
 — journal any `estimate-drift` lines it prints as typed `deviation` events
-before appending the precedent line. Its `w_actual_source` is a named proxy
-(in-channel output count); the doctrine-canonical drift basis is delivered
-diff bytes through the anchors — when the delivered files are on disk,
-compute that basis with `scripts/estimate-tokens.py --anchors <binding
-anchors>` over them and journal it in the same deviation event. The tool
-writes nothing anywhere: the operator constants table is HISTORY (binding.md
-§ User-level 常數表) and stays byte-identical through close.
+before the precedent line. Its `w_actual_source` is a proxy (in-channel
+output count); when the delivered files are on disk, compute the
+doctrine-canonical basis (diff bytes through the anchors) with
+`scripts/estimate-tokens.py` and journal it in the same event. The tool
+writes nothing: the operator constants table is HISTORY (binding.md § User-
+level 常數表), byte-identical through close.
 
-- [ ] Precedent line appended; drift emitter run (its output journaled, no table rows appended anywhere); calibration check run; any TRIGGER surfaced (calibration target = the binding's conversion anchors), not self-ruled.
+- [ ] Reconciliation run when artifacts exist (owed-when; pure 0-worker skips); precedent line appended; drift emitter run (output journaled, no table rows appended); calibration check run; any TRIGGER surfaced (target = the binding's conversion anchors), not self-ruled.
 
 ## Related
 

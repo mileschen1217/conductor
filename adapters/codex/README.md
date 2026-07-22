@@ -20,9 +20,11 @@ the mode contract:
 ```markdown
 ## orchestration-mode worker contract
 You may be dispatched as an orchestration-mode worker. When your prompt names
-a task-contract file: read it; it is the single home of your duties — obey its
-implementer behavioral contract in full and produce its Expected Output into
-the task directory (result schema path given in your prompt).
+a task-contract file: read it for your task-specific duties, and obey the
+implementer behavioral contract it cites at
+`$conductor/contract/task-contract.md § Implementer behavioral contract`;
+produce its Expected Output into the task directory (result schema path given
+in your prompt).
 ```
 
 ## Thin-forwarder recipe (dispatch primitive, middle step)
@@ -38,20 +40,18 @@ conductor repo root.
 command -v codex >/dev/null || { echo "codex-unavailable"; exit 3; }
 
 # 2. dispatch
-#    sandbox: read-only for parallel fan-out; workspace-write for the single
-#    write worker (doctrine § Single-writer rule)
+#    sandbox: read-only for fan-out; workspace-write for the single write worker
 #    stdin MUST be /dev/null: codex exec waits on stdin in non-interactive contexts
 codex exec \
   --cd "$task_dir" \
   --sandbox "$sandbox" \
   -m "$model" \
-  "You are a worker under orchestration mode. Read ./task-contract.md; it is the single home of your duties — obey its implementer behavioral contract in full and produce its Expected Output into this directory (result schema: $conductor/contract/task-result.schema.json). Final output: the single line RESULT: ./result.json" < /dev/null
+  "You are a worker under orchestration mode. Read ./task-contract.md for your task-specific duties, and obey the implementer behavioral contract it cites at $conductor/contract/task-contract.md § Implementer behavioral contract; produce its Expected Output into this directory (result schema: $conductor/contract/task-result.schema.json). Final output: the single line RESULT: ./result.json" < /dev/null
 rc=$?
 
-# 3. infra-failure fallback (codex exec died, or left no/empty/invalid
-#    result.json): synthesize a schema-valid failure result via the L2-owned
-#    generator — result-shape knowledge stays in contract/; this adapter only
-#    binds and calls. Any existing invalid file is preserved alongside.
+# 3. infra-failure fallback (codex exec died, or no/empty/invalid result.json):
+#    synthesize a schema-valid failure via the L2-owned generator (result-shape
+#    knowledge stays in contract/; any existing invalid file is preserved).
 if [ $rc -ne 0 ]; then
   if ! python3 "$conductor/contract/check-result.py" "$task_dir/result.json" >/dev/null 2>&1; then
     [ -f "$task_dir/result.json" ] && mv "$task_dir/result.json" "$task_dir/result.invalid.json"

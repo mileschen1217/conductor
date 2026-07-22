@@ -17,8 +17,10 @@ Commander models (4, human-confirmable at R1): fable / opus / sonnet / haiku
 (CC binding table 2026-07-11). Cells: 4 commander models × {inline, v2-form}
 plus ONE bare-inline ablation cell = **9 cells / 9 ledger rows**.
 
-- **matrix inline cell** = the mode's 0-worker form: contract + entry gate +
-  journal + checker + result.json discipline, pen stays with the commander.
+- **matrix inline cell** = the mode's 0-worker form: journal + entry-gate
+  declaration, pen stays with the commander; contract/result artifacts are
+  consumer-gated (produced only when a second context consumes them — doctrine
+  § Entry gate write-shape table).
 - **v2-form cell** = topology per the entry gate's own output for the task.
 - **bare-inline ablation cell** (the 9th): prompt-only, NO mode machinery, on
   the mid-tier commander model (sonnet — the tier the gate's refusal

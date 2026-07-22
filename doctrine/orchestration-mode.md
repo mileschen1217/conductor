@@ -59,7 +59,7 @@ The gate's output is a **declaration** — task family, write shape, read
 breadth, execution config, named grounds — plus the human veto record. It
 keeps no door: whether to run the mode at all is the operator's call (the
 same locus as § Judgment reservation), and the trivial-task exit is the
-inline 0-worker form, which carries the discipline at its cheapest. Grading
+inline 0-worker form, where the commander keeps the pen. Grading
 covers both self-decomposed work and pre-planned work (an externally
 supplied plan is graded per task, never re-decomposed for its own sake).
 Predictable + mechanically acceptable is where the safety net is strongest
@@ -69,7 +69,7 @@ and cheap tiers are most legal.
 
 | Shape | Meaning |
 |---|---|
-| inline | the commander keeps the pen. This is the mode's 0-worker form: contract, entry gate, journal, checker, and result discipline still apply. |
+| inline | the commander keeps the pen. This is the mode's 0-worker form: the journal and the entry-gate declaration always apply; contract and result artifacts are **consumer-gated** — written only for a task a second context consumes (a dispatched worker's brief, or a verification dispatch), the checker running per result that exists (a `result.json` exists iff a worker executed the task; the read-only-worker carrier rides § Report contract). A pure 0-worker run — zero write-role dispatch — manufactures no contract or result paper, and the journal is its sole record. |
 | 1-worker | one dispatched writer, serialized. |
 | disjoint-write | multiple writers on non-overlapping write surfaces, one writer per surface. An isolated working copy (e.g. a separate worktree) is one mechanical carrier; the merge-back is itself a single-writer step. |
 
@@ -377,12 +377,18 @@ recorded in the shape that actually ran (cold).
 ## Dispatch contract
 
 Every dispatch carries four elements, mapped to task-contract fields. A
-dispatch missing any element is defective — fix it before sending.
+dispatch missing any element is defective — fix it before sending. The four
+elements are authored PER TASK; the implementer behavioral contract they sit
+above is cited from its single home (the contract layer's task-contract
+template), never copied per instance — "written once and referenced, never
+restated" (§ Design principles) extends to the dispatched contract, so a
+per-subtask instance carries its task-specific fields plus a citation to that
+home, not a duplicate of the invariant boilerplate.
 
 | Element | Contract field |
 |---|---|
 | objective & motivation | Scope |
-| output format | Acceptance Criteria |
+| output format | Acceptance Criteria — each criterion quoting its written acceptance source verbatim (with a source reference), or marked `self-authored` where no written source exists (§ Verification) |
 | tool & source guidance | Commands to Run + Read-Only Boundaries |
 | task boundary | Do Not Touch + Owned Files |
 
@@ -458,8 +464,12 @@ The builder never accepts its own work. Acceptance of a mechanical AC is its
 check artifact (tier-0). Acceptance of a taste AC goes to the named verifier —
 default a fresh-context worker sharing no conversation state with the
 builder, which judges each criterion against the artifacts, citing evidence
-(file:line or command output). "Reads as correct" is not evidence; execution
-output is.
+(file:line or command output). The criterion the verifier binds to is the
+contract's quoted acceptance source — the original written assertion, not a
+paraphrase — so the judgment tracks the source of truth rather than a lossy
+projection; a `self-authored` criterion (no written source upstream) is
+judged on its own terms, there being no source text to quote against. "Reads
+as correct" is not evidence; execution output is.
 
 ## Audit surface
 
@@ -481,7 +491,7 @@ names and placeholders — a real journal carries the binding-resolved ids):**
 {"event":"brake","wave":1,"offload":[{"tier":"mid","w_est":0,"r":0.0,"warm":false,"C_brief_worker":{"tok":0,"basis":{"refs":["<path>"],"bytes":0,"class":"prose|code|cjk|mixed"}},"corpus":{"tok":0,"basis":{"refs":["<path>"],"bytes":0,"class":"prose|code|cjk|mixed"}},"boot":0}],"save":0,"pay":0,"verdict":"pass|fail|not-computable","ground":"wall-clock|corpus|disjoint-write|none","inputs":{"C_brief_cmd":{"tok":0,"basis":{"refs":["<path>"],"bytes":0,"class":"prose|code|cjk|mixed"}},"C_reread":{"tok":0,"basis":{"refs":["<path>"],"bytes":0,"class":"prose|code|cjk|mixed"}}},"probe_ref":"<config_hash>@<ts>|null","anchor_rev":"<binding changelog rev>","r_rev":"<binding changelog rev>","k_note":"<free>"}
 {"event":"containment_check","exposure":"<free>","capacity":"<free>"}
 {"event":"doubt","text":"<free>"}
-{"event":"deviation","kind":"escalation|scope-change|threshold|advisor-unavailable|estimate-drift|declaration-audit|warm-fallback|<open set>","note":"<free>"}
+{"event":"deviation","kind":"escalation|scope-change|threshold|advisor-unavailable|estimate-drift|declaration-audit|warm-fallback|aborted-dispatch|<open set>","note":"<free>","contract":"<task-contract path, optional — e.g. with kind aborted-dispatch>"}
 {"event":"dispatch","task_id":"<id>","tier":"mid","resolved_model":"<from the binding table>","read_only":true,"wave":1,"contract":"<path>"}
 {"event":"judgment_moment","moment_id":1,"decision_type":"entry-gate|grading-dispute|worker-blocked|acceptance-ambiguity|scope-change-preview","disposition":"frozen|mechanized|advisor|blocked"}
 {"event":"advisor_intent","moment_id":1,"decision_type":"<echoes its judgment_moment's decision_type>","why":"<1 line>"}
@@ -506,18 +516,26 @@ VIOLATION, and the degradation is never silent.
 
 Every dispatch line carries the binding-resolved model actually passed to
 the harness mechanism; the conformance audit joins these against execution
-telemetry after the run. Additive fields (never a shrink of the vocabulary
-above): a `dispatch` line carries `card:"<role>@<graded_under>"` — or
-`"none(<reason>)"` on a miss/stale citation — when role cards are in play, `grade` (the three tiering axes, when no valid card
-is cited), `why_not_script`, `contract_family` (a stable id shared by
-same-family waves), `warm`, `warm_prior` (the prior dispatch's task_id;
-null when cold), `write_surface` (a digest of the contract's Owned Files,
-or `read-only`), `brief_tokens_est`, `w_est`, and — on warm dispatches — a
-`staleness_note` naming what was checked (§ Dispatch primitive red lines).
-The `dispatch_result` line (harvest side) records the checker verdict and
-the worker usage; `usage` is an ENUM — an object of harness-channel-reported
-token counts, verbatim, or the typed degradation marker `"unavailable"`. A
-prose pointer (a see-elsewhere note) is not a legal value.
+telemetry after the run. **Additive fields** — a new optional field or a new
+open-set enum value, never a shrink of the vocabulary above, never a change
+to an existing event's required set, never a `vocab` bump — may extend ANY
+event, not only the `dispatch` line. On the `dispatch` line:
+`card:"<role>@<graded_under>"` — or `"none(<reason>)"` on a miss/stale
+citation — when role cards are in play, `grade` (the three tiering axes, when
+no valid card is cited), `why_not_script`, `contract_family` (a stable id
+shared by same-family waves), `warm`, `warm_prior` (the prior dispatch's
+task_id; null when cold), `write_surface` (a digest of the contract's Owned
+Files, or `read-only`), `brief_tokens_est`, `w_est`, and — on warm dispatches
+— a `staleness_note` naming what was checked (§ Dispatch primitive red
+lines). The first non-dispatch example: a `deviation` line of
+`kind:"aborted-dispatch"` (an open-set value) carries an optional `contract`
+field naming the task-contract path a decided-but-unlaunched dispatch left
+behind — a STRUCTURED field, not free-text `note` parsing, is what a
+reconciliation audit pairs the orphan artifact against. The `dispatch_result`
+line (harvest side) records the checker verdict and the worker usage; `usage`
+is an ENUM — an object of harness-channel-reported token counts, verbatim, or
+the typed degradation marker `"unavailable"`. A prose pointer (a see-elsewhere
+note) is not a legal value.
 
 **Computed-term object (one shape, four stations):** every computed brake
 input — offload `C_brief_worker`, offload `corpus`, inputs `C_brief_cmd`,

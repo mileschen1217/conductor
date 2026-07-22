@@ -47,6 +47,7 @@ created: YYYY-MM-DD
 - <testable outcomes; load-bearing source of truth for "done">
 - ACs from the spec/plan; implementer's job is to satisfy these, not to match a file list.
 - Mark each AC `mechanical:` (attach the runnable check — pattern match / exit code; claiming mechanical without a written check is a grading defect) or `taste:` (name the verifier route: fresh-context worker, orchestrator, or human). Unmarked = taste (fail-safe default).
+- **Quote the acceptance source.** Where an AC has a written source (a spec AC, an issue, a human's verbatim line in a durable transcript), quote its operative assertion verbatim and cite the source (`source: <file:line or equivalent locator>`); a long source may be excerpted per-AC — quote the operative assertion, mark any elision — but the operative assertion is never paraphrased. Where no written source exists (the orchestrator decomposed the subtask and authored the criterion), mark the AC `self-authored`. Paraphrasing a written source, or mislabeling one `self-authored`, is a defect caught by the design-review / code-review I3 lens — there is no tier-0 quote-match check.
 
 ## Commands to Run
 - <verification commands; exit codes captured in result.json>
@@ -67,6 +68,8 @@ created: YYYY-MM-DD
 ---
 
 **Implementer behavioral contract** (applies to all runtimes; canonical — harness-specific role prompts defer here):
+
+**Delivery rule — cite, don't copy.** This behavioral contract and the § Scope-Change Protocol below are invariant boilerplate whose single home is this template. A per-subtask instance contract CITES this home by path (e.g. `<conductor>/contract/task-contract.md § Implementer behavioral contract`) and never reproduces its text; every task-specific difference lives in the instance fields (Scope, Read-Only Boundaries, Do Not Touch, Owned Files, Acceptance Criteria). No instance rewrites, negates, or overrides a numbered behavioral rule — if a rule genuinely cannot fit a task, that is a doctrine-level change (add a shared rule), never a per-instance override.
 
 1. **Free movement within Scope** — create, modify, or delete files inside Scope without consulting the planner, as long as AC is met. Every path actually written goes into `files_changed`.
 2. **Hard stop at Read-Only Boundaries and Do Not Touch** — if AC appears to require modifying any of these, do **not** modify. Set `status: failed` with `risks` naming the path and the AC that conflicts.
