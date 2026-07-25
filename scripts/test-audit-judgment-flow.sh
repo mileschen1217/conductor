@@ -51,4 +51,12 @@ check warm-family      1 '^VIOLATION: semantic rule S2 .*cross-family'  $A "$F/j
 # legacy journal: drift forms PRESENT but vocab absent -> no false VIOLATION,
 # named LEGACY line (polar pair: honest old journals pass, downgrade is visible)
 check legacy-visible   0 '^LEGACY: '                           $A "$F/journal-legacy-no-vocab.jsonl"
+# --- mechanical task class (jsr REQ-1 / AC-3, AC-4): the entry event's additive
+#     class/class_default fields are additive (no vocab bump), and S4 makes the
+#     override's recorded reason the price of taking the licence ---
+check class-cited      0 '^CLEAN$'                             $A "$F/journal-class-cited.jsonl"
+check class-override   0 '^CLEAN$'                             $A "$F/journal-class-override-reasoned.jsonl"
+check class-empty      1 '^VIOLATION: semantic rule S4'        $A "$F/journal-class-override-empty.jsonl"
+# vocabulary unchanged by the adapter-side advisor-check reshape (jsr AC-12)
+check vocab2-advisor   0 '^CLEAN$'                             $A "$F/journal-vocab2-advisor-unchanged.jsonl"
 exit "$fail"

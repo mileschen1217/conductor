@@ -73,5 +73,9 @@ posture — AGENTS.md is a soft constraint. This stays out of acceptance until
 flip-trigger FT-2 fires (a real case where CC is unavailable and Codex must
 command).
 
+An FT-2 rework SHALL import the commander stations landed for the other
+adapter meanwhile — verify-locus routing, the advisor-check mechanical form,
+and close/open ceremony batching — rather than re-deriving them.
+
 `[unverified: FT-3]` Whether a TOML-defined agent can be spawned by file path
 — re-verify against official Codex docs when this adapter is reworked.

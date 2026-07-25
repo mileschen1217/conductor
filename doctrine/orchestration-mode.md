@@ -99,9 +99,47 @@ deviation-log line feeding calibration, never a block — except on
 measurement-bearing runs, where it escalates. Blocked/failed terminals are
 exempt.
 
+**Mechanical task class (declared at the gate):** a task is *declared
+mechanical* when every acceptance criterion of the work the run executes —
+the acceptance sources named in the declaration's grounds (an accepted
+contract's criteria, a frozen test suite, a written brief) — carries a
+runnable, builder-independent check artifact: a frozen test suite, an
+exit-code script, a byte comparison. The mechanical/taste boundary itself is
+§ Complexity tiering's taste criterion and is not restated here. The
+declaration holds for a 0-worker run where no task-contract file is ever
+written (contract artifacts are consumer-gated, per the write-shape table
+above): it cites the check artifacts themselves — the frozen suite's path —
+never a contract document.
+
+Declaring the class binds a frozen default set — decided once, at the
+declaration, instead of re-judged at each station:
+
+| Dial | Frozen default for a declared-mechanical task |
+|---|---|
+| write shape | inline, WHILE the corpus fits one context |
+| acceptance | per check artifact (§ Verification); no verification dispatch is owed |
+| entry-gate advisor check | pre-answered no-match — the class declaration IS that station's required line |
+
+Each is a default, not a handcuff: any of them is overridable with a
+recorded reason, and that reason is what the audit reads. A mechanical task
+whose corpus exceeds one context overrides the write-shape default on the
+standard necessity ground (§ Amortization brake), recorded like any other
+override. A pre-answered station is answered, not deleted — an adapter's
+enumeration of it still stands.
+
+Record the class on the typed entry event: `class` (`mechanical`, or absent
+= unclassified, the behavior above) and `class_default` (`cited`, or
+`overridden(<reason>)`) — additive fields under § Audit surface's
+additive-fields rule, no vocabulary bump. An override carrying an empty
+reason is a semantic VIOLATION (§ Audit surface, semantic rule 4).
+
 The entry declaration is still a judgment moment (decision_type
-`entry-gate`): the topology choice — where the pen lives, how much read
-breadth, which tiers — is judged, not defaulted. The gate consults no price
+`entry-gate`) — and for a declared-mechanical task it is the ONE remaining
+entry judgment, everything downstream of it being table lookup. For an
+unclassified task the topology choice — where the pen lives, how much read
+breadth, which tiers — is judged, not defaulted; for a declared-mechanical
+task that ruling is cached at class level, the declaration itself being the
+judged act. The gate consults no price
 table and weighs no price; every economic question about a concrete offload
 belongs to the brake (§ Amortization brake), per dispatch, at dispatch time.
 
@@ -554,7 +592,7 @@ Probe value unobtainable ⇒ `verdict:"not-computable"` (§ Amortization
 brake's conservative-closed path, in typed form).
 
 **Semantic validity (enforced at vocab ≥ 2):** typed carriers kill format
-drift; these three rules kill semantic drift:
+drift; these four rules kill semantic drift:
 
 1. **moment_id uniqueness** — one `judgment_moment` per `moment_id` per
    journal; paired references (advisor_intent / advisor_ruling /
@@ -567,6 +605,13 @@ drift; these three rules kill semantic drift:
    cross-family warm is equally a VIOLATION).
 3. **usage enum** — as above: token-count object or `"unavailable"`; prose
    is illegal.
+4. **Override reason** — an `entry` event whose `class_default` is an
+   override (§ Entry gate, mechanical task class) must carry a non-empty
+   recorded reason inside it; an empty reason is a VIOLATION. The default
+   set is overridable precisely because the reason is recorded, so an
+   override that records nothing has taken the licence without paying for
+   it. This rule is the enforcement path — not the family
+   declaration-audit above, which reads a different field.
 
 **Typed-event coverage (owed-when triggers):** the `entry` event is
 unconditional — one per run, the gate's declaration in full (§ Entry gate).

@@ -18,17 +18,24 @@ this file.
 **contract checker** — `python3 ${CLAUDE_PLUGIN_ROOT}/contract/check-result.py <result.json>`;
 VALID/exit 0 is the only acceptable worker return.
 
-## Advisor check — forced enumeration (at every `[advisor-check]` item below)
+## Advisor check — one line per station (at every `[advisor-check]` item below)
 
 Recognition is the first capability to fail as commander tier drops
-(§ Advisor primitive); this adapter makes the check mechanical. At each
-`[advisor-check]`, WRITE DOWN (journal or dispatch-plan.md, one line):
+(§ Advisor primitive); this adapter makes the check mechanical. Every
+`[advisor-check]` station is answered by exactly ONE written line, in the
+journal (or dispatch-plan.md when one is rendered):
 
-> Should I ask the advisor before this step? Test against the five call sites
-> — entry-gate / grading-dispute / worker-blocked / acceptance-ambiguity /
-> scope-change-preview (§ Advisor primitive): **match** (name it → consult),
-> **no-match** (one line why), or **misfit-but-uncertain** — no site fits AND
-> I am unsure of my own ruling. **Misfit-but-uncertain IS a consult trigger.**
+```
+advisor-check: <station> / match(<call site>) | no-match | misfit-but-uncertain / <one-line why>
+```
+
+The disposition is read against the five call sites — entry-gate /
+grading-dispute / worker-blocked / acceptance-ambiguity /
+scope-change-preview (§ Advisor primitive). **match** names its site and
+consults. **misfit-but-uncertain** — no site fits AND you are unsure of your
+own ruling — **IS a consult trigger.** **no-match** still owes its why.
+
+Preserved semantics (unchanged):
 
 - "The doctrine covers this / deterministic" is a no-match claim, not an
   answer — it still owes its one-line why.
@@ -37,6 +44,19 @@ Recognition is the first capability to fail as commander tier drops
   disposition; one consult per `moment_id`.
 - Advisor not attached / pairing illegal → `advisor_unavailable` line,
   proceed on own judgment (degradation, never a block).
+
+Worked examples — examples of the FORM, not additional stations:
+
+```
+advisor-check: harvest / match(acceptance-ambiguity) / two ACs are satisfied
+  by the same artifact and I cannot tell which one it accepts -> consult
+advisor-check: entry / misfit-but-uncertain / no call site covers a corpus
+  half-frozen mid-run, and I do not trust my own ruling -> consult
+advisor-check: entry / no-match / doctrine covers this
+  ^ ILLEGAL — a no-match claim standing in for its why. Legal form:
+advisor-check: entry / no-match / the declared-mechanical class pre-answers
+  this station (§ Entry gate); no topology question is left open
+```
 
 ## Phase 1 — Entry
 
@@ -48,10 +68,20 @@ dispatch may render one: optional, never mandatory.
 
 - [ ] journal.jsonl opened in the task directory; FIRST line is `commander_stamp` (self-reported model id + doctrine_rev = the doctrine FILE's own last-change commit, `git -C ${CLAUDE_PLUGIN_ROOT} log -1 --format=%h -- doctrine/orchestration-mode.md`, or — installed plugin, no `.git` — the shipped `${CLAUDE_PLUGIN_ROOT}/doctrine/REV` stamp; NEVER the plugin version or repo HEAD, both of which strand card `graded_under` staleness silently). Include an additive `run_id` field AND the `vocab: 2` stamp — auditors key their dialect on `vocab` (a stamp-less 0.4.0 run is audited visible-LEGACY, § Audit surface).
 - [ ] Every journal line carries `ts` (ISO8601 UTC) — drift-window logic keys on timestamps.
-- [ ] Boot-probe hook: run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/probe-select.py .conductor/probe.jsonl --harness claude-code --config-hash <hex> --model-gen <gen>` (hash inputs + probe procedure: binding.md § Boot 探針). HIT → journal `probe` event `action:"hit"` citing the row. REPROBE/absent → run the binding's probe procedure, append the new row, journal `action:"probed"|"reprobed"`. ERROR → journal `action:"failed"` + deviation event; brake economics become not-computable (conservative-closed) — entry NEVER blocks on the probe.
-- [ ] `[advisor-check]` BEFORE the entry ruling (entry-gate is a named call site).
-- [ ] Typed `entry` event journaled (§ Audit surface): family (declared from the write surface, § Entry gate) + write_shape + read_breadth + config + grounds; human veto (who/changed-to/why) in the `veto` field when one lands.
-- [ ] Typed `precedent` event journaled BEFORE the first dispatch: query `.conductor/precedent.jsonl` for the declared task shape — `cited <run_id>` | `deviation` + reason | `no-match`.
+- [ ] **Open chain — ONE invocation, before the first task action.** Chain the boot-probe hook and the precedent query in a single command and journal both events from its digest:
+
+  ```bash
+  P=${CLAUDE_PLUGIN_ROOT}
+  python3 $P/scripts/probe-select.py .conductor/probe.jsonl \
+      --harness claude-code --config-hash <hex> --model-gen <gen>; echo "probe-select rc=$?"
+  grep -F '"kind": "<declared task kind>"' .conductor/precedent.jsonl | tail -1; echo "precedent-query rc=${PIPESTATUS[0]}"
+  ```
+
+  (hash inputs + probe procedure: binding.md § Boot 探針). Probe HIT → journal `probe` event `action:"hit"` citing the row. REPROBE/absent → run the binding's probe procedure, append the new row, journal `action:"probed"|"reprobed"`. ERROR → journal `action:"failed"` + deviation event; brake economics become not-computable (conservative-closed) — entry NEVER blocks on the probe. This chain is deliberately NOT fail-fast — entry never blocks on either leg — so each member echoes its OWN exit code (`${PIPESTATUS[0]}` past a pipe, never the pipeline's): a failed leg is journaled as the failure it was, and no member's status can be swallowed by the one after it. Silence is not a legal reading of a missing rc.
+- [ ] `[advisor-check]` BEFORE the entry ruling (entry-gate is a named call site) — pre-answered by the class declaration when the task is declared mechanical (§ Entry gate); pre-answered means the line is still written.
+- [ ] Typed `entry` event journaled (§ Audit surface): family (declared from the write surface, § Entry gate) + write_shape + read_breadth + config + grounds; human veto (who/changed-to/why) in the `veto` field when one lands. When the task is declared mechanical (§ Entry gate), the same event carries `class:"mechanical"` and `class_default:"cited"` — or `"overridden(<reason>)"`, whose reason may not be empty (§ Audit surface semantic rule 4).
+- [ ] Typed `precedent` event journaled BEFORE the first dispatch, from the open chain's second leg — `cited <run_id>` | `deviation` + reason | `no-match`.
+- [ ] **Journal duties (all phases).** Appends are append-only writes: never re-read and never re-print the journal to confirm an append landed — the write either raised or it did not. Script output is consumed as exit code plus the final verdict line; the full output is never re-narrated back into the transcript.
 
 ## Phase 2 — Plan the wave
 
@@ -105,44 +135,73 @@ Run the contract checker on each result.json that exists — whether a worker
 wrote it or the commander persisted a read-only worker's report verbatim
 (§ Report contract); per result, not per planned subtask. INVALID → apply the
 L1 escalation ladder (§ Escalation ladder). Non-empty `scope_change_request`
-→ escalate to the human (§ Judgment reservation). Acceptance of deliverables
-goes to a fresh-context worker (§ Verification).
+→ escalate to the human (§ Judgment reservation). Acceptance routes PER
+ACCEPTANCE CRITERION (§ Verification): an AC carrying a runnable,
+builder-independent check artifact is accepted by that artifact's execution
+— tier-0, no verifier dispatch; an AC carrying none (a taste criterion) goes
+to the named fresh-context verifier.
 
 - [ ] `[advisor-check]` at EACH worker report intake (worker-blocked — a blocked/failed/boundary/misfit report is the canonical trigger) and BEFORE each acceptance verdict (acceptance-ambiguity); any scope event → scope-change-preview may inform the framing, the ruling stays the human's.
 - [ ] Every harvested result: checker exit code recorded; a `dispatch_result` journal line lands per task (checker verdict + `usage` as the typed ENUM — the harness's in-channel token counts verbatim, or `"unavailable"`; a prose pointer is a semantic VIOLATION — + `reread_tokens_est`); scope-change requests (if any) escalated, not adjudicated.
-- [ ] Journal audits run: `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/audit-judgment-flow.py <journal>` exits 0 (vocab 2 dialect: semantic rules S1-S3 on); `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/audit-brake-lines.py <journal> --anchors <binding anchors> --probe .conductor/probe.jsonl` exits 0; with a telemetry export also `audit-model-conformance.py <journal> <telemetry>` (absent telemetry = UNVERIFIABLE, recorded, never claimed CLEAN).
+- [ ] Journal audits are NOT run here — they ride the Phase 5 close chain (one invocation, canonical set). Two rules this phase owns: the vocab-2 dialect is what `audit-judgment-flow.py` will enforce (semantic rules S1-S4), and `audit-model-conformance.py` runs only with a telemetry export — absent telemetry is recorded UNVERIFIABLE, never claimed CLEAN.
 
 ## Phase 5 — Close
 
-Append the run's `precedent/v1` line to `.conductor/precedent.jsonl` (schema:
+**Close chain — ONE invocation, after delivery.** Append the run's
+`precedent/v1` line to `.conductor/precedent.jsonl` (schema:
 `${CLAUDE_PLUGIN_ROOT}/contract/precedent.schema.json`; append on EVERY
-terminal — done, failed, blocked). Run the calibration trigger check:
-`python3 ${CLAUDE_PLUGIN_ROOT}/scripts/audit-precedent.py --calibration-check .conductor/precedent.jsonl`.
-On TRIGGER: append the `calibration/v1 status=proposed` line, list it in the
-run report's pending-calibrations section, emit the promote-pending
-notification via the binding-named channel, and journal `calibration_notify`.
-Promotion/rejection is the human's (§ Precedent & eval loop) — never
-auto-promote.
+terminal — done, failed, blocked), then run the **canonical close audit set**
+— this list is the single home; the run report and any acceptance criterion
+that names "the close audits" cites it:
 
-**Artifact reconciliation (owed-when-artifacts):** if the run produced any
-contract or result artifact, run `python3
-${CLAUDE_PLUGIN_ROOT}/scripts/audit-artifact-reconciliation.py <task-dir>` —
-every artifact reconciles to a journal `dispatch`/`dispatch_result` or an
-`aborted-dispatch` deviation, an orphan is a FAIL; a pure 0-worker close
-(zero artifacts) does not call it.
+```bash
+P=${CLAUDE_PLUGIN_ROOT}; J=<journal>; run(){ n="$1"; shift; "$@"; rc=$?; \
+  [ $rc -eq 0 ] || { echo "CHAIN-FAIL: $n exit=$rc"; exit $rc; }; }
+run judgment-flow  python3 $P/scripts/audit-judgment-flow.py "$J"
+run brake-lines    python3 $P/scripts/audit-brake-lines.py "$J" --anchors <binding anchors> --probe .conductor/probe.jsonl
+run single-writer  bash    $P/scripts/audit-single-writer.sh "$J"
+run reconciliation python3 $P/scripts/audit-artifact-reconciliation.py <task-dir>   # owed iff artifacts exist
+run conformance    python3 $P/scripts/audit-model-conformance.py "$J" <telemetry>   # owed iff a telemetry export exists
+run run-stats      python3 $P/adapters/claude-code/tools/collect-run-stats.py "$J"
+run calibration    python3 $P/scripts/audit-precedent.py --calibration-check .conductor/precedent.jsonl
+```
 
-At precedent-append time, run the estimate-drift emitter (degradation never
-blocks close):
-`python3 ${CLAUDE_PLUGIN_ROOT}/adapters/claude-code/tools/collect-run-stats.py <journal>`
-— journal any `estimate-drift` lines it prints as typed `deviation` events
-before the precedent line. Its `w_actual_source` is a proxy (in-channel
-output count); when the delivered files are on disk, compute the
-doctrine-canonical basis (diff bytes through the anchors) with
+Membership rules, unchanged by the batching:
+
+- **Owed-when members.** Reconciliation runs iff the run produced any
+  contract or result artifact — every artifact reconciles to a journal
+  `dispatch`/`dispatch_result` or an `aborted-dispatch` deviation, an orphan
+  is a FAIL; a pure 0-worker close (zero artifacts) drops that member from
+  the chain. Conformance runs iff a telemetry export exists; absent
+  telemetry is recorded UNVERIFIABLE (Phase 4), never claimed CLEAN. A
+  member dropped for an absent trigger is recorded as such — dropped ≠ run
+  ≠ passed.
+- **Fail-fast names its member.** The chain stops at the first non-zero and
+  reports WHICH member failed with its exit code (`CHAIN-FAIL: <name>
+  exit=<rc>`). A bare non-zero is not an acceptable close: batching may not
+  hide which check failed.
+- **Ordering.** The precedent append comes first, so the calibration check
+  sees this run's own line (its trigger counts same-shape runs). The two
+  journal appends this chain can produce — `deviation` events for
+  `estimate-drift`, and `calibration_notify` — therefore land after the
+  precedent line, written from the chain's digest in one append. Nothing is
+  dropped: the deviation record is complete at close, and that completeness,
+  not the line's position, is what the record is for.
+
+On calibration TRIGGER: append the `calibration/v1 status=proposed` line,
+list it in the run report's pending-calibrations section, emit the
+promote-pending notification via the binding-named channel, and journal
+`calibration_notify`. Promotion/rejection is the human's (§ Precedent & eval
+loop) — never auto-promote.
+
+The drift emitter degrades, never blocks close. Its `w_actual_source` is a
+proxy (in-channel output count); when the delivered files are on disk,
+compute the doctrine-canonical basis (diff bytes through the anchors) with
 `scripts/estimate-tokens.py` and journal it in the same event. The tool
 writes nothing: the operator constants table is HISTORY (binding.md § User-
 level 常數表), byte-identical through close.
 
-- [ ] Reconciliation run when artifacts exist (owed-when; pure 0-worker skips); precedent line appended; drift emitter run (output journaled, no table rows appended); calibration check run; any TRIGGER surfaced (target = the binding's conversion anchors), not self-ruled.
+- [ ] Close chain run as ONE invocation after delivery; every owed-when member either ran or is recorded as trigger-absent; any failure names its member; precedent line appended; drift + calibration events journaled from the digest (no table rows appended); any TRIGGER surfaced (target = the binding's conversion anchors), not self-ruled.
 
 ## Related
 

@@ -162,6 +162,58 @@ Journal events: v2 vocabulary unchanged (zero-shrink); v3 adds
 `dispatch_result` (checker verdict + in-channel worker usage) and additive
 `dispatch` fields (`card`, `brief_tokens_est`, `w_est`).
 
+## judgment-surface-reduction re-run — two arms, one row each
+
+Harness single home: the distill repo's `benchmark/` (cite, never restate),
+frozen kernel Phase 1 task, frozen held-out pytest suite (133 assertions),
+commander = frontier tier, arms run serially in isolated worktrees (the
+isolation invariants above apply unchanged).
+
+**Shared denominator — the reused floor.** Both arms are scored against the
+existing measured floor **$11.254** (bare inline, no mode; reproduced across
+two prior pairs at 0.1% variance). The floor is NOT re-run. **Validity check,
+recorded in the findings BEFORE either verdict:** the commander model's
+current billing rates must equal those the floor fit used (in 5 / out 25 /
+cache-read 0.5 / 1h-write 10 USD per MTok). Any mismatch voids the reused
+floor and forces a fresh floor run.
+
+**Canonical turn metric (both arms):** unique API calls, deduped by message
+id from the session transcript. The summary fields `num_turns` /
+`num_turns_reported` are advisory only and DISQUALIFIED as evidence — the
+sidechain-inclusive count produced a "+9 turns" narrative that the deduped
+count overturned (floor 65 vs 59). Per-arm tables stay isolated: neither arm
+is reported in the other's row.
+
+### Arm — form (mode 0-worker form under the shipped revision)
+
+- Brief: `benchmark/briefs/jsr-form-arm.md`.
+- Installed from the published marketplace at the revision under test; the
+  entry gate declares the task class and the journal records it.
+- Targets: billed ≤ floor × 1.10; unique API calls ≤ 65; frozen suite 133/0;
+  the close audit set CLEAN over the arm's journal; ceremony invocations ≤ 5
+  (membership: ANY tool invocation that reads or writes `.conductor/` run
+  artifacts — journal appends INCLUDED — or runs a mode script, in any phase;
+  conditional mid-run events count when they fire; the task's own build /
+  test / version-control commands are excluded).
+- A band miss is an honest negative presented for human accept, never a
+  silent re-tune.
+
+### Arm — nudge (native turn economy, no mode)
+
+- Brief: `benchmark/briefs/jsr-nudge-arm.md`, which carries the canonical
+  marker `<!-- nudge:batch-v1 -->` beside its batching instruction.
+- Floor task plus the permissive batching nudge; no mode machinery.
+- Targets: billed ≤ floor × 0.95; unique API calls ≤ 58 (the mechanism
+  witness, gated separately from cost so a cost win with no turn cut is
+  visible); frozen suite 133/0.
+- Owed either way: the deduped-usage decomposition, and an offline
+  batching-integrity review of the transcript — every multi-call turn's calls
+  pairwise independent, an ambiguous group counting as a violation, each
+  violation reported with its turn id.
+- **Pollution rule:** the nudge text and its marker appear in this arm's
+  brief only. Every other arm brief is checked both ways — a grep for the
+  marker and a read for the same guidance in any paraphrase.
+
 ## Ledger — `benchmark/ledger.jsonl` (append-only; one run per line; never rewrite)
 
 ```json

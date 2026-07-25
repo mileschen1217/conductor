@@ -29,6 +29,11 @@ alone cannot — fixture blueprints: the quality-spine-p2 live-run drift forms):
   S3 usage enum             dispatch_result.usage is a token-count object or
                             the typed marker "unavailable"; prose pointers
                             (e.g. "see-transcript") are illegal
+  S4 override reason        an entry event whose class_default overrides the
+                            mechanical class's frozen default set must carry
+                            a non-empty recorded reason inside the override
+                            marker; an empty reason takes the licence without
+                            paying for it -> VIOLATION
 
 Journal face (always on; pairing is by moment_id, NEVER adjacency; covers
 RECOGNIZED moments only — decision_type within the five call sites):
@@ -260,6 +265,25 @@ def main():
             if not (isinstance(u, dict) or u == "unavailable"):
                 violations.append(
                     f"semantic rule S3 (usage enum): dispatch_result line {ln} usage {u!r} is not a token-count object or \"unavailable\" (prose pointers are illegal)")
+        # S4 — override reason (entry event's class_default)
+        for ln, e in events:
+            if e.get("event") != "entry":
+                continue
+            cd = e.get("class_default")
+            if cd is None or cd == "cited":
+                continue
+            if not isinstance(cd, str):
+                violations.append(
+                    f"semantic rule S4 (override reason): entry line {ln} class_default {cd!r} is not a string (legal values: \"cited\" | \"overridden(<reason>)\")")
+                continue
+            if not cd.startswith("overridden"):
+                violations.append(
+                    f"semantic rule S4 (override reason): entry line {ln} class_default {cd!r} is neither \"cited\" nor an \"overridden(<reason>)\" marker")
+                continue
+            reason = cd[len("overridden"):].strip()
+            if not (reason.startswith("(") and reason.endswith(")") and reason[1:-1].strip()):
+                violations.append(
+                    f"semantic rule S4 (override reason): entry line {ln} class_default {cd!r} overrides the frozen default set with no recorded reason (the override is legal only because the reason is recorded)")
 
     # J6 — threshold accounting
     consults = len(intent_order)

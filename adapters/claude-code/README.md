@@ -27,6 +27,8 @@ verified-run: opus×inline+v3form — doctrine 33ec134 — ledger v3-regression-
 verified-run: opus×conductor-v3 — doctrine 33ec134 — ledger v3-regression-2026-07-17
 verified-run: opus×forced-1-worker — doctrine 33ec134 — ledger v3-regression-2026-07-17
 verified-run: opus×inline+v4form — doctrine e7f60ae — ledger v4pair-2026-07-18
+verified-run: opus×inline+v5form — doctrine 2434baf — ledger cgc-rerun-2026-07-23
+verified-run: opus×inline+v5form+verifier — doctrine 2434baf — ledger cgc-rerun-2026-07-23
 ```
 
 The three v3 lines (arm names as in `benchmark/protocol.md` § v3
@@ -54,6 +56,20 @@ verification record, not a capability claim: that run measured a POSITIVE discip
 (+33%/+62% over the floor, one real held-out test lost per form arm) —
 the finding and its cost decomposition live in
 `benchmark/findings/2026-07-18-distill-kernel-v4pair-discipline-price.md`.
+
+The two v5form lines ran the same write-heavy task family under plugin
+0.5.0 from the published marketplace; `2434baf` is the shipped
+`doctrine/REV` stamp, verified in the install before launch. They are two
+DIFFERENT topologies, not two samples of one: the first is the compliant
+0-worker consumer-gated form (zero write dispatch, no contract or result
+paper, reconciliation vacuous); the second adds one read-only
+fresh-context acceptance verifier on a task whose acceptance criteria are
+all mechanical — a dispatch the doctrine does not mandate there. Both held
+the frozen suite at 133/0. Verification record, not capability claim: the
+compliant form measured **+22.2%** over the floor and the over-verifying
+one **+80.1%** — a documented band miss, accepted as an honest negative;
+the accounting is in
+`benchmark/findings/2026-07-23-consumer-gated-ceremony-rerun.md`.
 
 haiku appears in no line: both haiku cells failed acceptance on this run,
 and the M9 judgment-parity matrix independently placed it outside the
