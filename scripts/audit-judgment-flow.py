@@ -10,7 +10,7 @@ Usage:
 Dialect keying (v3.1 REQ-8): the journal's dialect is decided by
 commander_stamp.vocab — an integer stamp, NEVER inferred from event presence
 (presence inference would let a drifting commander escape full audit by
-writing old-form events). vocab >= 2 → semantic rules S1-S3 below enforced in
+writing old-form events). vocab >= 2 → semantic rules S1-S4 below enforced in
 full; vocab absent → legacy audit only, with a named LEGACY output line
 (visible degradation: an honest old journal never eats a false VIOLATION,
 and the downgrade is never silent).
@@ -29,11 +29,12 @@ alone cannot — fixture blueprints: the quality-spine-p2 live-run drift forms):
   S3 usage enum             dispatch_result.usage is a token-count object or
                             the typed marker "unavailable"; prose pointers
                             (e.g. "see-transcript") are illegal
-  S4 override reason        an entry event whose class_default overrides the
-                            mechanical class's frozen default set must carry
-                            a non-empty recorded reason inside the override
-                            marker; an empty reason takes the licence without
-                            paying for it -> VIOLATION
+  S4 override reason        an entry event that declares a task class owes a
+                            class_default; when that class_default overrides the
+                            frozen default set it must carry a non-empty recorded
+                            reason inside the override marker. An empty reason --
+                            or an omitted class_default -- takes the licence
+                            without paying for it -> VIOLATION
 
 Journal face (always on; pairing is by moment_id, NEVER adjacency; covers
 RECOGNIZED moments only — decision_type within the five call sites):
@@ -154,7 +155,7 @@ def main():
     if not semantic:
         legacy_notes.append(
             "LEGACY: commander_stamp carries no vocab stamp (or vocab < 2) — "
-            "semantic rules S1-S3 are not applicable to this journal dialect; "
+            "semantic rules S1-S4 are not applicable to this journal dialect; "
             "legacy audit only (visible degradation, never a false VIOLATION)")
 
     moments, intents, rulings, unavailables, blockeds = {}, {}, {}, {}, {}
@@ -270,6 +271,13 @@ def main():
             if e.get("event") != "entry":
                 continue
             cd = e.get("class_default")
+            if e.get("class") is not None and cd is None:
+                # Omission is the cheapest way to take the licence: declare the
+                # class, silently leave the default set, record nothing. An
+                # entry that declares a class owes its class_default.
+                violations.append(
+                    f"semantic rule S4 (override reason): entry line {ln} declares class {e.get('class')!r} but carries no class_default (a declared class owes \"cited\" or \"overridden(<reason>)\")")
+                continue
             if cd is None or cd == "cited":
                 continue
             if not isinstance(cd, str):

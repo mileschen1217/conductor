@@ -57,6 +57,9 @@ check legacy-visible   0 '^LEGACY: '                           $A "$F/journal-le
 check class-cited      0 '^CLEAN$'                             $A "$F/journal-class-cited.jsonl"
 check class-override   0 '^CLEAN$'                             $A "$F/journal-class-override-reasoned.jsonl"
 check class-empty      1 '^VIOLATION: semantic rule S4'        $A "$F/journal-class-override-empty.jsonl"
+# omission is the cheaper route to the same licence: declare the class, record
+# no class_default at all. Caught by the anvil final review, ratcheted here.
+check class-no-default 1 '^VIOLATION: semantic rule S4 .*no class_default' $A "$F/journal-class-no-default.jsonl"
 # vocabulary unchanged by the adapter-side advisor-check reshape (jsr AC-12)
 check vocab2-advisor   0 '^CLEAN$'                             $A "$F/journal-vocab2-advisor-unchanged.jsonl"
 exit "$fail"

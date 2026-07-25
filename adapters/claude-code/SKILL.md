@@ -160,8 +160,9 @@ P=${CLAUDE_PLUGIN_ROOT}; J=<journal>; run(){ n="$1"; shift; "$@"; rc=$?; \
 run judgment-flow  python3 $P/scripts/audit-judgment-flow.py "$J"
 run brake-lines    python3 $P/scripts/audit-brake-lines.py "$J" --anchors <binding anchors> --probe .conductor/probe.jsonl
 run single-writer  bash    $P/scripts/audit-single-writer.sh "$J"
-run reconciliation python3 $P/scripts/audit-artifact-reconciliation.py <task-dir>   # owed iff artifacts exist
-run conformance    python3 $P/scripts/audit-model-conformance.py "$J" <telemetry>   # owed iff a telemetry export exists
+owed(){ n="$1"; t="$2"; shift 2; [ -e "$t" ] && run "$n" "$@" || echo "$n: trigger absent ($t) — dropped, not run, not passed"; }
+owed reconciliation <task-dir>/<any contract or result artifact> python3 $P/scripts/audit-artifact-reconciliation.py <task-dir>
+owed conformance    <telemetry>                                  python3 $P/scripts/audit-model-conformance.py "$J" <telemetry>
 run run-stats      python3 $P/adapters/claude-code/tools/collect-run-stats.py "$J"
 run calibration    python3 $P/scripts/audit-precedent.py --calibration-check .conductor/precedent.jsonl
 ```

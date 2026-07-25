@@ -130,8 +130,10 @@ enumeration of it still stands.
 Record the class on the typed entry event: `class` (`mechanical`, or absent
 = unclassified, the behavior above) and `class_default` (`cited`, or
 `overridden(<reason>)`) — additive fields under § Audit surface's
-additive-fields rule, no vocabulary bump. An override carrying an empty
-reason is a semantic VIOLATION (§ Audit surface, semantic rule 4).
+additive-fields rule, no vocabulary bump. Declaring a `class` and omitting
+`class_default`, or overriding with an empty reason, are both semantic
+VIOLATIONs (§ Audit surface, semantic rule 4): the class is declarable for
+free, the departure from what it binds is not.
 
 The entry declaration is still a judgment moment (decision_type
 `entry-gate`) — and for a declared-mechanical task it is the ONE remaining
@@ -610,8 +612,11 @@ drift; these four rules kill semantic drift:
    recorded reason inside it; an empty reason is a VIOLATION. The default
    set is overridable precisely because the reason is recorded, so an
    override that records nothing has taken the licence without paying for
-   it. This rule is the enforcement path — not the family
-   declaration-audit above, which reads a different field.
+   it. An event that declares a `class` and omits `class_default` entirely
+   is the same VIOLATION by the shorter route — omission is the cheapest
+   way to leave the default set unrecorded, so the audit reads a declared
+   class as owing its `class_default`. This rule is the enforcement path —
+   not the family declaration-audit above, which reads a different field.
 
 **Typed-event coverage (owed-when triggers):** the `entry` event is
 unconditional — one per run, the gate's declaration in full (§ Entry gate).
