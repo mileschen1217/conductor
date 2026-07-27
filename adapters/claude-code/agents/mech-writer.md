@@ -4,7 +4,7 @@ description: Orchestration-mode worker — mechanical recipe application per a t
 tools: Read, Edit, Write, Bash
 model: haiku
 graded_under:
-  doctrine_rev: "b5d856d"
+  doctrine_rev: "978f98c"
   model_gen: "g2026.07"
 ---
 

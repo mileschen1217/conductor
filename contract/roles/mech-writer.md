@@ -28,7 +28,7 @@ when_not:
     encode
   - any duty in the doctrine's reserved set (§ Judgment reservation)
 graded_under:
-  doctrine_rev: "b5d856d"
+  doctrine_rev: "978f98c"
   model_gen: "g2026.07"
 ---
 
