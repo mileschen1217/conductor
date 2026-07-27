@@ -352,7 +352,7 @@ A judgment moment is a decision point the commander RECOGNIZES as a decision.
 Recognition is the first capability to fail as commander tier drops, so the
 moments are enumerated rather than left to notice: at each of the five call
 sites below, the commander writes exactly ONE line, in the form the adapter
-enumerates, with one of three dispositions.
+enumerates, carrying one of the three station answers defined below.
 
 **Call sites (closed enum):** `entry-gate | grading-dispute | worker-blocked
 | acceptance-ambiguity | scope-change-preview`.
@@ -386,7 +386,7 @@ Every answer has a destination, and the mapping is total:
 
 | Station answer | Disposition |
 |---|---|
-| `no-match` — resolved where it stood | `frozen` when the contract, or a declaration already made (e.g. the mechanical class), decided it; `mechanized` when a checker or tier-0 script decides it |
+| `no-match` — resolved where it stood | `frozen` when the answer was already decided before this moment and the commander is reading it off: the task contract, a declaration made at the gate (the mechanical class), or a cited role card (§ Complexity tiering — a card is a grading decided at design time, which is frozen-ahead by the same logic even though it is not the contract). `mechanized` when a checker or tier-0 script produces the answer — the commander is not deciding, it is running something and reading the exit code |
 | `match` | `surfaced` |
 | `misfit-but-uncertain` | `surfaced` |
 | any answer, when the moment is in the reserved set | `blocked` — the reserved set overrides every other row, and a `blocked_to_human` line carries the moment verbatim (§ Judgment reservation) |
@@ -681,6 +681,11 @@ alone:
   (§ Complexity tiering).
 - `containment` / `doubt` — dispatch-line fields, triggers as above.
 - `judgment_moment` — one per recognized moment (§ Judgment moments).
+- `blocked_to_human` — owed when a `judgment_moment` carries
+  `disposition: "blocked"`, carrying that moment verbatim. Listed here because
+  a duty stated only in prose sits outside the "owed but missing is decidable
+  from the journal alone" property this section claims for itself, and a
+  decidable duty nobody wrote down is decidable by nobody.
 - `deviation` — opens at the first deviation event (escalation, scope-change
   ruling, estimate drift, declaration-audit flag, aborted dispatch).
 

@@ -245,9 +245,9 @@ Preserved semantics:
 - Surfacing ≠ escalating: a reserved-set moment (§ Judgment reservation)
   terminates at the HUMAN regardless of how this station answered.
 - **[instrumented]** the line rides a `judgment_moment` event (`check` field +
-  `disposition`: `frozen` | `mechanized` | `surfaced` | `blocked`). A `blocked`
-  disposition additionally owes a `blocked_to_human` line carrying the moment
-  verbatim. On an uninstrumented run the station is exercised and not recorded.
+  `disposition`); the answer→disposition mapping and the duties a `blocked`
+  disposition carries are § Judgment moments' — read them there. On an
+  uninstrumented run the station is exercised and not recorded.
 
 Worked examples — examples of the FORM, not additional stations:
 
