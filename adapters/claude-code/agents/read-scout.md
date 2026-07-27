@@ -4,7 +4,7 @@ description: Orchestration-mode worker — read-only reconnaissance per a task c
 tools: Read, Grep, Glob, Bash
 model: sonnet
 graded_under:
-  doctrine_rev: "21fb7c9"
+  doctrine_rev: "b5d856d"
   model_gen: "g2026.07"
 ---
 
