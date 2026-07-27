@@ -357,7 +357,9 @@ enumerates, with one of three dispositions.
 **Call sites (closed enum):** `entry-gate | grading-dispute | worker-blocked
 | acceptance-ambiguity | scope-change-preview`.
 
-**Dispositions (the station's three answers):**
+**The station's three answers** (distinct from the journal line's
+`disposition` field, which records where the moment was ROUTED — see the
+mapping below):
 
 - **match** — this moment fits a call site and the commander's own ruling is
   not self-evident: **surface it to the human.** Surfacing is NON-BLOCKING —
@@ -373,8 +375,15 @@ enumerates, with one of three dispositions.
   decision is the strongest signal that a human should see it.
 
 **Where the station lives.** On an instrumented run each moment lands as a
-typed `judgment_moment` line carrying its disposition and the written line
-(§ Audit surface). On an ordinary run the station is guidance: it is
+typed `judgment_moment` line carrying the written answer in `check` and, in
+`disposition`, where the moment was routed: `frozen` (the contract already
+decided it), `mechanized` (a checker or tier-0 script decides it), `surfaced`
+(stated to the human and proceeded past), or `blocked` (reserved set — it
+terminates at the human, and a `blocked_to_human` line carries it). The two
+vocabularies answer different questions: the station's answer is *did this
+need a second pair of eyes*, the disposition is *who actually decided it*. A
+`match` or `misfit-but-uncertain` answer produces `surfaced` unless the moment
+is reserved, in which case it produces `blocked` (§ Audit surface). On an ordinary run the station is guidance: it is
 exercised — the commander answers it — and not recorded. The station's value
 is the forced enumeration, which costs nothing to keep and is measurable
 (a +1.0 judgment-quality lift when it was first instrumented); the record is
