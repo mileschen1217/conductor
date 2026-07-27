@@ -30,7 +30,17 @@ Checks:
 Fail-closed: absent, empty, or unparseable telemetry, or dispatches present
 with zero agent rows -> C1/C2 are UNVERIFIABLE and the run is NEVER reported
 CLEAN. C0 still returns its own verdict in every one of those cases.
-Exit: 1 VIOLATION > 2 UNVERIFIABLE > 0 CLEAN.
+Exit: 1 VIOLATION > 2 UNVERIFIABLE > 0 CLEAN, and 3 = CALLED WRONG.
+
+Codes 2 and 3 are deliberately distinct, and must stay distinct. The close
+chain records a failing member as fail(<rc>), so the exit code is the only
+thing that survives into the close event: 2 there reads "this audit ran and
+could not conclude for want of evidence", which on an instrumented run is a
+real, owed failure. If a caller bug — wrong argument count after some future
+refactor of the invocation — also exited 2, that bug would be recorded as a
+legitimate evidence gap and read as an honest red rather than a broken call.
+That is the silent-false-green shape this whole audit surface exists to
+prevent, so a usage error gets its own code and never borrows this one.
 """
 import json
 import sys
@@ -58,7 +68,7 @@ def load_jsonl(path, label):
 def main():
     if len(sys.argv) not in (2, 3):
         print("usage: audit-model-conformance.py <journal.jsonl> [telemetry.jsonl]")
-        sys.exit(2)
+        sys.exit(3)  # CALLED WRONG — never 2; see the exit contract above
 
     journal, journal_error = load_jsonl(sys.argv[1], "journal")
     if journal_error is not None:

@@ -29,5 +29,12 @@ check c0-only-clean   2 '^C0 CLEAN'                 $A "$F/journal-clean.jsonl"
 check c0-only-unverif 2 '^UNVERIFIABLE: no telemetry export given' $A "$F/journal-clean.jsonl"
 check c0-only-late    1 '^VIOLATION: .*first event' $A "$F/journal-late-stamp.jsonl"
 check c0-only-nostamp 1 '^VIOLATION: .*first event' $A "$F/journal-no-stamp.jsonl"
-check no-args         2 '^usage: '                  $A
+# --- the exit contract's two failure codes must never collide. The close chain
+#     keeps only the code (it records fail(<rc>)), so 2 has to mean "ran, could
+#     not conclude for want of evidence" and nothing else. A caller bug exiting
+#     2 would be recorded as an owed evidence gap — a broken call reading as an
+#     honest red. These two checks are what hold the codes apart: c0-only-unverif
+#     above pins 2 to the evidence gap, no-args pins 3 to the caller bug.
+check no-args         3 '^usage: '                  $A
+check too-many-args   3 '^usage: '                  $A "$F/journal-clean.jsonl" "$F/telemetry-clean.jsonl" extra
 exit "$fail"
