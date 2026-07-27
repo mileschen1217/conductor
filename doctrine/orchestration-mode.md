@@ -381,9 +381,19 @@ decided it), `mechanized` (a checker or tier-0 script decides it), `surfaced`
 (stated to the human and proceeded past), or `blocked` (reserved set — it
 terminates at the human, and a `blocked_to_human` line carries it). The two
 vocabularies answer different questions: the station's answer is *did this
-need a second pair of eyes*, the disposition is *who actually decided it*. A
-`match` or `misfit-but-uncertain` answer produces `surfaced` unless the moment
-is reserved, in which case it produces `blocked` (§ Audit surface). On an ordinary run the station is guidance: it is
+need a second pair of eyes*, the disposition is *who actually decided it*.
+Every answer has a destination, and the mapping is total:
+
+| Station answer | Disposition |
+|---|---|
+| `no-match` — resolved where it stood | `frozen` when the contract, or a declaration already made (e.g. the mechanical class), decided it; `mechanized` when a checker or tier-0 script decides it |
+| `match` | `surfaced` |
+| `misfit-but-uncertain` | `surfaced` |
+| any answer, when the moment is in the reserved set | `blocked` — the reserved set overrides every other row, and a `blocked_to_human` line carries the moment verbatim (§ Judgment reservation) |
+
+A `no-match` answer that can name neither a freezing source nor a mechanizing
+check has not resolved the moment — it has skipped it, and the honest answer
+was `misfit-but-uncertain` (§ Audit surface). On an ordinary run the station is guidance: it is
 exercised — the commander answers it — and not recorded. The station's value
 is the forced enumeration, which costs nothing to keep and is measurable
 (a +1.0 judgment-quality lift when it was first instrumented); the record is
