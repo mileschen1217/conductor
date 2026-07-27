@@ -39,14 +39,14 @@ Evaluate the L1 entry gate (§ Entry gate) and present the declaration to the
 human. Then decide, ONCE, whether this run is instrumented.
 
 - [ ] **Instrumentation check (§ Audit surface trigger enum).** This run is
-  instrumented iff one of: (a) it is a benchmark arm; (b) the commissioning
-  window is open — this is the first dispatch run after a doctrine revision
-  change or a binding model-generation change, decided by looking for a
-  journal under `.conductor/runs/` whose `commander_stamp` carries the current
-  `(doctrine_rev, model_gen)` pair; none ⇒ the window is open; (c) the human
-  asked for one. Otherwise the run is uninstrumented — skip every bracketed
-  **[instrumented]** step below. Uninstrumented is the default and the common
-  case.
+  instrumented iff one of: (a) it is a benchmark arm; (b) the human asked for
+  one. Both are deliberate — no run becomes instrumented by itself. Otherwise
+  the run is uninstrumented: skip every bracketed **[instrumented]** step
+  below. Uninstrumented is the default and the common case.
+- [ ] **[instrumented] Telemetry is owed, not optional.** Someone chose to
+  measure this run, so arrange the execution-telemetry export the close chain's
+  conformance member joins against (binding.md § Offered surfaces). Without it
+  that member FAILS and the close reads red — by design, not by accident.
 - [ ] **[instrumented] Open the journal** at `.conductor/runs/<run-slug>/journal.jsonl`.
   FIRST line is `commander_stamp` (self-reported model id + `doctrine_rev` =
   the doctrine FILE's own last-change commit,
@@ -204,8 +204,8 @@ bash "${CLAUDE_PLUGIN_ROOT}/adapters/claude-code/tools/close-chain.sh" \
 ```
 
 The script runs every member, records each as `pass` / `fail(<rc>)` /
-`unverifiable` / `dropped(trigger-absent)`, names any failing member with its
-exit code, and prints the `close-members:` JSON array. It is executed under
+`dropped(trigger-absent)`, names any failing member with its exit code, and
+prints the `close-members:` JSON array. It is executed under
 whatever shell the operator is running and is covered by a cross-shell
 portability suite (`scripts/test-close-chain.sh`) — do not hand-roll the chain
 inline, and never read a member's exit code through `${PIPESTATUS[...]}`.
@@ -213,8 +213,9 @@ inline, and never read a member's exit code through `${PIPESTATUS[...]}`.
 - [ ] Close chain run as ONE invocation after delivery; the `close` event
   journaled from its `close-members:` output, with the run's `terminal`
   (`done|failed|blocked`). This event closes the journal.
-- [ ] Any member reported `unverifiable` is carried into the run report as
-  such — never rounded up to CLEAN, never quietly dropped.
+- [ ] A member that ran and could not conclude for want of evidence is a
+  `fail`, not a pass — see § Audit surface. Do not re-run the chain without
+  the missing evidence and report the second result.
 - [ ] The drift emitter degrades, never blocks close. Its `w_actual_source` is
   a proxy (in-channel output count); when the delivered files are on disk,
   compute the doctrine-canonical basis (diff bytes through the anchors) with

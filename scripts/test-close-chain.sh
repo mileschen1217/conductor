@@ -20,15 +20,22 @@ if ! command -v zsh >/dev/null 2>&1; then
   exit 2
 fi
 
-# --- fixture 1: a clean instrumented run that dispatched nothing ---
-mkdir -p "$TMP/clean"
-cat > "$TMP/clean/journal.jsonl" <<'EOF'
-{"event":"commander_stamp","ts":"2026-07-27T00:00:00Z","model":"m","doctrine_rev":"abc1234","model_gen":"g1","vocab":3}
+JOURNAL_OK='{"event":"commander_stamp","ts":"2026-07-27T00:00:00Z","model":"m","doctrine_rev":"abc1234","model_gen":"g1","vocab":3}
 {"event":"entry","ts":"2026-07-27T00:00:01Z","family":"write-heavy","write_shape":"1-worker","read_breadth":0,"config":{"tiers":"worker=mid"},"grounds":"fixture","veto":null}
-{"event":"close","ts":"2026-07-27T00:00:02Z","terminal":"done","members":[]}
-EOF
+{"event":"close","ts":"2026-07-27T00:00:02Z","terminal":"done","members":[]}'
 
-# --- fixture 2: a journal with an S1 violation, so judgment-flow must FAIL ---
+# --- fixture 1: a clean instrumented run, telemetry present ---
+mkdir -p "$TMP/clean"
+printf '%s\n' "$JOURNAL_OK" > "$TMP/clean/journal.jsonl"
+printf '%s\n' '{"type":"session","model":"m"}' > "$TMP/clean/telemetry.jsonl"
+
+# --- fixture 2: same run, telemetry ABSENT. Every instrumented run is
+#     deliberately triggered, so the evidence it depends on is owed: the
+#     conformance member must FAIL, not pass and not drop. ---
+mkdir -p "$TMP/notelemetry"
+printf '%s\n' "$JOURNAL_OK" > "$TMP/notelemetry/journal.jsonl"
+
+# --- fixture 3: an S1 violation, so judgment-flow must FAIL ---
 mkdir -p "$TMP/dirty"
 cat > "$TMP/dirty/journal.jsonl" <<'EOF'
 {"event":"commander_stamp","ts":"2026-07-27T00:00:00Z","model":"m","doctrine_rev":"abc1234","model_gen":"g1","vocab":3}
@@ -36,20 +43,23 @@ cat > "$TMP/dirty/journal.jsonl" <<'EOF'
 {"event":"judgment_moment","ts":"2026-07-27T00:00:02Z","moment_id":1,"decision_type":"grading-dispute","disposition":"frozen"}
 EOF
 
-run_under() {  # <shell> <dir> -> writes "$TMP/<shell>-<tag>.out", echoes rc
-  sh_bin="$1"; dir="$2"; tag="$3"
-  "$sh_bin" "$CHAIN" --journal "$dir/journal.jsonl" --task-dir "$dir" --anchors "$ANCHORS" \
-      > "$TMP/$sh_bin-$tag.out" 2>&1
+run_under() {  # <shell> <tag> -> echoes rc, writes "$TMP/<shell>-<tag>.out"
+  sh_bin="$1"; tag="$2"; dir="$TMP/$tag"
+  if [ -r "$dir/telemetry.jsonl" ]; then
+    "$sh_bin" "$CHAIN" --journal "$dir/journal.jsonl" --task-dir "$dir" \
+        --anchors "$ANCHORS" --telemetry "$dir/telemetry.jsonl" > "$TMP/$sh_bin-$tag.out" 2>&1
+  else
+    "$sh_bin" "$CHAIN" --journal "$dir/journal.jsonl" --task-dir "$dir" \
+        --anchors "$ANCHORS" > "$TMP/$sh_bin-$tag.out" 2>&1
+  fi
   echo $?
 }
 
-# member-status lines only, so the comparison is about verdicts not formatting
 statuses() { grep -E '^close-members: ' "$1"; }
 
-for tag in clean dirty; do
-  dir="$TMP/$tag"
-  rc_bash="$(run_under bash "$dir" "$tag")"
-  rc_zsh="$(run_under zsh "$dir" "$tag")"
+for tag in clean notelemetry dirty; do
+  rc_bash="$(run_under bash "$tag")"
+  rc_zsh="$(run_under zsh "$tag")"
   if [ "$rc_bash" != "$rc_zsh" ]; then
     echo "FAIL: $tag — chain exit differs by shell (bash=$rc_bash zsh=$rc_zsh)"; fail=1
   else
@@ -71,18 +81,27 @@ expect() {  # <name> <file> <pattern>
   if grep -qE "$3" "$2"; then echo "ok: $1"; else
     echo "FAIL: $1 — pattern not found: $3"; sed 's/^/    /' "$2"; fail=1; fi
 }
-expect "clean: judgment-flow passes"        "$TMP/bash-clean.out" '^judgment-flow: pass'
-expect "clean: reconciliation dropped"      "$TMP/bash-clean.out" '"name":"reconciliation","status":"dropped\(trigger-absent\)"'
-# absent telemetry: C0 still ran, and the rest is unverifiable — never a pass
-expect "clean: conformance unverifiable"    "$TMP/bash-clean.out" '"name":"conformance","status":"unverifiable"'
-expect "clean: chain exits 0"               "$TMP/bash-clean.out" 'close-members:'
-expect "dirty: failure names its member"    "$TMP/bash-dirty.out" '^CHAIN-FAIL: judgment-flow exit=1'
-expect "dirty: failure recorded with rc"    "$TMP/bash-dirty.out" '"name":"judgment-flow","status":"fail\(1\)"'
+expect "clean: judgment-flow passes"         "$TMP/bash-clean.out" '^judgment-flow: pass'
+expect "clean: reconciliation dropped"       "$TMP/bash-clean.out" '"name":"reconciliation","status":"dropped\(trigger-absent\)"'
+expect "clean: conformance passes with telemetry" "$TMP/bash-clean.out" '"name":"conformance","status":"pass"'
+# absent telemetry is a FAILURE, not a tolerated state: an instrumented run was
+# chosen, so the evidence the measurement depends on is owed
+expect "no telemetry: conformance fails"     "$TMP/bash-notelemetry.out" '"name":"conformance","status":"fail\(2\)"'
+expect "no telemetry: failure names member"  "$TMP/bash-notelemetry.out" '^CHAIN-FAIL: conformance exit=2'
+# ... and the status vocabulary has exactly three values — no fourth escape
+if grep -q 'unverifiable' "$TMP/bash-notelemetry.out"; then
+  echo "FAIL: close chain emitted a status outside pass|fail(<rc>)|dropped(trigger-absent)"; fail=1
+else
+  echo "ok: status vocabulary is the pinned three values"
+fi
+expect "dirty: failure names its member"     "$TMP/bash-dirty.out" '^CHAIN-FAIL: judgment-flow exit=1'
+expect "dirty: failure recorded with rc"     "$TMP/bash-dirty.out" '"name":"judgment-flow","status":"fail\(1\)"'
 # the chain does not stop at the first failure: later members are still recorded
 expect "dirty: later members still recorded" "$TMP/bash-dirty.out" '"name":"run-stats"'
 
-# clean must exit 0, dirty must exit non-zero
-rc="$(run_under bash "$TMP/clean" clean)"; [ "$rc" -eq 0 ] || { echo "FAIL: clean chain exit=$rc want 0"; fail=1; }
-rc="$(run_under bash "$TMP/dirty" dirty)"; [ "$rc" -ne 0 ] || { echo "FAIL: dirty chain exit=0, want non-zero"; fail=1; }
+# exit codes: clean 0, the other two non-zero
+rc="$(run_under bash clean)";       [ "$rc" -eq 0 ] || { echo "FAIL: clean chain exit=$rc want 0"; fail=1; }
+rc="$(run_under bash notelemetry)"; [ "$rc" -ne 0 ] || { echo "FAIL: no-telemetry chain exit=0, want non-zero"; fail=1; }
+rc="$(run_under bash dirty)";       [ "$rc" -ne 0 ] || { echo "FAIL: dirty chain exit=0, want non-zero"; fail=1; }
 [ "$fail" -eq 0 ] && echo "ALL OK"
 exit "$fail"

@@ -26,8 +26,11 @@
 #
 # Member status vocabulary (doctrine § Audit surface, close event):
 #   pass                     ran, exit 0
-#   fail(<rc>)               ran, exit non-zero (and not an unverifiable rc)
-#   unverifiable             ran, could not conclude (exit 2) — never a pass
+#   fail(<rc>)               ran and did not conclude in the affirmative.
+#                            A member that could not conclude for want of
+#                            evidence lands here too, and is meant to: every
+#                            instrumented run is deliberately triggered, so the
+#                            evidence a measurement depends on is owed.
 #   dropped(trigger-absent)  not run because its trigger did not fire
 #
 # Usage:
@@ -39,7 +42,7 @@
 #
 # Output: one line per member, then a `close-members:` line carrying the JSON
 # array the commander journals in the `close` event.
-# Exit: 0 = every member passed or was legitimately dropped/unverifiable;
+# Exit: 0 = every member passed or was legitimately dropped;
 #       1 = at least one member failed; 2 = usage error.
 set -u
 
@@ -70,21 +73,16 @@ record() {  # <name> <status>
   MEMBERS="$MEMBERS{\"name\":\"$1\",\"status\":\"$2\"}"
 }
 
-# run_member <name> <unverifiable_ok> <cmd...>
-# unverifiable_ok=1 means exit 2 is a legal "ran, could not conclude" result
-# rather than a failure. rc is read from the command itself, on the line
-# after it — never through a pipe.
+# run_member <name> <cmd...>
+# rc is read from the command itself, on the line after it — never through a
+# pipe, and never from ${PIPESTATUS[...]}.
 run_member() {
-  name="$1"; unv_ok="$2"; shift 2
+  name="$1"; shift
   out=$("$@" 2>&1)
   rc=$?
   if [ "$rc" -eq 0 ]; then
     record "$name" "pass"
     echo "$name: pass"
-  elif [ "$rc" -eq 2 ] && [ "$unv_ok" -eq 1 ]; then
-    record "$name" "unverifiable"
-    echo "$name: unverifiable (exit 2) — ran, could not conclude; never a pass"
-    echo "$out" | sed 's/^/    /'
   else
     record "$name" "fail($rc)"
     FAILED=1
@@ -93,34 +91,36 @@ run_member() {
   fi
 }
 
-run_member judgment-flow 0 python3 "$ROOT/scripts/audit-judgment-flow.py" "$JOURNAL"
+run_member judgment-flow python3 "$ROOT/scripts/audit-judgment-flow.py" "$JOURNAL"
 
 if [ -n "$PROBE" ]; then
-  run_member brake-lines 0 python3 "$ROOT/scripts/audit-brake-lines.py" "$JOURNAL" --anchors "$ANCHORS" --probe "$PROBE"
+  run_member brake-lines python3 "$ROOT/scripts/audit-brake-lines.py" "$JOURNAL" --anchors "$ANCHORS" --probe "$PROBE"
 else
-  run_member brake-lines 0 python3 "$ROOT/scripts/audit-brake-lines.py" "$JOURNAL" --anchors "$ANCHORS"
+  run_member brake-lines python3 "$ROOT/scripts/audit-brake-lines.py" "$JOURNAL" --anchors "$ANCHORS"
 fi
 
-run_member single-writer 0 bash "$ROOT/scripts/audit-single-writer.sh" "$JOURNAL"
+run_member single-writer bash "$ROOT/scripts/audit-single-writer.sh" "$JOURNAL"
 
 # Reconciliation's trigger is a dispatch: a run that dispatched has artifacts
 # to pair in both directions, and a run that did not has neither side.
 if grep -q '"event":[ ]*"dispatch"' "$JOURNAL" 2>/dev/null; then
-  run_member reconciliation 0 python3 "$ROOT/scripts/audit-artifact-reconciliation.py" "$TASK_DIR"
+  run_member reconciliation python3 "$ROOT/scripts/audit-artifact-reconciliation.py" "$TASK_DIR"
 else
   record reconciliation "dropped(trigger-absent)"
   echo "reconciliation: dropped(trigger-absent) — journal records no dispatch; dropped is not run and not passed"
 fi
 
 # Conformance always runs: C0 is telemetry-independent, and gating the whole
-# audit on a telemetry export is exactly how C0 never ran.
+# audit on a telemetry export is exactly how C0 never ran. Absent telemetry is
+# a FAILURE, not a tolerated state — an instrumented run was chosen, so the
+# evidence it depends on is owed.
 if [ -n "$TELEMETRY" ]; then
-  run_member conformance 1 python3 "$ROOT/scripts/audit-model-conformance.py" "$JOURNAL" "$TELEMETRY"
+  run_member conformance python3 "$ROOT/scripts/audit-model-conformance.py" "$JOURNAL" "$TELEMETRY"
 else
-  run_member conformance 1 python3 "$ROOT/scripts/audit-model-conformance.py" "$JOURNAL"
+  run_member conformance python3 "$ROOT/scripts/audit-model-conformance.py" "$JOURNAL"
 fi
 
-run_member run-stats 0 python3 "$SCRIPT_DIR/collect-run-stats.py" "$JOURNAL"
+run_member run-stats python3 "$SCRIPT_DIR/collect-run-stats.py" "$JOURNAL"
 
 echo "close-members: [$MEMBERS]"
 exit "$FAILED"

@@ -44,8 +44,8 @@ This file is one deep module; read the section your workstation needs.
   dispatch is exactly what the two contexts need to transact: a contract, a
   result, a checker verdict. The self-audit surface — journal, computed brake
   terms, probe record, close chain — is *instrumentation*: it exists to make a
-  measurement or a commissioning check trustworthy, and it is switched on by a
-  named trigger, not by every run. The normative form is § Audit surface.
+  measurement trustworthy, and it is switched on by a named trigger, not by
+  every run. The normative form is § Audit surface.
 - **Thin prompts, thick artifacts + context.** The mode's paperwork records
   only decisions that change downstream behavior. Everything else lives in
   artifacts (contracts, results, journals) written once and referenced,
@@ -541,16 +541,29 @@ ceremony):** a run is instrumented iff at least one of
 
 - **(a) benchmark arm** — the run is a cell of a comparison whose numbers are
   published or compared (arm, parity run, ablation).
-- **(b) commissioning window** — the run is the FIRST dispatch run after a
-  doctrine revision change or a binding model-generation change. The window's
-  discharge record is the commissioning run's own journal, keyed by
-  `(doctrine_rev, model_gen)`: no journal under the project's run directory
-  carries the current pair ⇒ the window is open and this run is instrumented;
-  once one does, the window is closed. N = 1 by construction; extending it is
-  trigger (c).
-- **(c) explicit human request** — the human asks for an instrumented run.
+- **(b) explicit human request** — the human asks for an instrumented run.
 
-Every other run is uninstrumented, and that is the default. The brake's
+Every other run is uninstrumented, and that is the default. **Both triggers
+are deliberate: no run becomes instrumented without someone choosing it.**
+That property is load-bearing downstream — it is why a missing telemetry
+export is a close-chain FAILURE rather than a tolerated state (below). Whoever
+chose to measure owes the evidence the measurement depends on.
+
+**A named gap, stated rather than papered over.** An earlier revision of this
+enum carried a third, automatic trigger: the first dispatch run after a
+doctrine or model-generation change was instrumented without anyone asking, so
+that drift nobody noticed would still be caught. It was removed on evidence
+that it did not do that. Its model-generation leg keyed on a
+human-maintained tag, so it fired only after a human had already noticed the
+change — a trigger that requires you to notice cannot catch what you did not
+notice. Its doctrine-revision leg had no payload: nearly every close-chain
+member audits an artifact that exists only because the run was instrumented,
+and the one member whose referent is outside this mode — the conformance
+join of recorded model against execution telemetry — needs a telemetry export
+that no binding currently produces. **So: nothing automatic now watches for a
+silent model-generation change.** Closing that gap starts with a binding that
+produces telemetry; an automatic trigger is worth re-adding to this enum only
+once there is something for it to trigger. The brake's
 computed and typed form — the probe record, the typed `brake` event — is
 instrumentation by this rule; its qualitative launch rule survives on every
 run as commander guidance (§ Amortization brake, "Two forms, one rule").
@@ -576,7 +589,7 @@ names and placeholders — a real journal carries the binding-resolved ids):**
 {"event":"blocked_to_human","moment_id":2,"reason":"judgment-reserved|worker-blocked","payload":"<verbatim>"}
 {"event":"dispatch_result","task_id":"<id>","checker":"VALID|INVALID","usage":{"<harness-reported worker token counts, verbatim>":0}}
 {"event":"dispatch_result","task_id":"<id>","checker":"VALID|INVALID","usage":"unavailable"}
-{"event":"close","terminal":"done|failed|blocked","members":[{"name":"<member>","status":"pass|fail(<rc>)|unverifiable|dropped(trigger-absent)"}]}
+{"event":"close","terminal":"done|failed|blocked","members":[{"name":"<member>","status":"pass|fail(<rc>)|dropped(trigger-absent)"}]}
 ```
 
 Every line carries `ts` (ISO8601 UTC) in addition to the fields shown.
@@ -691,20 +704,22 @@ alone:
 
 **The close event and its chain.** Close runs the project's canonical audit
 set as ONE invocation and records the outcome in the `close` event: each
-member by name with one of four statuses — `pass`, `fail(<rc>)`,
-`unverifiable`, `dropped(trigger-absent)`. The four exist because the three
-things that are not a pass are not the same thing, and collapsing any of them
-into `pass` is the silent false-green this whole surface is built to catch:
+member by name with one of three statuses — `pass`, `fail(<rc>)`,
+`dropped(trigger-absent)`. Neither of the two that are not a pass may be
+collapsed into `pass`; that collapse is the silent false-green this whole
+surface is built to catch:
 
 - **`dropped(trigger-absent)`** — the member's trigger did not fire, so it was
   not run. Dropped ≠ run ≠ passed.
-- **`unverifiable`** — the member RAN and could not conclude, because the
-  evidence it needs was not offered (the canonical case: a conformance check
-  with no execution telemetry). A member that cannot conclude is never
-  recorded as CLEAN, and it is never silently dropped either — it ran, and
-  what it could not establish is on the record.
-- **`fail(<rc>)`** — the member ran and failed, named with its exit code.
-  Batching may not hide WHICH member failed.
+- **`fail(<rc>)`** — the member ran and did not conclude in the affirmative,
+  named with its exit code. Batching may not hide WHICH member failed.
+  **A member that ran and could not conclude for want of evidence fails here,
+  and it is meant to.** The canonical case is the conformance join with no
+  execution telemetry: every instrumented run is deliberately triggered
+  (§ trigger enum above), so somebody chose to measure, and the evidence a
+  measurement depends on is owed rather than hoped for. A close that read
+  green while the model-conformance join established nothing would let a
+  published tier claim rest on a record that verified none of it.
 
 Every member is run and recorded: a chain that stops at the first failure
 produces a close record with holes in it, and the record's completeness is
