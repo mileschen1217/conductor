@@ -31,7 +31,7 @@ when_not:
     is fresh-verifier's shape, or the doctrine's reserved set)
   - any duty in the doctrine's reserved set (§ Judgment reservation)
 graded_under:
-  doctrine_rev: "978f98c"
+  doctrine_rev: "82606dd"
   model_gen: "g2026.07"
 ---
 
