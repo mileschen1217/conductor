@@ -22,4 +22,12 @@ check missing-telemetry 2 '^UNVERIFIABLE: '         $A "$F/journal-clean.jsonl" 
 check no-stamp-missing-telemetry 1 '^VIOLATION: .*first event' $A "$F/journal-no-stamp.jsonl" "$F/telemetry-nonexistent.jsonl"
 check no-stamp-malformed-telemetry 1 '^VIOLATION: .*first event' $A "$F/journal-no-stamp.jsonl" "$F/telemetry-malformed.jsonl"
 check malformed-telemetry 2 '^UNVERIFIABLE: .*JSON parse error' $A "$F/journal-clean.jsonl" "$F/telemetry-malformed.jsonl"
+# --- C0 without telemetry (AC-21): the close chain invokes this audit on EVERY
+#     instrumented run, so C0 must return a verdict with no telemetry argument.
+#     Absent telemetry leaves C1/C2 UNVERIFIABLE and can never read CLEAN.
+check c0-only-clean   2 '^C0 CLEAN'                 $A "$F/journal-clean.jsonl"
+check c0-only-unverif 2 '^UNVERIFIABLE: no telemetry export given' $A "$F/journal-clean.jsonl"
+check c0-only-late    1 '^VIOLATION: .*first event' $A "$F/journal-late-stamp.jsonl"
+check c0-only-nostamp 1 '^VIOLATION: .*first event' $A "$F/journal-no-stamp.jsonl"
+check no-args         2 '^usage: '                  $A
 exit "$fail"

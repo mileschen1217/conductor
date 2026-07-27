@@ -1,18 +1,30 @@
 #!/usr/bin/env python3
-"""audit-artifact-reconciliation.py — consumer-gating invariant enforcement.
+"""audit-artifact-reconciliation.py — artifact ↔ record reconciliation.
 
-The 0-worker consumer-gating rule (doctrine § Entry gate, inline write-shape
-row): contract and result artifacts are produced ONLY for a task a second
-context consumes. This audit is that rule's STANDING mechanical enforcement:
-every contract/result artifact on disk must reconcile to a journal event that
-accounts for it; an orphan artifact — paper with no journal home — is the
-producer=judge ceremony the rule exists to kill (regression-ratchet: without a
-standing check the silent drift re-enacts itself).
+An instrumented dispatch run's artifacts and its journal must describe the same
+world. This audit checks that in BOTH directions, because each direction is
+blind to the other's failure:
 
-Reconciliation is journal-only (doctrine:583 journal-only audit boundary): it
-reads the append-only journal, NEVER file mtimes, NEVER a session transcript.
+  disk → journal   every contract/result artifact on disk reconciles to a
+                   journal event that accounts for it. An orphan artifact —
+                   paper with no journal home — is ceremony produced for no
+                   consumer.
+  journal → disk   every contract path a journal names, and every result a
+                   journal claims was harvested, resolves to a file that
+                   exists. A record naming an artifact that is not there is a
+                   claim with no referent — and it is exactly how a renamed
+                   contract escapes the disk-side scan (the glob stops
+                   matching, so disk→journal falls silent while the run still
+                   looks accounted for).
 
-Artifacts reconciled (by basename convention):
+The filename convention both directions pair on is contractual (doctrine
+§ Dispatch primitive): `task-contract.md` / `task-contract-<suffix>.md` for the
+contract, `result.json` for the result.
+
+Reconciliation is journal-only (doctrine § Audit surface): it reads the
+append-only journal, NEVER file mtimes, NEVER a session transcript.
+
+Pairing rules:
   - `task-contract*.md`  → accounted iff cited by a journal `dispatch` line's
     `contract` field, OR by a `deviation{kind:"aborted-dispatch"}` line's
     STRUCTURED `contract` field (a decided-but-unlaunched dispatch's record;
@@ -22,9 +34,8 @@ Artifacts reconciled (by basename convention):
     executed the task; the read-only-worker carrier — commander-persisted result
     — rides the same dispatch_result, doctrine § Report contract).
 
-Owed-when: a pure 0-worker run (zero artifacts) is vacuous — exit 0, nothing to
-reconcile (the SKILL side does not even call this on a pure 0-worker close; the
-script side is the double-check, doctrine owed-when).
+Owed-when: a run with zero artifacts and an empty journal is vacuous — exit 0,
+nothing to reconcile in either direction.
 
 Usage:
   python3 scripts/audit-artifact-reconciliation.py <dir>
@@ -114,46 +125,66 @@ def _find_artifacts(base):
 
 
 def reconcile(base):
-    """Return (orphans, errors). orphans: list of (path, reason)."""
+    """Return (failures, errors, n_artifacts).
+
+    failures: list of (path, reason). Both directions land in this one list —
+    a reconciliation failure is a reconciliation failure whichever side is
+    missing its counterpart."""
     journal_path = os.path.join(base, "journal.jsonl")
     dispatched, aborted, result_dirs, errors = _parse_journal(journal_path, base)
     contracts, results = _find_artifacts(base)
-    orphans = []
+    failures = []
+
+    # --- direction 1: disk -> journal ---
     accounted_contracts = set(dispatched) | aborted
     for c in contracts:
         if c not in accounted_contracts:
-            orphans.append((c, "contract with no journal dispatch / aborted-dispatch record"))
+            failures.append((c, "ORPHAN: contract with no journal dispatch / aborted-dispatch record"))
     for r in results:
         if os.path.dirname(r) not in result_dirs:
-            orphans.append((r, "result.json with no matching dispatch_result (no worker executed this task)"))
-    return orphans, errors, len(contracts) + len(results)
+            failures.append((r, "ORPHAN: result.json with no matching dispatch_result (no worker executed this task)"))
+
+    # --- direction 2: journal -> disk ---
+    # A path the journal names must exist. Without this leg a renamed contract
+    # is invisible: the disk scan's basename glob stops matching it, so
+    # direction 1 has nothing to flag and the run reads as fully accounted.
+    for c in sorted(accounted_contracts):
+        if not os.path.isfile(os.path.join(base, c)):
+            failures.append((c, "DANGLING: journal names this contract path but no such file exists"))
+    for d in sorted(result_dirs):
+        rp = os.path.join(d, "result.json") if d else "result.json"
+        if not os.path.isfile(os.path.join(base, rp)):
+            failures.append((rp, "DANGLING: journal records a dispatch_result for this task but no result.json exists"))
+
+    return failures, errors, len(contracts) + len(results)
 
 
 def _run(base):
     if not os.path.isdir(base):
         print(f"ERROR: not a directory: {base}", file=sys.stderr)
         return 2
-    orphans, errors, n_artifacts = reconcile(base)
+    failures, errors, n_artifacts = reconcile(base)
     if errors:
         for e in errors:
             print(f"ERROR: {e}", file=sys.stderr)
         return 2
-    if orphans:
-        for path, reason in orphans:
-            print(f"ORPHAN: {path} — {reason}")
-        print(f"FAIL: {len(orphans)} orphan artifact(s)")
+    if failures:
+        for path, reason in failures:
+            print(f"{reason} — {path}")
+        print(f"FAIL: {len(failures)} reconciliation failure(s)")
         return 1
     if n_artifacts == 0:
-        print("CLEAN: no contract/result artifacts (vacuous — pure 0-worker or empty)")
+        print("CLEAN: no contract/result artifacts and nothing claimed by the journal (vacuous)")
     else:
-        print(f"CLEAN: {n_artifacts} artifact(s) reconciled to journal")
+        print(f"CLEAN: {n_artifacts} artifact(s) reconciled to journal, both directions")
     return 0
 
 
 def _self_test():
     """Prove the reconciler on planted fixtures under scripts/fixtures/reconciliation/.
     Filename convention on each fixture subdir mirrors test-*.sh: dir name
-    prefix `clean-`/`orphan-` encodes expectation."""
+    prefix `clean-` expects a pass, any other prefix (`orphan-`, `dangling-`)
+    expects a flagged failure."""
     here = os.path.dirname(os.path.abspath(__file__))
     fixdir = os.path.join(here, "fixtures", "reconciliation")
     if not os.path.isdir(fixdir):
@@ -164,14 +195,14 @@ def _self_test():
         d = os.path.join(fixdir, name)
         if not os.path.isdir(d):
             continue
-        orphans, errors, _ = reconcile(d)
-        got_fail = bool(orphans) or bool(errors)
-        want_fail = name.startswith("orphan-")
+        failures, errors, _ = reconcile(d)
+        got_fail = bool(failures) or bool(errors)
+        want_fail = not name.startswith("clean-")
         if got_fail != want_fail:
-            print(f"SELF-TEST FAIL: {name} want_fail={want_fail} got_fail={got_fail} orphans={orphans}")
+            print(f"SELF-TEST FAIL: {name} want_fail={want_fail} got_fail={got_fail} failures={failures}")
             failed = 1
         else:
-            print(f"ok: {name} ({'orphan flagged' if want_fail else 'clean'})")
+            print(f"ok: {name} ({'flagged' if want_fail else 'clean'})")
     if failed:
         print("SELF-TEST FAIL")
         return 1

@@ -1,5 +1,0 @@
-{"event":"commander_stamp","ts":"2026-07-25T00:00:00Z","model":"mid-model-1","doctrine_rev":"abc1234","vocab":2,"run_id":"fx-vocab2-advisor"}
-{"event":"judgment_moment","ts":"2026-07-25T00:00:01Z","moment_id":1,"decision_type":"entry-gate","disposition":"frozen"}
-{"event":"judgment_moment","ts":"2026-07-25T00:00:02Z","moment_id":2,"decision_type":"grading-dispute","disposition":"advisor"}
-{"event":"advisor_intent","ts":"2026-07-25T00:00:03Z","moment_id":2,"decision_type":"grading-dispute","why":"two tiers defensible for the same subtask"}
-{"event":"advisor_unavailable","ts":"2026-07-25T00:00:04Z","moment_id":2,"note":"transport not attached — commander proceeds on own judgment, confidence degraded"}

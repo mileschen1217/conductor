@@ -1,6 +1,6 @@
 {
   "name": "conductor",
-  "description": "Portable orchestration mode — a commander judges, decomposes, and dispatches; tiered workers execute through file contracts (L1 doctrine / L2 contracts / L3 adapters). v3.1: declaration-only entry gate, per-dispatch computed brake inputs over binding conversion anchors, boot-probe cold-start record, warm continuation, typed journal (vocab 2) with semantic audits, human-gated anchor calibration.",
+  "description": "Portable orchestration mode — a commander judges, decomposes, and dispatches; tiered workers execute through file contracts (L1 doctrine / L2 contracts / L3 adapters). The mode is paid for at the first dispatch: a run that never delegates creates nothing, and an ordinary dispatch run pays only contract + result + checker verdict. Self-audit ceremony — journal, computed brake terms, boot probe, close chain — is instrumentation, switched on by a named trigger (benchmark arm / commissioning window / human request), never by default.",
   "version": "0.6.0",
   "skills": [
     "./adapters/claude-code"

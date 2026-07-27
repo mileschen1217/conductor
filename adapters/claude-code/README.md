@@ -8,6 +8,13 @@ each line means "this combination ran validly under the protocol at least
 once", nothing more. A combination without such evidence never appears
 (claim ≤ evidence).
 
+**Every line below predates the pay-at-first-dispatch cut (0.7.0)** and is
+written in the vocabulary of the doctrine revision it ran under — including
+forms such as the "0-worker" ceremony-bearing run, which no longer exists (a
+run that never dispatches does not enter the mode). A verification record is
+history: it is never rewritten to match current vocabulary, and the
+measurements remain valid measurements of what they measured.
+
 Scope honestly stated: the evidence below is n=1 per cell, one task family
 (read-heavy repository audit), one date. The protocol's comparative cost
 formula (R3) **failed for every v2-form pair on this run** — v2-form cost

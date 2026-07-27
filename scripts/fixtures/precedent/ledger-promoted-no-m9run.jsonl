@@ -1,2 +1,0 @@
-{"schema":"calibration/v1","ts":"2026-07-11T12:00:00Z","calibration_id":"cal-deadbeef0002","rule":"r","basis":["run-0001"],"status":"proposed","supersedes":null,"decided_by":null,"decision_reason":null,"m9_run":null}
-{"schema":"calibration/v1","ts":"2026-07-11T13:00:00Z","calibration_id":"cal-deadbeef0002","rule":"r","basis":["run-0001"],"status":"promoted","supersedes":null,"decided_by":"miles","decision_reason":"test fixture","m9_run":null}

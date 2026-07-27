@@ -2,23 +2,19 @@
 
 Single home for mode behavior: the commander judges, decomposes, dispatches,
 integrates — and never executes the grunt work personally. This layer is
-harness-neutral: it speaks only in capability tiers, one dispatch primitive,
-and one advisor primitive. Adapters bind these abstractions to a concrete
-harness; an adapter may cite this doctrine, never restate it.
+harness-neutral: it speaks only in capability tiers and one dispatch
+primitive. Adapters bind these abstractions to a concrete harness; an adapter
+may cite this doctrine, never restate it.
 
 **commander** — the orchestrating model instance (synonym: orchestrator).
 **worker** — a model instance executing exactly one task contract.
-**advisor** — a frontier-tier model instance the commander (or, within a
-declared tactical scope, a worker) consults for a ruling at an enumerated
-judgment moment. A ruling is an input to the caller, never a verdict.
 **human** — the adjudication layer above the commander; the last word on
 entry, permission, contract changes, and quality.
 
-Judgment has three homes, and every judgment moment is routed to one of them:
-**frozen ahead** (the task contract), **mechanized** (a checker / tier-0
-script), or **purchased on demand** (the advisor). What remains after routing
-is exactly the commander's own load — and the reserved set (§ Judgment
-reservation) that always terminates at the human.
+Judgment routes to one of two homes — **frozen ahead** (the task contract) or
+**mechanized** (a checker / tier-0 script). What neither home absorbs is the
+commander's own load, and inside it the reserved set (§ Judgment reservation)
+always terminates at the human.
 
 ## Routing header (workstation → section)
 
@@ -26,19 +22,30 @@ This file is one deep module; read the section your workstation needs.
 
 | You are… | Read |
 |---|---|
-| declaring entry / choosing topology | § Entry gate |
+| deciding whether the mode applies at all / declaring entry / choosing topology | § Entry gate |
 | pricing an offload, choosing worker count | § Amortization brake |
 | grading a subtask or citing a role card | § Complexity tiering |
 | resolving a tier to a model, ratio, or generation tag | the harness binding table (L3) |
-| at a judgment moment mid-run | § Advisor primitive |
+| at a judgment moment mid-run | § Judgment moments |
 | writing or sending a dispatch | § Dispatch primitive, § Dispatch contract |
 | harvesting a worker result | § Report contract, § Escalation ladder |
 | accepting deliverables | § Verification, § Judgment reservation |
-| writing the journal (or its optional render) | § Audit surface |
-| closing the run (ledgers, calibration) | § Precedent & eval loop |
+| deciding whether this run is instrumented, or writing its journal | § Audit surface |
+| closing the run | § Audit surface (close event), § Durable records |
 
 ## Design principles
 
+- **Pay at first dispatch.** The mode's obligations attach to a *dispatch*, not
+  to an invocation. Coordination machinery exists to make delegation safe, so
+  work that delegates nothing owes it nothing: a run that never reaches a
+  dispatch decision is not orchestration, and this doctrine asks nothing of it.
+  The normative form of this principle is § Entry gate.
+- **Instrumentation-conditioned ceremony.** The always-on interface of a
+  dispatch is exactly what the two contexts need to transact: a contract, a
+  result, a checker verdict. The self-audit surface — journal, computed brake
+  terms, probe record, close chain — is *instrumentation*: it exists to make a
+  measurement or a commissioning check trustworthy, and it is switched on by a
+  named trigger, not by every run. The normative form is § Audit surface.
 - **Thin prompts, thick artifacts + context.** The mode's paperwork records
   only decisions that change downstream behavior. Everything else lives in
   artifacts (contracts, results, journals) written once and referenced,
@@ -49,27 +56,38 @@ This file is one deep module; read the section your workstation needs.
   files, prompt fragments) is the ADAPTER layer's responsibility and stays
   thin: route and cite, never restate.
 - **Decisions are token-priced.** Brake decisions are made entirely in token
-  space against numbers computed on the spot from the artifacts in hand
-  (through the binding's conversion anchors) or read from the binding's
-  boot-probe record; currency belongs to the reporting layer only.
+  space against the artifacts in hand (through the binding's conversion
+  anchors); currency belongs to the reporting layer only.
 
 ## Entry gate
 
-The gate's output is a **declaration** — task family, write shape, read
-breadth, execution config, named grounds — plus the human veto record. It
-keeps no door: whether to run the mode at all is the operator's call (the
-same locus as § Judgment reservation), and the trivial-task exit is the
-inline 0-worker form, where the commander keeps the pen. Grading
-covers both self-decomposed work and pre-planned work (an externally
-supplied plan is graded per task, never re-decomposed for its own sake).
-Predictable + mechanically acceptable is where the safety net is strongest
-and cheap tiers are most legal.
+**The mode begins at the first dispatch decision.** A run that never reaches
+one never enters the mode: it owes no declaration, writes no contract, no
+result, and no journal, and it leaves no artifact behind. Nothing in this
+doctrine obliges any artifact or declaration before that moment. Whether to
+delegate at all remains the operator's call (the same locus as § Judgment
+reservation); a dispatch decision answered "no" is a legal answer that leaves
+the run outside the mode, with nothing owed for having asked.
+
+**Mid-run entry is forward-only.** A run may begin with the commander working
+inline and later reach a dispatch decision; the mode begins at that moment.
+Contract and result artifacts — and instrumentation, iff a § Audit surface
+trigger holds — materialize from that point forward. No retroactive backfill
+of the pre-dispatch history is owed, and none may be written: a record that
+narrates a past it did not observe is evidence manufactured after the fact.
+
+At that first dispatch decision the gate's output is a **declaration** — task
+family, write shape, read breadth, execution config, named grounds — plus the
+human veto record. Grading covers both self-decomposed work and pre-planned
+work (an externally supplied plan is graded per task, never re-decomposed for
+its own sake). Predictable + mechanically acceptable is where the safety net
+is strongest and cheap tiers are most legal.
 
 **Write shape** (where the pen lives — the gate's primary output):
 
 | Shape | Meaning |
 |---|---|
-| inline | the commander keeps the pen. This is the mode's 0-worker form: the journal and the entry-gate declaration always apply; contract and result artifacts are **consumer-gated** — written only for a task a second context consumes (a dispatched worker's brief, or a verification dispatch), the checker running per result that exists (a `result.json` exists iff a worker executed the task; the read-only-worker carrier rides § Report contract). A pure 0-worker run — zero write-role dispatch — manufactures no contract or result paper, and the journal is its sole record. |
+| inline | the commander keeps the pen. Work that stays inline reaches no dispatch decision and therefore sits outside the mode entirely — no declaration, no contract, no result, no journal. A run whose inline stretch later reaches a dispatch decision enters the mode there, forward-only (above). |
 | 1-worker | one dispatched writer, serialized. |
 | disjoint-write | multiple writers on non-overlapping write surfaces, one writer per surface. An isolated working copy (e.g. a separate worktree) is one mechanical carrier; the merge-back is itself a single-writer step. |
 
@@ -79,24 +97,24 @@ passes the brake (§ Amortization brake); parallel dispatch additionally cites
 its necessity ground there.
 
 **Execution config recommendation:** alongside the write shape the gate
-names read breadth, worker count, worker tiers, and the advisor setup.
+names read breadth, worker count, and worker tiers.
 
 **Task family (declared ex-ante):** derived from the deliverable's write
 surface at gate time — empty or report-only write surface → `read-heavy`;
 anything else → `write-heavy`. Indeterminate write-surface semantics →
-conservatively `write-heavy`, plus a typed journal signal (the family key may
-need splitting; the flip-trigger registry is the project's assay record).
-The declaration is audited two-way on runs that complete delivery (audit
-domain = the working tree OUTSIDE the contract-declared output paths and the
-mode's own artifacts): declared write-heavy with zero new commits or
-uncommitted changes in the declared write surface is an untrue declaration —
-unless the run's reasoned, recorded conclusion was "no change needed";
-declared read-heavy with ANY new commit or uncommitted change in the audit
-domain is an untrue declaration (under-declaring to dodge a positive price is
-the economically tempting gaming direction; both directions carry equal
-audit weight). The consequence is advisory — a journal audit-flag plus a
-deviation-log line feeding calibration, never a block — except on
-measurement-bearing runs, where it escalates. Blocked/failed terminals are
+conservatively `write-heavy`, plus a typed signal on an instrumented run (the
+family key may need splitting; the flip-trigger registry is the project's
+assay record). On an instrumented run that completes delivery the declaration
+is audited two-way (audit domain = the working tree OUTSIDE the
+contract-declared output paths and the mode's own artifacts): declared
+write-heavy with zero new commits or uncommitted changes in the declared write
+surface is an untrue declaration — unless the run's reasoned, recorded
+conclusion was "no change needed"; declared read-heavy with ANY new commit or
+uncommitted change in the audit domain is an untrue declaration (under-
+declaring to dodge a positive price is the economically tempting gaming
+direction; both directions carry equal audit weight). The consequence is a
+signal, not a stop — a `declaration-audit` deviation line, never a block —
+except on measurement-bearing runs, where it escalates. Blocked/failed terminals are
 exempt.
 
 **Mechanical task class (declared at the gate):** a task is *declared
@@ -106,10 +124,9 @@ contract's criteria, a frozen test suite, a written brief) — carries a
 runnable, builder-independent check artifact: a frozen test suite, an
 exit-code script, a byte comparison. The mechanical/taste boundary itself is
 § Complexity tiering's taste criterion and is not restated here. The
-declaration holds for a 0-worker run where no task-contract file is ever
-written (contract artifacts are consumer-gated, per the write-shape table
-above): it cites the check artifacts themselves — the frozen suite's path —
-never a contract document.
+declaration cites the check artifacts themselves — the frozen suite's path —
+never a contract document, so it is declarable before any contract file
+exists.
 
 Declaring the class binds a frozen default set — decided once, at the
 declaration, instead of re-judged at each station:
@@ -118,7 +135,7 @@ declaration, instead of re-judged at each station:
 |---|---|
 | write shape | inline, WHILE the corpus fits one context |
 | acceptance | per check artifact (§ Verification); no verification dispatch is owed |
-| entry-gate advisor check | pre-answered no-match — the class declaration IS that station's required line |
+| entry-gate judgment check | pre-answered no-match — the class declaration IS that station's required line (§ Judgment moments) |
 
 Each is a default, not a handcuff: any of them is overridable with a
 recorded reason, and that reason is what the audit reads. A mechanical task
@@ -127,12 +144,12 @@ standard necessity ground (§ Amortization brake), recorded like any other
 override. A pre-answered station is answered, not deleted — an adapter's
 enumeration of it still stands.
 
-Record the class on the typed entry event: `class` (`mechanical`, or absent
-= unclassified, the behavior above) and `class_default` (`cited`, or
-`overridden(<reason>)`) — additive fields under § Audit surface's
-additive-fields rule, no vocabulary bump. Declaring a `class` and omitting
+On an instrumented run the class rides the typed `entry` event: `class`
+(`mechanical`, or absent = unclassified, the behavior above) and
+`class_default` (`cited`, or `overridden(<reason>)`) — additive fields under
+§ Audit surface's additive-fields rule. Declaring a `class` and omitting
 `class_default`, or overriding with an empty reason, are both semantic
-VIOLATIONs (§ Audit surface, semantic rule 4): the class is declarable for
+VIOLATIONs (§ Audit surface, semantic rule S4): the class is declarable for
 free, the departure from what it binds is not.
 
 The entry declaration is still a judgment moment (decision_type
@@ -141,14 +158,17 @@ entry judgment, everything downstream of it being table lookup. For an
 unclassified task the topology choice — where the pen lives, how much read
 breadth, which tiers — is judged, not defaulted; for a declared-mechanical
 task that ruling is cached at class level, the declaration itself being the
-judged act. The gate consults no price
-table and weighs no price; every economic question about a concrete offload
-belongs to the brake (§ Amortization brake), per dispatch, at dispatch time.
+judged act. The gate consults no price table and weighs no price; every
+economic question about a concrete offload belongs to the brake
+(§ Amortization brake), per dispatch, at dispatch time.
 
-Record every entry decision in the audit surface (§ Audit surface) as a
-typed entry event: family + write shape + read breadth + execution config +
+On an uninstrumented run the declaration is exercised in-session and not
+recorded: the gate's questions are answered where they are asked, and the
+absence of a record is the point of the cut, not an omission. On an
+instrumented run it is recorded in full as the typed `entry` event
+(§ Audit surface): family + write shape + read breadth + execution config +
 named grounds. A human veto is recorded — who, changed to what, why — and
-governs.
+governs on either kind of run.
 
 ## Amortization brake
 
@@ -162,9 +182,7 @@ offload pays ⟺ Σi W_i × (1−r_i) > C_reread + C_brief_cmd + Σi r_i × (C_f
 - `W_i` — order-of-magnitude estimate of the output offloaded to worker i:
   the brake's ONLY on-the-spot estimate. It is made in units the estimator
   can feel (file count, line count) and converted to token space through the
-  same conversion anchors as everything else. Every other number is computed
-  from an artifact in hand or read from the boot-probe record; inventing a
-  constant on the spot is an audit FAIL.
+  same conversion anchors as everything else.
 - `r_i` — worker i's tier price relative to the commander tier, from the
   binding's ratio table (L3, with the unit weights). Same tier ⇒ r = 1.0 by
   construction — same tier, same price is a definition, not an approximation
@@ -172,69 +190,91 @@ offload pays ⟺ Σi W_i × (1−r_i) > C_reread + C_brief_cmd + Σi r_i × (C_f
   economics. That consequence emerges from the formula; no per-tier or
   per-model exception clause exists or may be added.
 - `C_brief_cmd`, `C_reread` (commander-side) and `C_brief_worker`, the
-  corpus term of `C_fresh` (worker-side, per offload) — computed
-  PER-DISPATCH from the actual byte sizes of the artifacts in hand (the
-  contract file and prompt, the corpus files the worker must read, the
-  expected re-read set) through the binding's **conversion anchors** — the
-  binding's declared bytes→token-equivalent rates per content class, with
-  their correction factor. The mechanism is named here; the anchor VALUES
-  live only in the binding, changelog-governed like its ratio table. Every
-  computed value is recorded with its basis (file refs + bytes + content
-  class) so a tier-0 auditor can recompute both sides of the inequality; a
-  value without a basis is an invented constant — an audit FAIL. Mixed
-  tiers and mixed warm/cold states compute each offload item separately.
+  corpus term of `C_fresh` (worker-side, per offload) — derived from the
+  actual byte sizes of the artifacts in hand (the contract file and prompt,
+  the corpus files the worker must read, the expected re-read set) through
+  the binding's **conversion anchors** — the binding's declared bytes→token-
+  equivalent rates per content class, with their correction factor. The
+  mechanism is named here; the anchor VALUES live only in the binding,
+  changelog-governed like its ratio table. Mixed tiers compute each offload
+  item separately.
 - `C_fresh` — a worker's cold-start cost, decomposed into a **boot term**
-  (the harness's fixed context-establishment overhead, read from the
-  binding's boot-probe record and cited by probe row — never computed from
-  bytes, never estimated) plus the **corpus term** (computed per-dispatch as
-  above). A warm continuation (§ Dispatch primitive) zeroes both terms for
-  that hop: its pay side is r_i × C_brief_worker alone.
+  (the harness's fixed context-establishment overhead) plus the **corpus
+  term** (the artifacts the worker must read).
+
+**Two forms, one rule.** The inequality is the same on every run; what
+changes is whether it is *evidenced*.
+
+- **Ordinary (uninstrumented) run:** the commander applies the inequality
+  qualitatively — reasoning in token space from the artifacts in front of it —
+  and launches or does not. Nothing is computed into a record, no probe record
+  is read or written, and the boot term is not priced at all: the commander
+  weighs a cold start it cannot quantify. That is a deliberate, named
+  consequence of paying at first dispatch, not an unstated gap.
+- **Instrumented run (§ Audit surface):** the same inequality is computed and
+  recorded as a typed `brake` event, every term carrying its basis (file refs
+  + bytes + content class) so a tier-0 auditor can recompute both sides; the
+  boot term is read from the probe record and cited by probe row, never
+  computed from bytes and never estimated. Here a computed value without a
+  basis is an invented constant — an audit FAIL.
+
+The launch rule binds identically on both: **an economics-failing dispatch
+without a necessity ground does not launch.** Instrumentation buys the
+evidence, never the obligation.
 
 EVERY dispatch that moves work off the commander — the serial 1-worker shape
 included (a write-shape choice needs no necessity ground) — carries a typed
-brake event in the journal (format: § Audit surface). Parallel dispatch
-additionally cites its necessity ground — a closed triple, each an override
-with its own citation duty: **wall-clock** (cite the concrete deadline),
-**corpus exceeds one context** (cite the corpus-size evidence),
-**disjoint-write** (list the non-overlapping write surfaces). An
-economics-failing dispatch without a necessity ground does not launch. Under
-an override the brake's job shifts to bounding k and tier: each added worker
-still pays its marginal r_i × (C_fresh + C_brief_worker), and the brake
-event records the basis for k.
+brake event on an instrumented run. Parallel dispatch, and any dispatch whose
+economics fail, additionally names its **necessity ground** from a closed
+enum of four, each an override with its own citation duty:
 
-Cold start is conservative-closed: no boot-probe value obtainable (the probe
-failed, or the binding declares no probe procedure) or no conversion-anchor
-table in the binding → the economics leg cannot be computed, the brake
-verdict is `not-computable`, offload is legal on necessity grounds only, and
-the gap lands in the deviation log. The next mode entry retries the probe.
+| Ground | Citation duty |
+|---|---|
+| `wall-clock` | cite the concrete deadline |
+| `corpus` | the corpus exceeds one context — cite the corpus-size evidence |
+| `disjoint-write` | list the non-overlapping write surfaces |
+| `verification-mandated` | this doctrine itself mandates the dispatch away from the commander — cite the mandating rule |
 
-**Boot-probe record (cache semantics, never calibration):** the boot term's
-source is a per-project, append-only probe record written ONLY by the
-binding's probe procedure. The first mode entry in a project runs the probe
-automatically — a cheap-tier one-question boot whose measured
-context-establishment cost IS the value — and entry continues regardless of
-its outcome. The consumable row is the latest row matching the current
-harness, configuration hash, and model generation (three axes, equal
+`verification-mandated` is the non-discretionary ground: the launch bar
+governs DISCRETIONARY offload of the commander's own work, so a dispatch this
+doctrine mandates is accounted for (its brake event is still written on an
+instrumented run; k and tier are still bounded) but an economics fail does not
+block it. The fresh-context verifier (§ Verification — the builder may not
+hold it) is the ONLY such mandate in this doctrine; extending the class is an
+edit to this sentence, gated like any doctrine-default change (§ Durable
+records). Under any override the brake's job shifts to bounding k and tier:
+each added worker still pays its marginal r_i × (C_fresh + C_brief_worker),
+and the recorded basis for k is what an auditor reads.
+
+Cold start is conservative-closed on an instrumented run: no boot-probe value
+obtainable (the probe failed, or the binding declares no probe procedure) or
+no conversion-anchor table in the binding → the economics leg cannot be
+computed, the brake verdict is `not-computable`, offload is legal on necessity
+grounds only, and the gap lands in the deviation log. The next instrumented
+entry retries the probe.
+
+**Boot-probe record (instrumentation only; cache semantics, never a feedback
+loop):** the boot term's evidenced source is a per-project,
+append-only probe record written ONLY by the binding's probe procedure, and
+read ONLY on an instrumented run. The first dispatch of an instrumented run
+takes the probe if no usable row exists — a cheap-tier one-question boot whose
+measured context-establishment cost IS the value — and entry continues
+regardless of its outcome. The consumable row is the latest row matching the
+current harness, configuration hash, and model generation (three axes, equal
 weight); any mismatch is a deterministic re-probe — append a new row, never
 edit or delete old ones. A run's own measurements NEVER write back into the
-probe record: a stale stamp means cache invalidation, not recalibration.
-Probe-row selection is a tier-0 decision (hit | reprobe | error); a
-malformed or unreadable record is an error and follows the cold-start path
-above — a suspicious row is never consumed.
+probe record: a stale stamp means the cached value is invalid and must be
+re-measured by the probe, never adjusted in place from a run's own numbers.
+Probe-row selection is a tier-0 decision (hit | reprobe | error); a malformed
+or unreadable record is an error and follows the cold-start path above — a
+suspicious row is never consumed. An ordinary run neither reads nor writes
+this record.
 
-Boundary: the launch bar governs DISCRETIONARY offload of the commander's
-own work. A dispatch this doctrine itself mandates away from the commander
-is not discretionary: its brake event is still written (accounting; k and
-tier still bounded), but an economics fail does not block it. The fresh-
-context verifier (§ Verification — the builder may not hold it) is the ONLY
-such mandate in this doctrine; extending the class is an edit to this
-sentence, gated like any doctrine-default change.
-
-Estimate drift — the measured output (delivered diff bytes, converted
-through the same anchors) versus the brake event's estimate — is journaled
-at close as a typed deviation signal feeding anchor calibration
-(§ Precedent & eval loop); W is per-task and never becomes a stored
-constant.
+Estimate drift — the measured output (delivered diff bytes, converted through
+the same anchors) versus the brake event's estimate — is journaled at close on
+an instrumented run as a typed `estimate-drift` deviation. It is evidence for
+a later change to the binding's anchors, which travels the evidence path of
+§ Durable records; W is per-task and never becomes a stored constant.
 
 ## Complexity tiering
 
@@ -260,12 +300,12 @@ or write role within the chosen write shape, and a `why-not-a-script` answer
 **Role cards (grading cache):** a role card (contract layer, `roles/`) is a
 three-axis grading result cached at design time for a shape-constant
 dispatch. Citing a card on the dispatch line replaces the grade axes — but only
-after checking the card's `graded_under` stamp against this run's
-`commander_stamp.doctrine_rev` and the binding's current model-generation
-tag; any mismatch means the card is stale and the citation is a miss,
-recorded as `card=none(<reason>)` with full three-axis grading as the
-fallback. Judgment duties never appear on a card (§ Judgment reservation);
-the boundary is mechanically scanned at the contract layer.
+after checking the card's `graded_under` stamp against the doctrine revision
+this run runs under and the binding's current model-generation tag; any
+mismatch means the card is stale and the citation is a miss, recorded as
+`card=none(<reason>)` with full three-axis grading as the fallback. Judgment
+duties never appear on a card (§ Judgment reservation); the boundary is
+mechanically scanned at the contract layer.
 
 Concurrency hard cap: **5 simultaneous workers** (default; 3–5 recommended
 operating band).
@@ -293,91 +333,61 @@ weight, or price value.
 | Tier | Task shape |
 |---|---|
 | tier-0 (deterministic script) | acceptance, counting, format checks, any decision already expressible as a written command with an exit code. Not a model. Cheapest, fully auditable — always preferred where it exists. |
-| frontier | judgment, decomposition, integration, first-time diagnosis, architecture trade-offs, cross-file invariants (usually the commander itself, or the advisor) |
+| frontier | judgment, decomposition, integration, first-time diagnosis, architecture trade-offs, cross-file invariants (usually the commander itself) |
 | mid | clear-spec implementation, search/inventory, multi-source research, review lenses (default worker) |
 | cheap | batch application of an already-solved pattern; format conversion; mechanical enumeration |
 
 Cheap-tier red line: work needing judgment, first encounters, or a fuzzy
 recipe never goes to cheap.
 
-## Advisor primitive
+**Worker tier default:** default one tier below the commander, and choose the
+cheapest tier expected to pass acceptance in ONE dispatch — a cheaper tier
+that needs a retry has already spent the saving (§ Escalation ladder prices
+the retry). Each harness binding homes the concrete tier→model mapping and any
+tier-specific admissibility conditions that follow from it.
 
-The advisor call is the dispatch primitive's inverse: dispatch pushes frozen
-judgment down into a fresh small context (cheap, scalable); an advisor call
-sends the caller's full context up for a ruling (expensive, rationed by
-accounting). Transport is a binding concern — this layer never names it.
+## Judgment moments
+
+A judgment moment is a decision point the commander RECOGNIZES as a decision.
+Recognition is the first capability to fail as commander tier drops, so the
+moments are enumerated rather than left to notice: at each of the five call
+sites below, the commander writes exactly ONE line, in the form the adapter
+enumerates, with one of three dispositions.
 
 **Call sites (closed enum):** `entry-gate | grading-dispute | worker-blocked
 | acceptance-ambiguity | scope-change-preview`.
 
-**Protocol (commander side):** for every RECOGNIZED judgment moment the
-commander writes a `judgment_moment` journal line — `moment_id` monotonically
-increasing — with a disposition: `frozen | mechanized | advisor | blocked`.
+**Dispositions (the station's three answers):**
 
-- disposition `advisor` → write `advisor_intent` (decision_type + why)
-  BEFORE the call; the ruling lands as an `advisor_ruling` line whose payload
-  validates against the contract layer's advisor-ruling schema. One consult
-  per `moment_id`; a second consult on the same moment is a protocol
-  violation (the runaway loop's only true form — killed here, no global
-  limiter needed). Pairing in every audit is by `moment_id`, never adjacency.
-- disposition `blocked` → `blocked_to_human` line; the moment terminates at
-  the human (§ Judgment reservation).
-- Transport not attached / pairing illegal → `advisor_unavailable` line +
-  confidence-degraded note; the commander proceeds on its own judgment
-  (delivery-first), never silently. If the moment is itself
-  judgment-reserved, it goes to the human regardless of advisor state.
+- **match** — this moment fits a call site and the commander's own ruling is
+  not self-evident: **surface it to the human.** Surfacing is NON-BLOCKING —
+  the commander states the moment and its own ruling in-channel and proceeds.
+  It is a disclosure, not a request for permission; the one exception is a
+  moment in the reserved set (§ Judgment reservation), which terminates at the
+  human regardless of how this station answered.
+- **no-match** — no call site fits. The line still owes its one-line why:
+  "the doctrine covers this" / "it is deterministic" is a no-match *claim*,
+  not an answer.
+- **misfit-but-uncertain** — no site fits AND the commander does not trust its
+  own ruling. This **is** a surface trigger; uncertainty about the shape of a
+  decision is the strongest signal that a human should see it.
+
+**Where the station lives.** On an instrumented run each moment lands as a
+typed `judgment_moment` line carrying its disposition and the written line
+(§ Audit surface). On an ordinary run the station is guidance: it is
+exercised — the commander answers it — and not recorded. The station's value
+is the forced enumeration, which costs nothing to keep and is measurable
+(a +1.0 judgment-quality lift when it was first instrumented); the record is
+what instrumentation adds.
 
 Unrecognized moments (the commander never saw the decision point) are the
-fourth class: no journal line exists, so no audit can see them — they are
-governed by containment (the containment-check line, § Audit surface),
-not by the judgment-flow audit. This boundary is honest, not
-accidental.
+fourth class, and no audit can see them either: they are governed by the
+containment statement on a write-role dispatch (§ Audit surface), not by any
+audit of the judgment stream. This boundary is honest, not accidental.
 
-**Attention threshold** (default **3**; a run may override it in a written
-journal note at entry): the counter is the count of `advisor_intent` lines in the current
-run journal — the journal IS the counter; no second mutable state exists.
-Crossing NEVER blocks a call or delivery: the call executes, an
-`advisor_threshold` line lands at the crossing, and the harvest report
-surfaces it as a calibration signal. Budget governance is accounting +
-calibration; the only mandatory mid-run stop is a judgment-reserved moment.
-
-**I3 boundary:** a ruling is an input. Permission grants, contract changes,
-and final quality verdicts do not move because an advisor exists.
-
-**Worker→advisor path (contract-governed):** the task contract declares the
-worker's tactical advisor scope; the worker discloses every consult in
-result.json `judgment_events`. The worker layer may consult tactically ONLY —
-contract-interpretation and acceptance-interpretation moments escalate
-(blocked / scope protocols), never consult. Worker consults do NOT count
-against the commander's per-run threshold (different context, different
-economics); harvest folds their counts into the run report as a separate
-worker-consult metric feeding calibration. Disclosed overage beyond the
-declared scope is calibration data; undisclosed use is a VIOLATION — the
-honesty red line, audited post-hoc against the harness's observation surface
-where the binding has one (a binding without one degrades that check to
-UNVERIFIABLE, never CLEAN).
-
-Two limits on that audit, because an honesty rule that overreaches buys
-nothing and costs a great deal:
-
-- **The mode binds a harness's interface, never its internals.** An adapter may
-  build an observation surface only from what its harness *offers* — a
-  documented log, an exported metric, a supported API. It may not reach into
-  formats the harness never promised to keep stable (session transcripts,
-  on-disk state, private files). Such a binding is not portability, it is a
-  guess about someone else's implementation, and it will break silently on
-  their next release. Where no offered surface exists, the correct answer is
-  UNVERIFIABLE — not a cleverer excavation. **A harness that reports a worker
-  ran on tier X while running it on tier Y is that harness's defect, not this
-  mode's threat model.**
-- **The check is scoped to measurement-bearing runs.** Undisclosed advisor use
-  corrupts exactly one thing: a claim that attributes work to a tier. It is
-  therefore REQUIRED for runs whose output is such a claim (benchmark cells,
-  parity runs, ablations — anything whose numbers a reader would trust) and NOT
-  required for ordinary orchestration, where UNVERIFIABLE is a legal resting
-  state and the disclosure duty stands on the contract alone. Verifying a
-  measurement-bearing run is a bounded, one-off act (its cost is known in
-  advance); it does not license a standing mechanism in the mode.
+**I3 boundary:** surfacing a moment is disclosure. Permission grants,
+contract changes, and final quality verdicts do not move because a moment was
+surfaced (§ Judgment reservation).
 
 ## Dispatch primitive
 
@@ -387,32 +397,18 @@ and validate it with the contract checker. Only the middle step is
 harness-bound (adapter territory); the first and last steps are pure file
 operations, identical everywhere.
 
-**Warm continuation:** a later wave of the SAME run and SAME contract family
-may re-dispatch to a still-warm worker — one already holding the corpus in
-context — paying r_i × C_brief_worker alone (boot and corpus terms zero, §
-Amortization brake). Warm continuation is a binding-declared capability: a
-binding that declares no warm channel accounts every dispatch as a cold
-start — a legal degradation, not a defect. Three red lines force fresh (any
-hit ⇒ cold):
+**Filename convention (contractual — audits pair artifacts against records by
+it):** within a task directory the contract file is named `task-contract.md`,
+or `task-contract-<suffix>.md` where one directory holds several; the result
+is named `result.json`. A dispatch record's contract path and the file on disk
+must be the same path in both directions — an artifact no record names, and a
+record naming no artifact, are equally reconciliation failures (§ Audit
+surface). Renaming an artifact does not excuse it from the pairing.
 
-1. **Across runs — never warm.** Mechanically enforced: a warm dispatch's
-   prior-task reference must resolve to an earlier dispatch of the same
-   contract family within the same journal (§ Audit surface); a cross-run
-   reference is necessarily dangling.
-2. **The doctrine revision changed** since the prior dispatch.
-3. **The write surface holding the worker's cached corpus was changed by any
-   pen other than that worker's** since the prior dispatch.
-
-Red line 1 is mechanical; red lines 2 and 3 are the commander's judgment
-with a declared fail-safe direction: uncertain ⇒ fresh. The journal evidence
-base is each dispatch's write-surface field plus a staleness note on every
-warm dispatch (what was checked); no worker read-set tracking exists — the
-signal suffices for audit, the ruling is judgment. The fresh-context
-verifier is NEVER warm: its entire value is zero builder state
-(§ Verification), and warm continuation does not soften it. A warm worker
-that has died or stopped responding falls back to a cold fresh dispatch,
-recorded as a typed deviation (warm-fallback), and the brake event is
-recorded in the shape that actually ran (cold).
+Every dispatch is cold: the worker starts with no state from any earlier
+dispatch, and its cost is accounted as a cold start. There is no continuation
+channel at this layer — a later wave that needs earlier context passes it as
+artifacts (§ Report contract), which is the mode's only communication surface.
 
 ## Dispatch contract
 
@@ -438,16 +434,15 @@ Artifacts over relay: worker products land on the filesystem; result.json
 carries light references (paths), never bulk content. The filesystem is the
 ONLY commander↔worker communication surface. A worker's report is its
 result.json — summary, files_changed, commands_run (with exit codes), risks,
-observations, and (when the contract declares an advisor scope)
-judgment_events.
+and observations.
 
 One named exception: where a binding's read-only worker type structurally
 cannot write files, its report rides the harness channel and the commander
 persists it VERBATIM into the task directory, provenance-noted — the channel
 is a carrier, never a second home; the task directory remains the record of
-record. The transcription is mechanical for findings; worker-self-reported
-doctrine-vocabulary fields (e.g. judgment_events) enter the record only
-after the commander's own judgment.
+record. The transcription is mechanical for findings; any doctrine-vocabulary
+field a worker self-reports enters the record only after the commander's own
+judgment.
 
 ## Escalation ladder
 
@@ -463,8 +458,8 @@ first distinctive line.
 - Same approach: at most 3 attempts total per subtask × approach. A genuinely
   different approach resets the count.
 - Timeout / no response counts as an error at that tier.
-- A grading dispute the ladder cannot settle is an advisor call site
-  (`grading-dispute`), not an infinite retry.
+- A grading dispute the ladder cannot settle is a judgment moment
+  (`grading-dispute`, § Judgment moments), not an infinite retry.
 - De-escalation: a solved pattern gets written as an exact recipe (with
   verification commands) and demoted to mid/cheap batch application — or to
   tier-0 where a script can carry it.
@@ -475,26 +470,26 @@ One pen per write surface. Parallel READ breadth is always legal (read-only
 workers); parallel WRITES are legal only on non-overlapping write surfaces
 (disjoint-write shape), one writer per surface, and the merge-back of
 isolated working copies is itself a single-writer step. The inline and
-1-worker shapes satisfy this trivially — the journal still records the
-configuration (the audit surface degrades to the judgment stream, not to
-nothing).
+1-worker shapes satisfy this trivially.
 
 Adapters SHALL enable preventive enforcement where the harness supports it
 (read-only worker toolsets, read-only sandbox modes) and SHALL record that
-configuration in each run's dispatch records. The portable acceptance check
-is post-hoc audit: worker transcripts of every parallel phase show zero file
-writes outside the writer's own surface.
+configuration in every dispatch record they write. **The preventive rule binds
+every dispatch run, instrumented or not** — it is procedure, not paperwork,
+and it is the leg that actually prevents the damage. The post-hoc audit is a
+detective addition available on instrumented runs: worker records of every
+parallel phase show zero file writes outside the writer's own surface.
 
 ## Judgment reservation
 
 Permission grants, contract changes, and quality verdicts are NEVER delegated
-to workers, automation, or the advisor. The commander holds them; the human
-overrules the commander.
+to workers or automation. The commander holds them; the human overrules the
+commander.
 
 - A result.json with a non-empty scope_change_request stops that line of work
   immediately. The commander escalates the request verbatim to the human —
   never approves in the human's stead, never re-dispatches enlarged work
-  before the ruling. (A `scope-change-preview` advisor consult may inform the
+  before the ruling. (A `scope-change-preview` moment may inform the
   commander's framing; it never substitutes for the human ruling.)
 - Quality verdicts on deliverables terminate at the human.
 
@@ -504,78 +499,113 @@ The builder never accepts its own work. Acceptance of a mechanical AC is its
 check artifact (tier-0). Acceptance of a taste AC goes to the named verifier —
 default a fresh-context worker sharing no conversation state with the
 builder, which judges each criterion against the artifacts, citing evidence
-(file:line or command output). The criterion the verifier binds to is the
-contract's quoted acceptance source — the original written assertion, not a
-paraphrase — so the judgment tracks the source of truth rather than a lossy
-projection; a `self-authored` criterion (no written source upstream) is
-judged on its own terms, there being no source text to quote against. "Reads
-as correct" is not evidence; execution output is.
+(file:line or command output). That verifier dispatch is the one this doctrine
+mandates: it does not need to pass the brake's economics leg, and it names
+`verification-mandated` as its ground (§ Amortization brake). The criterion
+the verifier binds to is the contract's quoted acceptance source — the
+original written assertion, not a paraphrase — so the judgment tracks the
+source of truth rather than a lossy projection; a `self-authored` criterion
+(no written source upstream) is judged on its own terms, there being no source
+text to quote against. "Reads as correct" is not evidence; execution output is.
 
 ## Audit surface
 
-**Run semantics:** one run = one mode invocation over one contract scope
-(entry gate → waves → harvest → close), producing exactly one
-journal file. The journal opens on `commander_stamp` and closes on the
-precedent append (§ Precedent & eval loop). A new run = a new journal file;
-counters reset by construction; the append-only journal is simultaneously the
-audit surface and the counter — no second, driftable state exists.
+Everything in this section is **instrumentation**. It exists on a run whose
+numbers or whose conformance a reader will trust, and it is absent otherwise
+(§ Design principles). An ordinary dispatch run produces exactly three kinds
+of artifact — task-contract instance(s), a result.json per executed worker,
+and the checker verdict per result — and nothing here.
+
+**Measurement-bearing (the trigger enum — the single extension point; a
+future measurement need appends a trigger here rather than re-hardwiring
+ceremony):** a run is instrumented iff at least one of
+
+- **(a) benchmark arm** — the run is a cell of a comparison whose numbers are
+  published or compared (arm, parity run, ablation).
+- **(b) commissioning window** — the run is the FIRST dispatch run after a
+  doctrine revision change or a binding model-generation change. The window's
+  discharge record is the commissioning run's own journal, keyed by
+  `(doctrine_rev, model_gen)`: no journal under the project's run directory
+  carries the current pair ⇒ the window is open and this run is instrumented;
+  once one does, the window is closed. N = 1 by construction; extending it is
+  trigger (c).
+- **(c) explicit human request** — the human asks for an instrumented run.
+
+Every other run is uninstrumented, and that is the default. The brake's
+computed and typed form — the probe record, the typed `brake` event — is
+instrumentation by this rule; its qualitative launch rule survives on every
+run as commander guidance (§ Amortization brake, "Two forms, one rule").
+
+**Run semantics:** one instrumented run = one mode entry over one contract
+scope (first dispatch decision → waves → harvest → close), producing exactly
+one journal file. The journal opens on `commander_stamp` and closes on the
+typed `close` event. A new run = a new journal file; counters reset by
+construction; the append-only journal is simultaneously the audit surface and
+the counter — no second, driftable state exists.
 
 **Journal event vocabulary (JSONL, one event per line; examples use tier
 names and placeholders — a real journal carries the binding-resolved ids):**
 
 ```jsonl
-{"event":"commander_stamp","model":"<self-reported model id>","doctrine_rev":"<revision short-hash>","vocab":2}
-{"event":"entry","family":"read-heavy|write-heavy","write_shape":"inline|1-worker|disjoint-write","read_breadth":0,"config":{"tiers":"<free>","advisor":"<free>"},"grounds":"<free text>","veto":null}
-{"event":"precedent","query":"kind=<kind>,write_surface=<surface>","result":"cited <run_id>|no-match|deviation","reason":"<free>"}
+{"event":"commander_stamp","model":"<self-reported model id>","doctrine_rev":"<revision short-hash>","model_gen":"<binding gen-tag>","vocab":3}
+{"event":"entry","family":"read-heavy|write-heavy","write_shape":"inline|1-worker|disjoint-write","read_breadth":0,"config":{"tiers":"<free>"},"grounds":"<free text>","veto":null}
 {"event":"probe","action":"hit|probed|reprobed|failed","row":"<config_hash>@<ts>|null"}
-{"event":"brake","wave":1,"offload":[{"tier":"mid","w_est":0,"r":0.0,"warm":false,"C_brief_worker":{"tok":0,"basis":{"refs":["<path>"],"bytes":0,"class":"prose|code|cjk|mixed"}},"corpus":{"tok":0,"basis":{"refs":["<path>"],"bytes":0,"class":"prose|code|cjk|mixed"}},"boot":0}],"save":0,"pay":0,"verdict":"pass|fail|not-computable","ground":"wall-clock|corpus|disjoint-write|none","inputs":{"C_brief_cmd":{"tok":0,"basis":{"refs":["<path>"],"bytes":0,"class":"prose|code|cjk|mixed"}},"C_reread":{"tok":0,"basis":{"refs":["<path>"],"bytes":0,"class":"prose|code|cjk|mixed"}}},"probe_ref":"<config_hash>@<ts>|null","anchor_rev":"<binding changelog rev>","r_rev":"<binding changelog rev>","k_note":"<free>"}
-{"event":"containment_check","exposure":"<free>","capacity":"<free>"}
-{"event":"doubt","text":"<free>"}
-{"event":"deviation","kind":"escalation|scope-change|threshold|advisor-unavailable|estimate-drift|declaration-audit|warm-fallback|aborted-dispatch|<open set>","note":"<free>","contract":"<task-contract path, optional — e.g. with kind aborted-dispatch>"}
-{"event":"dispatch","task_id":"<id>","tier":"mid","resolved_model":"<from the binding table>","read_only":true,"wave":1,"contract":"<path>"}
-{"event":"judgment_moment","moment_id":1,"decision_type":"entry-gate|grading-dispute|worker-blocked|acceptance-ambiguity|scope-change-preview","disposition":"frozen|mechanized|advisor|blocked"}
-{"event":"advisor_intent","moment_id":1,"decision_type":"<echoes its judgment_moment's decision_type>","why":"<1 line>"}
-{"event":"advisor_ruling","moment_id":1,"decision_type":"<echoes the paired advisor_intent's decision_type>","ruling":"<verdict>","rationale":"<1-3 lines>","confidence":"high|medium|low","what_would_change_my_mind":"<1 line>","digest_ref":"<path or null>"}
-{"event":"advisor_threshold","moment_id":4,"threshold":3,"consults_so_far":4}
-{"event":"advisor_unavailable","moment_id":2,"note":"transport not attached / pairing illegal — commander proceeds on own judgment, confidence degraded"}
+{"event":"brake","wave":1,"offload":[{"tier":"mid","w_est":0,"r":0.0,"C_brief_worker":{"tok":0,"basis":{"refs":["<path>"],"bytes":0,"class":"prose|code|cjk|mixed"}},"corpus":{"tok":0,"basis":{"refs":["<path>"],"bytes":0,"class":"prose|code|cjk|mixed"}},"boot":0}],"save":0,"pay":0,"verdict":"pass|fail|not-computable","ground":"wall-clock|corpus|disjoint-write|verification-mandated|none","inputs":{"C_brief_cmd":{"tok":0,"basis":{"refs":["<path>"],"bytes":0,"class":"prose|code|cjk|mixed"}},"C_reread":{"tok":0,"basis":{"refs":["<path>"],"bytes":0,"class":"prose|code|cjk|mixed"}}},"probe_ref":"<config_hash>@<ts>|null","anchor_rev":"<binding changelog rev>","r_rev":"<binding changelog rev>","k_note":"<free>"}
+{"event":"deviation","kind":"escalation|scope-change|estimate-drift|declaration-audit|aborted-dispatch|<open set>","note":"<free>","contract":"<task-contract path, optional — e.g. with kind aborted-dispatch>"}
+{"event":"dispatch","task_id":"<id>","tier":"mid","resolved_model":"<from the binding table>","read_only":true,"wave":1,"contract":"<path>","containment":"<free>","doubt":"<free>"}
+{"event":"judgment_moment","moment_id":1,"decision_type":"entry-gate|grading-dispute|worker-blocked|acceptance-ambiguity|scope-change-preview","disposition":"frozen|mechanized|surfaced|blocked","check":"<the station's one written line>"}
 {"event":"blocked_to_human","moment_id":2,"reason":"judgment-reserved|worker-blocked","payload":"<verbatim>"}
-{"event":"calibration_notify","calibration_id":"<stable proposal key>","channel":"<binding-named channel, or report-only>","status":"sent|report-only|failed","error":null}
 {"event":"dispatch_result","task_id":"<id>","checker":"VALID|INVALID","usage":{"<harness-reported worker token counts, verbatim>":0}}
 {"event":"dispatch_result","task_id":"<id>","checker":"VALID|INVALID","usage":"unavailable"}
+{"event":"close","terminal":"done|failed|blocked","members":[{"name":"<member>","status":"pass|fail(<rc>)|unverifiable|dropped(trigger-absent)"}]}
 ```
 
-The first journal line is ALWAYS `commander_stamp` — the commander
-self-reports its model id, the doctrine revision it runs under, and `vocab`,
-the journal vocabulary version (an integer; this revision's vocabulary is
-version 2). Auditors key their dialect on the vocab stamp, NEVER on event
-presence — presence inference would let a drifting commander escape full
-audit by writing old-form events, which is exactly the drift the stamp
-exists to kill. A journal without the stamp is audited as legacy with a
-named, visible LEGACY output line: an honest old journal never eats a false
-VIOLATION, and the degradation is never silent.
+Every line carries `ts` (ISO8601 UTC) in addition to the fields shown.
 
-Every dispatch line carries the binding-resolved model actually passed to
-the harness mechanism; the conformance audit joins these against execution
-telemetry after the run. **Additive fields** — a new optional field or a new
-open-set enum value, never a shrink of the vocabulary above, never a change
-to an existing event's required set, never a `vocab` bump — may extend ANY
-event, not only the `dispatch` line. On the `dispatch` line:
-`card:"<role>@<graded_under>"` — or `"none(<reason>)"` on a miss/stale
+The first journal line is ALWAYS `commander_stamp` — the commander
+self-reports its model id, the doctrine revision it runs under, the binding's
+model-generation tag, and `vocab`, the journal vocabulary version (an integer;
+this revision's vocabulary is version 3). Auditors key their dialect on the
+vocab stamp, NEVER on event presence — presence inference would let a
+drifting commander escape full audit by writing old-form events, which is
+exactly the drift the stamp exists to kill. **A journal an audit is invoked on
+that carries no stamp, or a stamp below the current vocabulary, FAILS that
+audit.** There is no legacy dialect and no fallback: the scope of every audit
+is the journal its own close chain hands it, so a stamp-less journal is not an
+honest old record being misread — it is a current record that failed to
+declare itself. Historical journals from earlier vocabularies are simply never
+re-invoked.
+
+**Additive fields** — a new optional field or a new open-set enum value, never
+a shrink of the vocabulary above, never a change to an existing event's
+required set, never a `vocab` bump — may extend ANY event. On the `dispatch`
+line: `card:"<role>@<graded_under>"` — or `"none(<reason>)"` on a miss/stale
 citation — when role cards are in play, `grade` (the three tiering axes, when
 no valid card is cited), `why_not_script`, `contract_family` (a stable id
-shared by same-family waves), `warm`, `warm_prior` (the prior dispatch's
-task_id; null when cold), `write_surface` (a digest of the contract's Owned
-Files, or `read-only`), `brief_tokens_est`, `w_est`, and — on warm dispatches
-— a `staleness_note` naming what was checked (§ Dispatch primitive red
-lines). The first non-dispatch example: a `deviation` line of
-`kind:"aborted-dispatch"` (an open-set value) carries an optional `contract`
-field naming the task-contract path a decided-but-unlaunched dispatch left
-behind — a STRUCTURED field, not free-text `note` parsing, is what a
-reconciliation audit pairs the orphan artifact against. The `dispatch_result`
-line (harvest side) records the checker verdict and the worker usage; `usage`
-is an ENUM — an object of harness-channel-reported token counts, verbatim, or
-the typed degradation marker `"unavailable"`. A prose pointer (a see-elsewhere
-note) is not a legal value.
+shared by same-family waves), `write_surface` (a digest of the contract's
+Owned Files, or `read-only`), `brief_tokens_est`, and `w_est`. The first
+non-dispatch example: a `deviation` line of `kind:"aborted-dispatch"` (an
+open-set value) carries an optional `contract` field naming the task-contract
+path a decided-but-unlaunched dispatch left behind — a STRUCTURED field, not
+free-text `note` parsing, is what a reconciliation audit pairs the orphan
+artifact against. The `dispatch_result` line (harvest side) records the
+checker verdict and the worker usage; `usage` is an ENUM — an object of
+harness-channel-reported token counts, verbatim, or the typed degradation
+marker `"unavailable"`. A prose pointer (a see-elsewhere note) is not a legal
+value.
+
+**Two folded judgment fields on the `dispatch` line.** Both were standalone
+events in earlier vocabularies and carry the same content on a field:
+
+- `containment` — owed on EACH write-role dispatch line: expected drift
+  exposure (duration × scope × novelty proxies) vs containment capacity
+  (mechanical-acceptance coverage × recovery cost).
+- `doubt` — owed on the dispatch line of the affected moment when an entry or
+  grading `judgment_moment` lands with disposition ≠ `frozen`: what the
+  commander is least sure about. One per recurrence, not one per run.
+
+On an uninstrumented run both are exercised and not recorded, like the
+stations they follow.
 
 **Computed-term object (one shape, four stations):** every computed brake
 input — offload `C_brief_worker`, offload `corpus`, inputs `C_brief_cmd`,
@@ -588,26 +618,22 @@ term: its value comes from the probe record and is verified by resolving
 `probe_ref`, never by byte recomputation. Recompute identities:
 `save = Σ w_est × (1−r)`;
 `pay = C_reread.tok + C_brief_cmd.tok + Σ r × (C_brief_worker.tok + boot + corpus.tok)`.
-Worker-side items ride per-offload (mixed tiers / mixed warm states each
-computed separately; `warm:true` ⇒ that item's `boot = corpus.tok = 0`).
+Worker-side items ride per-offload (mixed tiers each computed separately).
 Probe value unobtainable ⇒ `verdict:"not-computable"` (§ Amortization
 brake's conservative-closed path, in typed form).
 
-**Semantic validity (enforced at vocab ≥ 2):** typed carriers kill format
-drift; these four rules kill semantic drift:
+**Semantic validity (the four rules, enforced on every stamped journal):**
+typed carriers kill format drift; these kill semantic drift:
 
-1. **moment_id uniqueness** — one `judgment_moment` per `moment_id` per
-   journal; paired references (advisor_intent / advisor_ruling /
-   blocked_to_human echoing their moment) are not re-uses.
-2. **Referential pairing** — every `dispatch_result.task_id` and every
-   non-null `warm_prior` (a warm dispatch's; cold dispatches carry null and
-   owe no resolution) must resolve to an earlier `dispatch.task_id` in the
-   SAME journal, and a `warm_prior` target's `contract_family` must equal
-   the referring line's (cross-run warm is necessarily dangling; same-run
-   cross-family warm is equally a VIOLATION).
-3. **usage enum** — as above: token-count object or `"unavailable"`; prose
-   is illegal.
-4. **Override reason** — an `entry` event whose `class_default` is an
+1. **S1 — moment_id uniqueness.** One `judgment_moment` per `moment_id` per
+   journal; a paired reference (a `blocked_to_human` echoing its moment) is
+   not a re-use.
+2. **S2 — referential pairing.** Every `dispatch_result.task_id` must resolve
+   to an EARLIER `dispatch.task_id` in the SAME journal. A result attributed
+   to a dispatch this journal never recorded is unattributable work.
+3. **S3 — usage enum.** `dispatch_result.usage` is a token-count object or the
+   typed marker `"unavailable"`; prose is illegal.
+4. **S4 — override reason.** An `entry` event whose `class_default` is an
    override (§ Entry gate, mechanical task class) must carry a non-empty
    recorded reason inside it; an empty reason is a VIOLATION. The default
    set is overridable precisely because the reason is recorded, so an
@@ -616,32 +642,51 @@ drift; these four rules kill semantic drift:
    is the same VIOLATION by the shorter route — omission is the cheapest
    way to leave the default set unrecorded, so the audit reads a declared
    class as owing its `class_default`. This rule is the enforcement path —
-   not the family declaration-audit above, which reads a different field.
+   not the family declaration-audit in § Entry gate, which reads a different
+   field.
 
-**Typed-event coverage (owed-when triggers):** the `entry` event is
-unconditional — one per run, the gate's declaration in full (§ Entry gate).
-Each remaining event is owed ONLY when its trigger fires; an absent event
-with no trigger is compliant, and "owed but missing" is decidable from the
-journal alone:
+**Typed-event coverage (owed-when triggers):** on an instrumented run the
+`entry` event and the `close` event are unconditional — one of each per run,
+the gate's declaration in full and the chain's terminal digest. Each
+remaining event is owed ONLY when its trigger fires; an absent event with no
+trigger is compliant, and "owed but missing" is decidable from the journal
+alone:
 
-- `precedent` — owed before the first dispatch: the project-ledger query
-  result, cite / deviate / no-match (§ Precedent & eval loop).
-- `brake` — owed per wave when any offload is planned or executed (a
-  zero-dispatch inline run owes none). A vocab ≥ 2 journal containing
-  dispatch events but no brake event is an audit FAIL — the plan's absence
-  is no escape hatch.
+- `probe` — owed before the first dispatch: the row selection's outcome.
+- `brake` — owed per wave when any offload is planned or executed. A journal
+  containing dispatch events but no brake event is an audit FAIL — the plan's
+  absence is no escape hatch.
 - Subtask grading — carried on each `dispatch` line's additive fields
   (grade or card citation, why_not_script); a valid card citation replaces
   the grade axes, and a stale card is `card:"none"` plus full grading
   (§ Complexity tiering).
-- `containment_check` — owed when any write-role dispatch exists: expected
-  drift exposure (duration × scope × novelty proxies) vs containment
-  capacity (mechanical-acceptance coverage × recovery cost).
-- `doubt` — owed when an entry or grading `judgment_moment` lands with
-  disposition ≠ frozen: what the commander is least sure about.
-- `deviation` — opens at the first deviation event (escalation,
-  scope-change ruling, threshold crossing, advisor-unavailable degradation,
-  estimate drift, declaration-audit flag, warm fallback).
+- `containment` / `doubt` — dispatch-line fields, triggers as above.
+- `judgment_moment` — one per recognized moment (§ Judgment moments).
+- `deviation` — opens at the first deviation event (escalation, scope-change
+  ruling, estimate drift, declaration-audit flag, aborted dispatch).
+
+**The close event and its chain.** Close runs the project's canonical audit
+set as ONE invocation and records the outcome in the `close` event: each
+member by name with one of four statuses — `pass`, `fail(<rc>)`,
+`unverifiable`, `dropped(trigger-absent)`. The four exist because the three
+things that are not a pass are not the same thing, and collapsing any of them
+into `pass` is the silent false-green this whole surface is built to catch:
+
+- **`dropped(trigger-absent)`** — the member's trigger did not fire, so it was
+  not run. Dropped ≠ run ≠ passed.
+- **`unverifiable`** — the member RAN and could not conclude, because the
+  evidence it needs was not offered (the canonical case: a conformance check
+  with no execution telemetry). A member that cannot conclude is never
+  recorded as CLEAN, and it is never silently dropped either — it ran, and
+  what it could not establish is on the record.
+- **`fail(<rc>)`** — the member ran and failed, named with its exit code.
+  Batching may not hide WHICH member failed.
+
+Every member is run and recorded: a chain that stops at the first failure
+produces a close record with holes in it, and the record's completeness is
+what it is for. The members' list and their order are the adapter's single
+home, cited by anything that says "the close audits" rather than
+re-enumerated. The journal closes on this event.
 
 Judgment-bearing fields (grounds, doubt text, containment statements) are
 free-text one-liners BY DESIGN: the typed carrier changes the surface, not
@@ -652,66 +697,25 @@ the judgment itself.
 the sole legal home of machine-consumed record fields. A dispatch-plan.md
 may still be written — or generated from the journal — for human reading,
 but no auditor may take it as a source of record; where render and journal
-disagree, the journal governs, and the disagreement is an advisory signal
-with no audit consequence. The persistence duty the plan's append-per-wave
-rule once carried now rides the journal's append-only semantics: events
-land at their moment and are never rewritten — a rewrite is audit history
-destroyed.
+disagree, the journal governs, and the disagreement is a signal with no audit
+consequence. Journal events land at their moment and are never
+rewritten — a rewrite is audit history destroyed.
 
-## Precedent & eval loop
+## Durable records
 
-The mode's durable records are append-only and project-local, never
-shipped: the project's journal + precedent ledger, and the project's
-boot-probe record (§ Amortization brake).
+The mode's durable records are append-only and project-local, never shipped:
+an instrumented run's journal, and the project's boot-probe record
+(§ Amortization brake). Never rewrite an existing line: history is evidence,
+and a diff showing an existing line changed is itself a violation. Runs that
+are not instrumented leave no durable record, by design — the deliverable and
+version control are the record of what happened.
 
-**Project tier — journal + precedent ledger:** a per-project append-only
-ledger records every run (line formats: the contract layer's precedent
-schema; the file path is named by each harness binding). Append after EVERY
-run, including failed and blocked-to-human terminals — the outcome verdict
-records the terminal state. Never rewrite an existing line: history is
-evidence; the ledger is a version-controlled file, and a diff showing an
-existing line changed is itself a violation.
-
-**Retired: the operator constants table.** Earlier revisions kept an
-operator-level constants table feeding an entry-time price weighing and the
-brake. As of this revision NOTHING consumes or produces it: brake inputs
-are computed per-dispatch or read from the boot-probe record
-(§ Amortization brake), and the gate weighs no price (§ Entry gate).
-Existing table files remain valid history — their row schemas stay in the
-contract layer, marked deprecated — and are never read by this mode again.
-
-**Pre-dispatch duty (cite-or-deviate):** before dispatching, query the
-project ledger for lines matching the declared task shape (`task_shape.kind`
-+ `write_surface` equality). A match must be either cited in the typed
-precedent event (by `run_id`) or deviated from with a written reason.
-Querying is a duty; following is not. No match is a vacuous pass, recorded
-as `no-match`.
-
-**Calibration loop (target: the binding's conversion anchors):** at run
-close, run the deterministic trigger check (tier-0): ≥3 same-shape runs
-carrying a consistent typed `deviation_signal` (estimate drift between
-computed values and measured diff bytes, same sign) → append a
-`calibration/v1` `status=proposed` line whose proposal targets the
-binding's conversion-anchor rates, list it in the run report's
-pending-calibrations section, and emit a promote-pending notification
-through the binding-named channel (a harness without one degrades to the
-report floor; emission failure is journaled and never blocks run close). An
-open proposed line suppresses duplicate triggers for the same rule.
-Promotion or rejection is human-only, recorded by APPEND (a promoted line
-superseding the proposed one — never in-place) plus a changelog entry in
-the binding's anchor table: anchors are binding values, governed like the
-ratio table — evidence plus changelog, never a silent edit, and never a
-regression-run levy (see below).
-
-**Maintenance rule (doctrine-default changes ONLY):** a change to a
-DOCTRINE default (e.g. the attention threshold value) is legal ONLY when it
-cites a parity-regression run whose record (a) predates the text change,
-(b) carries `doctrine_rev` equal to the pre-change revision, and (c)
-carries a `candidate_delta` naming the proposed change — i.e. the
-regression executed the pre-change doctrine PLUS the candidate override,
-never old behaviour alone. The promoting `calibration/v1` line cites that
-run via its `m9_run` field, joining the ledger to the regression record. A
-change missing any leg is rejected on review. This rule's scope is doctrine
-defaults and nothing else: binding-owned values — conversion anchors, ratio
-rows — change through the calibration loop's evidence + changelog path, and
-a promoted line targeting an anchor owes no `m9_run`.
+**Default-change governance (doctrine defaults AND binding values):** a
+change to a default in this doctrine, or to a value the binding owns (a
+conversion anchor, a ratio row, a tier mapping), is legal ONLY when the
+changing spec or commit cites regression evidence that **predates the text
+change** — evidence gathered under the pre-change behavior, naming what the
+candidate change was expected to do. A change whose only evidence is
+collected after the fact has assumed its own conclusion. No ledger mechanism
+carries this rule; the citation lives in the spec or commit that makes the
+change, where a reviewer reads it.

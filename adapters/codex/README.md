@@ -5,6 +5,14 @@ Doctrine: `doctrine/orchestration-mode.md` (cite, never restate). Tier→model:
 `binding.md` beside this file. Codex-as-commander is documented at the end —
 documentation only, not an acceptance surface (flip-trigger FT-2).
 
+**The mode is paid for at the first dispatch** (doctrine § Entry gate). This
+adapter is the dispatch primitive's middle step, so everything below applies
+from the moment work is handed to a worker; a run that never dispatches uses
+none of it and leaves nothing behind. Self-audit ceremony — journal, computed
+brake terms, close chain — is instrumentation and applies only to a
+measurement-bearing run (doctrine § Audit surface trigger enum). The forwarder
+recipe below is the always-on part: contract in, result out, checker verdict.
+
 ## Verification record
 
 No `verified-run:` lines yet — no benchmark cell has been executed through
@@ -27,11 +35,24 @@ produce its Expected Output into the task directory (result schema path given
 in your prompt).
 ```
 
+## Preventive single-writer enforcement (mandatory, every dispatch run)
+
+Doctrine § Single-writer rule's preventive half, bound to this harness's
+sandbox flag. It is a procedural step, not paperwork: it binds on ordinary and
+instrumented runs alike, and does not depend on a journal existing.
+
+- Read-only fan-out workers: `--sandbox read-only`. Any number in parallel.
+- Write-capable work: `--sandbox workspace-write`, **ONE worker at a time**
+  per write surface (disjoint-write: non-overlapping surfaces, one writer
+  each, and the merge-back is itself a single-writer step).
+- The sandbox value actually passed is what an instrumented run records as the
+  dispatch line's `read_only` field (`read-only` → `true`).
+
 ## Thin-forwarder recipe (dispatch primitive, middle step)
 
-Inputs: `$task_dir` containing `task-contract.md`; `$model` resolved from
-`binding.md`; `$sandbox` = `read-only` for parallel fan-out workers,
-`workspace-write` for the single write-capable worker; `$conductor` =
+Inputs: `$task_dir` containing `task-contract.md` (the contract filename
+convention is contractual — doctrine § Dispatch primitive); `$model` resolved
+from `binding.md`; `$sandbox` per the preventive rule above; `$conductor` =
 conductor repo root.
 
 ```bash
@@ -74,8 +95,11 @@ flip-trigger FT-2 fires (a real case where CC is unavailable and Codex must
 command).
 
 An FT-2 rework SHALL import the commander stations landed for the other
-adapter meanwhile — verify-locus routing, the advisor-check mechanical form,
-and close/open ceremony batching — rather than re-deriving them.
+adapter meanwhile — verify-locus routing, the mechanical judgment-check form,
+the instrumentation trigger check, and the single-invocation close chain —
+rather than re-deriving them. That import duty is the whole of this section's
+forward scope: naming it here does not make Codex-as-commander an acceptance
+surface before FT-2 fires.
 
 `[unverified: FT-3]` Whether a TOML-defined agent can be spawned by file path
 — re-verify against official Codex docs when this adapter is reworked.

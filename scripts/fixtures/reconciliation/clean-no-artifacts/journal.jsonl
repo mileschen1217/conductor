@@ -1,4 +1,4 @@
-{"event": "commander_stamp", "ts": "2026-07-27T00:00:00Z", "model": "m", "doctrine_rev": "rev", "model_gen": "g1", "vocab": 3, "run_id": "fx-orphanc"}
+{"event": "commander_stamp", "ts": "2026-07-27T00:00:00Z", "model": "m", "doctrine_rev": "rev", "model_gen": "g1", "vocab": 3, "run_id": "fx-none"}
 {"event": "entry", "ts": "2026-07-27T00:00:00Z", "family": "write-heavy", "write_shape": "1-worker", "read_breadth": 0, "config": {"tiers": "cmd/worker"}, "grounds": "g", "veto": null}
 {"event": "probe", "ts": "2026-07-27T00:00:00Z", "action": "hit", "row": "h@t"}
 {"event": "close", "ts": "2026-07-27T00:00:00Z", "terminal": "done", "members": [{"name": "reconciliation", "status": "pass"}]}

@@ -2,16 +2,32 @@
 
 查得方法：Agent tool `model` 參數合法值（sonnet | opus | haiku | fable）+
 Claude Code 官方文件的現行模型 ID（操作者本機 dispatch 慣例檔可覆寫此表）。
-查證與釘文件日期：**2026-07-11**。官方 advisor 頁與 subagents 頁互不引用
-（單向性）＝FT-v2-5 訊號：行為可能無聲變動，本表大改前回訪官方文件。
+查證與釘文件日期：**2026-07-11**。官方文件對這些介面的行為可能無聲變動，
+本表大改前回訪官方文件。
 
 | 能力階層 | 模型/agent | 適用任務形 | 備註 |
 |---|---|---|---|
-| frontier | fable（`claude-fable-5`）；opus（`claude-opus-4-8`）為次選 | 首次診斷、架構取捨、跨檔不變量、advisor 位 | advisor pairing 限制：fable 主對話僅接受 fable advisor（sonnet 主 → opus advisor 合法） |
+| frontier | fable（`claude-fable-5`）；opus（`claude-opus-4-8`）為次選 | 首次診斷、架構取捨、跨檔不變量 | 通常即 commander 自身 |
 | mid | sonnet（`claude-sonnet-5`）— Agent tool 預設工人；唯讀 fan-out 用 `Explore` agent type | 規格清楚的實作、搜尋/盤點、多源研究、審查 lens | 預設工人；v1 表載 claude-sonnet-4-6 已過期（telemetry 實證 claude-sonnet-5，2026-07-10 benchmark） |
 | cheap | haiku（`claude-haiku-4-5-20251001`） | 已解模式批次套用、格式轉換、機械枚舉 | 紅線承 doctrine § Capability tiers |
 
 tier-0 不入表：tier-0 是 script（Bash/Python），不經 Agent tool。
+
+## Worker tier（doctrine § Capability tiers「worker tier default」的 CC 綁定）
+
+L1 的一句原則落到本表：**預設低 commander 一階**（opus commander → sonnet
+worker），並取「預期一次 dispatch 就過驗收的最便宜階」。
+
+- **為什麼是一階而不是兩階**：opus→sonnet 已吃下每 token 省項的約 80%；
+  sonnet→haiku 只再多約 16 個百分點，但失敗階差大——一次 haiku 失敗＝一次
+  sonnet 重派的 C_fresh ＋ 額外 harvest 往返，蓋過那 16%。
+- **haiku 作 worker 的准入（三條件全中才合法）**：(1) brief 純機械、零殘留
+  判斷；(2) 有便宜的可執行 check artifact，失敗由機器抓而非自報；(3) 小而多
+  的子任務，單次重派成本有界、16% 才複利。典型：逐模組盤點/掃描工位、
+  測試輸出收集、格式 sweep。
+- **誠實線**：haiku-as-worker 在本專案紀錄中樣本數 **0**（M9 測到的崩落是
+  haiku 作 *commander*，不同位置）。上列三條件是推理，不是實測結論；首個
+  樣本由 MigrationBench 臂帶出，屆時以實測回寫本節並記 changelog。
 
 ## 價格比 r 與單位權重（doctrine § Amortization brake 的 CC 綁定）
 
@@ -44,7 +60,8 @@ changelog：
 
 Brake 的計算輸入（C_brief_cmd／C_brief_worker／C_reread／C_fresh corpus 項）
 一律「實物 bytes → tok-eq」換算；錨值只住本節（L1 名機制不載值），變更走
-calibration promote（target=anchor，人裁）＋本節 changelog——與 r 表同構。
+doctrine § Durable records 的 default-change governance（先於文字變更的迴歸
+證據，引在改動的 spec/commit 裡）＋本節 changelog——與 r 表同構。
 粗比例（數量級精度）；estimate-drift 訊號軌是收斂機制。
 
 | class | 錨率（chars per tok-eq） | 依據 |
@@ -99,32 +116,13 @@ gitignored，不 ship；schema = `contract/probe.schema.json`；唯一 writer =
 - **選行**：`scripts/probe-select.py .conductor/probe.jsonl --harness claude-code --config-hash <hex> --model-gen <gen>`
   → `HIT`（直接消費）｜`REPROBE`（跑探針、append 新行）｜`ERROR`
   （conservative-closed：brake verdict=not-computable，necessity ground only）。
-- 首次 mode entry 自動探（SKILL Phase 1 hook）；entry 永不因探針失敗 block。
+- **只在 instrumented run 讀寫**（doctrine § Audit surface trigger enum）：
+  ordinary run 既不讀探針也不寫探針，其 boot 項不入算。instrumented run 的
+  第一次 dispatch 若無可用行才探；entry 永不因探針失敗 block。
 
 changelog：
 - 2026-07-18 建節（v3.1 build）：首版程序＋hash 輸入清單（model id 集合＋
   本節版本）。
-
-## Warm channel（doctrine § Dispatch primitive「warm continuation」的 CC 綁定）
-
-**本 binding 宣告有 warm channel——限頂層 commander session。** 機制 = 同一
-commander session 內以 SendMessage 對既有具名 worker agent 續派（Agent tool
-起的 worker 在完成後保留 transcript，後續 wave 可循名續話——同 run 內有效）。
-記帳：warm hop pay = r_i × C_brief_worker（boot、corpus 項為零，doctrine
-§ Amortization brake）。**位置邊界（v3.1 witness 實測）**：巢狀 agent
-（被派出的 mini-commander）無法 spawn 具名可續話 worker（roster 扁平），
-故 warm channel 對其不可用——該位置一律冷啟記帳（宣告缺席的合法降級，
-doctrine 能力宣告制；witness：wt5-warm 誠實 blocked，2026-07-18）。
-
-- **Staleness 判定的機械面（紅線 (3) 的證據基）**：查本 run journal 中
-  該 worker 快取 corpus 所在 write surface 的他筆紀錄——其他 dispatch 行的
-  `write_surface` 欄與 commander 自身 inline 編輯紀錄；warm 派工必帶
-  `staleness_note`（查了哪些面）。不確定＝保守 fresh（fail-safe 方向，
-  doctrine 明文）。
-- 紅線 (1)(2) 與 verifier-always-fresh 照 doctrine；fresh-context verifier
-  一律新 agent，永不續話。
-- Worker 死亡/無回應 → 冷退（fresh dispatch）＋ deviation event
-  `kind=warm-fallback`；brake event 以實跑形（warm=false）記帳。
 
 ## model_gen 正規化（role card 戳記與 probe 記錄 key 用）
 
@@ -132,24 +130,20 @@ doctrine 能力宣告制；witness：wt5-warm 誠實 blocked，2026-07-18）。
 ＝同一 tag；任一 tier 換代（表列模型 id 更換主版本）＝ tag 換新（格式
 `gYYYY.MM`，取換代當月）。minor id 漂移（如 dated snapshot 更新）不換 tag。
 
-## User-level 常數表【歷史檔，0.4.0 起退役】
+## Offered surfaces（journal 記錄面的合法量測源）
 
-- 路徑：`~/.claude/conductor/constants.jsonl`——**自 0.4.0（v3.1）起無生產者
-  也無消費者**：gate 不秤價（doctrine § Entry gate）、brake 輸入逐次計算＋
-  探針取得（上兩節）、collector 不再 append 任何行（`tools/collect-run-stats.py`
-  只餘 estimate-drift 訊號）。檔案留檔作歷史，永不刪改；行 schema
-  （`contract/constants.schema.json`）保留 deprecated 註記作歷史行法源。
-- Offered surfaces（journal 記錄面的合法量測源，依 doctrine「介面非內部」，
-  與常數表退役無關、照舊有效）：
-  1. `in-channel-worker-usage` — Agent tool 頻道內回報的 worker token 用量，
-     commander 原樣記入 journal `dispatch_result.usage`（typed enum：數值
-     物件 | `"unavailable"`）；
-  2. `headless-json` — headless 執行的 JSON 輸出（run 總量；帳單級；boot
-     探針即用此面）；
-  3. `journal-estimate` — commander 對 brief／re-read 體積的 tok-eq 計算
-     （journal additive 欄位 `brief_tokens_est`／`reread_tokens_est`，經
-     換算錨表）。
-  session transcript／on-disk 內部格式非法源（doctrine 明令）。
+依 doctrine「介面非內部」：
+
+1. `in-channel-worker-usage` — Agent tool 頻道內回報的 worker token 用量，
+   commander 原樣記入 journal `dispatch_result.usage`（typed enum：數值物件
+   | `"unavailable"`）；
+2. `headless-json` — headless 執行的 JSON 輸出（run 總量；帳單級；boot
+   探針即用此面）；
+3. `journal-estimate` — commander 對 brief／re-read 體積的 tok-eq 計算
+   （journal additive 欄位 `brief_tokens_est`／`reread_tokens_est`，經
+   換算錨表）。
+
+session transcript／on-disk 內部格式非法源（doctrine 明令）。
 
 ## Role card 綁定（doctrine § Complexity tiering — Role cards 的 CC 面）
 
@@ -168,50 +162,10 @@ doctrine_rev 的取得：`git log -1 --format=%h -- <doctrine 檔路徑>`
 REV 新鮮度由 `scripts/check-doctrine-rev.sh` 在 repo 端把關（doctrine 變更
 後的 follow-up commit 更新 REV，與卡 re-key 同車）。
 
-## Advisor transport（doctrine § Advisor primitive 的 CC 綁定）
-
-- 傳輸 = CC 內建 advisor tool。前置：人一次性 `/advisor <model>`（session 級
-  配置，commander 無法自行配置）。未掛/pairing 不合法 → doctrine 的
-  `advisor_unavailable` 降級路徑。
-- **Per-call digest 紀錄（本 binding 的必填義務；L2 schema 的 `digest_ref`
-  在 CC 側必填）**：呼叫前把送審 context 的 digest 寫到
-  `<task-dir>/advisor/<moment_id>-digest.md`，`advisor_ruling` 行的
-  `digest_ref` 指向它——full-context call 旁的獨立見證，跨 binding 比對用。
-- **Per-worker advisor opt-out：不存在**（probe 1）。advisor 是 session
-  級的：配對合法時它同時出現在 commander 與**每一個 worker**的工具面，
-  commander 無法只給自己不給工人。故 worker→advisor 必須以**契約宣告
-  （task-contract § Advisor Scope）+ worker 自身揭露義務**治理，絕不可假設
-  「工人沒有那個工具」。
-- **Observation surface：本 binding 不提供。** CC 未對外提供任何 advisor 使用的
-  介面級觀測面（probe 2）——唯一留痕處是 session transcript，那是 CC 的
-  **內部格式**，doctrine § Advisor primitive 明令 mode 不得綁 harness 內部實作。
-  故 CC 側 undisclosed-use 檢查的常態＝**UNVERIFIABLE，永不 CLEAN**；worker→
-  advisor 的治理靠**契約宣告**（task-contract § Advisor Scope）+ worker 自身
-  揭露義務。**harness 若謊報 worker 的執行事實，那是 harness 的缺陷，不是本
-  mode 的威脅模型。**
-- Measurement-bearing run（benchmark cell／parity／ablation——輸出「這份工作由
-  某 tier 完成」這種宣稱的 run）另有要求：那類 run 的數字會被未揭露的 consult
-  無聲汙染，故須一次性查驗。工具與程序在 **`benchmark/`**，不在本 binding：
-  `benchmark/tools/cc-advisor-observations.py`（明載綁 CC 內部、升級即可能失效；
-  失效時正解是 UNVERIFIABLE 或改由 agent 人工讀，不是往內部鑽更深）。
-
-上兩條陳述（無 per-worker opt-out；無介面級觀測面）的實測依據：
-`benchmark/probes/2026-07-12-cc-advisor-probes.md`（probe 1 + probe 2，
-均 CLOSED）。本 binding 只承載結論。
-
-## Precedent ledger（doctrine § Precedent & eval loop 的 CC 綁定）
-
-- 路徑：`<project-root>/.conductor/precedent.jsonl`（repo 追蹤檔；歷史不可變
-  性由 version control 稽核——既有行改寫在 diff 現形即違規）。
-- Promote-pending 通報 channel：`PushNotification` 工具（schema 已驗證存在；
-  session 級；使用者在終端時自動略過——skip 即 report-only 降級的天然形）。
-  emission 失敗降級 report-only（journal `calibration_notify` 行記
-  `status=failed`），絕不擋 run close。
-
 ## Preventive single-writer enforcement（doctrine § Single-writer rule 的 CC 面）
 
 read breadth 一律以唯讀 agent type（`Explore`——工具集無 Write/Edit）派出，
-宣告記入 dispatch 記錄；write worker（`general-purpose`）每個 write surface
+宣告記入 dispatch 記錄的 `read_only` 欄；write worker（`general-purpose`）每個 write surface
 同時至多一個（disjoint-write shape：面不相交、各面單筆、merge 合流單筆）。
 
 Explore 型 worker **寫不出 result.json**（無 Write 工具，結構性）：唯讀契約
@@ -219,10 +173,13 @@ Explore 型 worker **寫不出 result.json**（無 Write 工具，結構性）�
 task-dir 的 result.json（機械轉錄，provenance 註記 commander-persisted）——
 write shape 為 inline/1-worker 時不破 single-writer。逐字 artifact 要緊時
 改派 task-dir-scoped 的 write worker。（實測：MR9 witness run，4/5 Explore
-worker 交付被此擋下；承 sonnet-v2form precedent lesson。）
+worker 交付被此擋下。）
 
-轉錄界線：findings 內容機械逐字；但 worker 自報的 `judgment_events` 等
-doctrine 詞彙欄位須經 commander 自行核判才入 artifact——worker 環境可能帶
-與 mode Advisor Scope 無關的 harness 層 advisor 工具，其誤標自報若被盲信
-轉錄即污染 ledger（實測：MR9 partition-1 廢稿自報 2 筆禁區
-acceptance-interpretation consult，實為環境工具誤標）。
+轉錄界線：findings 內容機械逐字；但 worker 自報的 doctrine 詞彙欄位須經
+commander 自行核判才入紀錄——worker 環境可能帶與本 mode 無關的 harness 層
+工具，其誤標自報若被盲信轉錄即污染紀錄（實測：MR9 partition-1 廢稿自報 2 筆
+禁區 decision_type，實為環境工具誤標）。
+
+**本節的規則不依賴 instrumentation**：唯讀 fan-out 用唯讀 agent type、
+write worker 同時至多一個，這兩條在 ordinary run 與 instrumented run 上
+一字不差地適用（doctrine § Single-writer rule：預防面是程序不是文書）。

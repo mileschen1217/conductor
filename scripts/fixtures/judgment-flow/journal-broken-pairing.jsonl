@@ -1,6 +1,5 @@
 {"event": "commander_stamp", "ts": "2026-07-27T00:00:00Z", "model": "<frontier>", "doctrine_rev": "abc1234", "model_gen": "g2026.07", "vocab": 3}
 {"event": "entry", "ts": "2026-07-27T00:00:00Z", "family": "write-heavy", "write_shape": "1-worker", "read_breadth": 0, "config": {"tiers": "worker=mid"}, "grounds": "spec-driven build", "veto": null}
-{"event": "judgment_moment", "ts": "2026-07-27T00:00:00Z", "moment_id": 1, "decision_type": "entry-gate", "disposition": "frozen", "check": "judgment-check: entry / no-match / the declared class pre-answers this station"}
 {"event": "dispatch", "ts": "2026-07-27T00:00:00Z", "task_id": "t1", "tier": "mid", "resolved_model": "<mid-model>", "read_only": false, "wave": 1, "contract": "t1/task-contract.md", "containment": "one file, frozen suite covers acceptance", "why_not_script": "needs judgment about naming"}
-{"event": "dispatch_result", "ts": "2026-07-27T00:00:00Z", "task_id": "t1", "checker": "VALID", "usage": {"input_tokens": 10, "output_tokens": 5}}
+{"event": "dispatch_result", "ts": "2026-07-27T00:00:00Z", "task_id": "t9", "checker": "VALID", "usage": "unavailable"}
 {"event": "close", "ts": "2026-07-27T00:00:00Z", "terminal": "done", "members": [{"name": "judgment-flow", "status": "pass"}, {"name": "reconciliation", "status": "dropped(trigger-absent)"}]}

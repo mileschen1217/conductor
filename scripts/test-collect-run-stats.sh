@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# test-collect-run-stats.sh — fixture suite for the CC binding's tier-0
-# estimate-drift emitter (v3.1 REQ-5 / AC-10: constants-row production
-# RETIRED — the tool writes nothing anywhere). Offline, deterministic.
+# test-collect-run-stats.sh — fixture suite for the harness binding's tier-0
+# estimate-drift emitter (the tool writes nothing anywhere).
+# Offline, deterministic.
 set -u
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 COL="$ROOT/adapters/claude-code/tools/collect-run-stats.py"
@@ -43,7 +43,7 @@ python3 "$COL" "$TMP/does-not-exist.jsonl" >/dev/null 2>&1
 check "missing journal: exit 2" 2 $?
 
 # 6. retired flags rejected — a caller still passing --out/--binding must hear
-#    about it, not get a silent no-op (the constants table is history)
+#    about it, not get a silent no-op
 python3 "$COL" "$FIX/journal-full.jsonl" --binding claude-code --out "$TMP/t6.jsonl" >/dev/null 2>&1
 check "retired flags: exit 2" 2 $?
 check "retired flags: no file created" 0 "$(ls "$TMP"/t6.jsonl 2>/dev/null | wc -l | tr -d ' ')"

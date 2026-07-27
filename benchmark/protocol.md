@@ -1,8 +1,23 @@
-# Benchmark protocol v2 — commander×topology matrix
+# Benchmark protocol — comparative acceptance procedures
 
-One-shot comparative acceptance procedure (NOT standing eval infrastructure).
+One-shot comparative acceptance procedures (NOT standing eval infrastructure).
 Human-governed: the human selects the task, adjudicates quality, and rules
 pass/fail — this protocol contains NO automatic pass logic.
+
+**How to read this file.** Sections below marked **[historical — ran under
+<revision>]** describe protocols that already executed. They are kept in the
+vocabulary of the doctrine revision they ran under, because a record rewritten
+to match current vocabulary is no longer a record of what happened. Only the
+unmarked sections — § Isolation invariants, § Ceremony-replay method,
+§ Ledger, § Quality rubric, § Acceptance-judge instruction — are live
+procedure for a new run.
+
+Vocabulary note for every historical section: they predate the
+pay-at-first-dispatch cut (0.7.0), so they speak of a "0-worker form" — a run
+that entered the mode and paid its ceremony without dispatching anything.
+That form no longer exists: a run that never dispatches is not in the mode.
+The measurements those sections report remain valid measurements OF that
+form.
 
 ## Task selection (human)
 
@@ -11,16 +26,17 @@ heterogeneous; quality is decidable by tests and/or severity-graded review.
 The selection (task, repo, why it meets each criterion) is recorded in the
 run ledger entry (`task_ref`).
 
-## Matrix (v2 — supersedes the single inline-vs-conductor pair)
+## Matrix (v2) **[historical — ran under the v2 revision, 2026-07-12/13]**
 
 Commander models (4, human-confirmable at R1): fable / opus / sonnet / haiku
 (CC binding table 2026-07-11). Cells: 4 commander models × {inline, v2-form}
 plus ONE bare-inline ablation cell = **9 cells / 9 ledger rows**.
 
-- **matrix inline cell** = the mode's 0-worker form: journal + entry-gate
-  declaration, pen stays with the commander; contract/result artifacts are
-  consumer-gated (produced only when a second context consumes them — doctrine
-  § Entry gate write-shape table).
+- **matrix inline cell** = the v2 "0-worker form": journal + entry-gate
+  declaration, pen stays with the commander; contract/result artifacts
+  produced only when a second context consumed them. (Under the current
+  revision this cell is not constructible — an undelegated run does not enter
+  the mode at all.)
 - **v2-form cell** = topology per the entry gate's own output for the task.
 - **bare-inline ablation cell** (the 9th): prompt-only, NO mode machinery, on
   the mid-tier commander model (sonnet — the tier the gate's refusal
@@ -35,8 +51,8 @@ missed) — never folded into topology comparisons.
 **Staged execution:** inline row first (4 cells), then v2-form row, ablation
 cell last. Cell 2 (opus-inline) may reuse the 2026-07-10 ledger data ONLY if
 the task is identical to v1's; else rerun (+cost accepted). Every completed
-cell appends one ledger row AND one precedent/v1 line to
-`.conductor/precedent.jsonl`.
+cell appended one ledger row (and, under that revision, one line to the
+per-project precedent ledger — a mechanism since removed).
 
 **Adjudication:** the commander-vs-inline face is human-ruled per cell pair
 by the R3 formula (quality not-worse AND cost lower — § Quality rubric).
@@ -71,26 +87,27 @@ tier claim, whatever its cause.
    rerun recorded in the ledger (symmetric contamination is acceptable and
    noted).
 
-5. **No undisclosed tier leakage** — a cell's whole point is the claim "this
-   work was done at tier X". A worker that silently consults a frontier advisor
-   makes that claim false while every number still looks clean, so each cell is
-   checked at close: worker advisor calls observed vs disclosed in
-   result.json's `judgment_events`. Mismatch voids the cell's tier claim.
-   Because this is a *measurement* duty and not a mode duty (doctrine
-   § Advisor primitive: the mode binds a harness's interface, never its
-   internals; ordinary runs rest at UNVERIFIABLE), the machinery lives here:
+5. **The tier claim is verified, not assumed** — a cell's whole point is the
+   claim "this work was done at tier X", and a claim about which model ran is
+   worth exactly the evidence behind it. Each cell is checked at close by
+   `scripts/audit-model-conformance.py <journal> [<telemetry>]`, which joins
+   every journal `dispatch` line's `resolved_model` against the run's
+   execution telemetry (C1) and the commander's own stamp against the session
+   rows (C2). Its C0 leg — the journal opens on `commander_stamp` — is
+   telemetry-independent and runs on every instrumented close, with or without
+   a telemetry export.
 
-   - CC arms: `benchmark/tools/cc-advisor-observations.py` produces the
-     observation file, and each dispatch prompt in a measured run must carry a
-     literal `Task contract: <task_id>` line for its calls to be attributable.
-     The tool reads CC-internal transcripts and **will break on a CC upgrade**;
-     when it does, verify by having an agent read the run's worker sessions, or
-     record UNVERIFIABLE. Never deepen the excavation.
-   - codex arms: no advisor path is reachable from the worker sandbox
-     (*reasoned*, not probed) — record UNVERIFIABLE, not CLEAN, until probed.
-   - Either way the verdict is joined by
-     `scripts/audit-judgment-flow.py --results … --advisor-observations …`
-     (vendor-neutral; absent observations = UNVERIFIABLE, never CLEAN).
+   A cell with no telemetry export is recorded **UNVERIFIABLE, never CLEAN**,
+   and an UNVERIFIABLE tier claim may not be published as a tier claim. This
+   is the whole of the leakage check that survives: the earlier
+   consult-observation machinery is gone with the primitive it observed, and
+   nothing replaced it, because there is no longer a second model the worker
+   could quietly reach.
+
+   Any planned-vs-actual mismatch voids the cell's tier claim, whatever its
+   cause (doctrine: a harness that misreports which model it ran is that
+   harness's defect, not this mode's threat model — but the arm's numbers are
+   void either way).
 
 Isolation audit: before adjudication, an audit of each arm's inputs (worktree
 diff provenance + transcript reads) confirms invariant 4; the audit record
@@ -106,22 +123,18 @@ ruling 2026-07-13): each line asserts only that the combination ran
 validly under this protocol; comparative verdicts (R3) live in the
 ledger's ruling rows, including negative ones.
 
-## v3 regression — distill kernel 4+1 arms (acceptance protocol for doctrine v3)
+## v3 regression — distill kernel 4+1 arms **[historical — ran under v3, 2026-07-17]**
 
 Harness single home: the distill repo's `benchmark/` (run-arm / summarize /
 cost scripts and the cross-check rule in its README — cite, never restate).
 Frozen inputs: distill arm-base `a43c48a`, byte-identical spec per arm (plus
 each arm's own methodology paragraph only), same main model on every arm,
 headless, arms run serially, worktree isolation per arm (invariants above
-apply unchanged). Operator constants table: isolate per arm (HOME-level
-override or per-arm table path) — the 2026-07-17 run showed serial arms
-couple through the shared table (a later arm's brake consumed an earlier
-arm's appended row); harmless there (topologies were pinned or pre-dated
-the row) but it is an arm-order variance channel. The at-start snapshot
-into run meta stays required either way.
+apply unchanged). (That revision also kept an operator-level
+constants table, which coupled serial arms through a shared file; the table
+and its coupling are gone.)
 
-Arms (5): `inline` (floor) / `inline+v3form` (the mode's 0-worker form under
-v3 doctrine) / `anvil-sdd` (incumbent) / `conductor-v3` (gate's own topology)
+Arms (5): `inline` (floor) / `inline+v3form` (the v3 "0-worker form") / `anvil-sdd` (incumbent) / `conductor-v3` (gate's own topology)
 / `forced-1-worker` (commander never holds the pen; the forcing is the
 doctrine's human-veto mechanism — who/changed-to/why recorded in the arm
 brief, so the conformance audit reads it as governed, not violating).
@@ -162,7 +175,7 @@ Journal events: v2 vocabulary unchanged (zero-shrink); v3 adds
 `dispatch_result` (checker verdict + in-channel worker usage) and additive
 `dispatch` fields (`card`, `brief_tokens_est`, `w_est`).
 
-## judgment-surface-reduction re-run — two arms, one row each
+## judgment-surface-reduction re-run **[historical — ran under 0.6.0, 2026-07-25]**
 
 Harness single home: the distill repo's `benchmark/` (cite, never restate),
 frozen kernel Phase 1 task, frozen held-out pytest suite (133 assertions),
@@ -177,6 +190,19 @@ current billing rates must equal those the floor fit used (in 5 / out 25 /
 cache-read 0.5 / 1h-write 10 USD per MTok). Any mismatch voids the reused
 floor and forces a fresh floor run.
 
+**Pinned session settings (every arm, no exceptions).** An arm inherits from
+the CLI exactly what it does not pin, and CLI defaults move: the `opus` alias
+resolved to `claude-opus-4-8` when the floor was measured and to
+`claude-opus-5` two days later, which would have put a model generation inside
+a discipline-price delta had it not been caught. Therefore every arm pins the
+commander model (`ARM_MODEL`) and the reasoning effort (`ARM_EFFORT`)
+explicitly, and `summary.json` records the effort and CLI version actually
+observed in the transcript. An arm whose recorded settings differ from another
+arm's is not comparable with it, and a recorded value of `UNRECORDED` voids the
+comparison rather than being read as "probably the default". Effort is an
+operator setting, not a conductor lever — this harness's dispatch primitive
+exposes no effort parameter — so it is controlled, never optimised.
+
 **Canonical turn metric (both arms):** unique API calls, deduped by message
 id from the session transcript. The summary fields `num_turns` /
 `num_turns_reported` are advisory only and DISQUALIFIED as evidence — the
@@ -184,7 +210,7 @@ sidechain-inclusive count produced a "+9 turns" narrative that the deduped
 count overturned (floor 65 vs 59). Per-arm tables stay isolated: neither arm
 is reported in the other's row.
 
-### Arm — form (mode 0-worker form under the shipped revision)
+### Arm — form (the 0.6.0 "0-worker form")
 
 - Brief: `benchmark/briefs/jsr-form-arm.md`.
 - Installed from the published marketplace at the revision under test; the
@@ -213,6 +239,56 @@ is reported in the other's row.
 - **Pollution rule:** the nudge text and its marker appear in this arm's
   brief only. Every other arm brief is checked both ways — a grep for the
   marker and a read for the same guidance in any paraphrase.
+
+## Ceremony-replay method (live procedure)
+
+The instrument that attributes an arm's cost to the mode rather than to the
+task. It replays the arm's own transcript and counts the calls that exist
+only because the mode was installed. Two measurements rest on it — the
+null-check band and the instrumentation share of a delegating arm — so its
+membership rule is fixed here rather than re-decided per run.
+
+**Unit.** The billed unit is the API round-trip, not the byte. A single call
+at a large context costs on the order of a tenth of a dollar whatever it
+carries, and the mode's own TEXT is nearly free (a measured +159 tokens
+across a whole run's ceremony). Count calls; do not count characters.
+
+**Membership — a call is a ceremony call iff it does one of:**
+
+1. reads or writes an artifact under the run's `.conductor/` tree (journal
+   appends INCLUDED — an append is a round-trip like any other);
+2. invokes a mode script (anything under the conductor root's `scripts/` or
+   an adapter's `tools/`);
+3. reads a mode document *during the run* in order to act (the doctrine, an
+   adapter file, a task-contract template) — reading it to author the arm's
+   brief before the run starts is setup, not ceremony.
+
+**Excluded, always:** the task's own build, test, lint, and version-control
+commands; the harness's own session bookkeeping; anything the floor arm also
+does. The test is counterfactual and mechanical: *would this call exist in
+the uninstalled floor arm?* If yes, it is not ceremony.
+
+**Conditional events count when they fire.** A mid-run event that the
+doctrine owes only under a trigger is a ceremony call on the runs where its
+trigger fired, and no call at all on the runs where it did not. Averaging it
+across runs would hide exactly the conditioning the current revision is
+built on.
+
+**Null check (the instrument's own calibration).** Before trusting a replay
+number, run the replayer against a floor arm — an arm with no mode installed.
+It must report **0** ceremony calls and $0.00. A replayer that finds ceremony
+in an arm that has none is measuring its own assumptions, and its numbers on
+the other arms are void.
+
+**Outputs, per arm:** the ceremony call count, the dollar attribution
+(ceremony calls × that arm's measured per-call cost), and the ceremony share
+of billed total. For a delegating arm, report the production estimate
+(billed − instrumentation) alongside billed, and never in place of it.
+
+**Reproducibility.** The replayer script is archived with the run meta of the
+round that used it, and the archived copy — not a re-derivation — is what a
+later round re-runs. A replay whose instrument was not preserved is not a
+reproducible measurement, which is how one prior round lost its baseline.
 
 ## Ledger — `benchmark/ledger.jsonl` (append-only; one run per line; never rewrite)
 

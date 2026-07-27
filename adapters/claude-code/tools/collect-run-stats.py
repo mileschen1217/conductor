@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
-"""collect-run-stats.py — L3 tier-0 estimate-drift emitter (v3.1 REQ-5 / AC-10).
+"""collect-run-stats.py — L3 tier-0 estimate-drift emitter.
 
-History: through v3 (0.3.x) this tool appended constants rows to the
-operator's constants table at precedent-append time. As of v3.1 (0.4.0) that
-table is retired from BOTH production and consumption (doctrine § Precedent &
-eval loop): brake inputs are computed per-dispatch or read from the boot-probe
-record, and nothing reads the table. The collector's one remaining duty is the
-estimate-drift signal — dispatch.w_est vs the dispatch_result's
-harness-reported output tokens — printed as JSON lines for the commander to
-journal as typed deviation events (the calibration loop's anchor-retargeting
-input). This tool now writes NOTHING anywhere: the operator constants file is
-historical and stays byte-identical through every run close.
+Runs on an instrumented close only, because only an instrumented run has the
+journal this reads. Its one duty is the estimate-drift signal —
+dispatch.w_est vs the dispatch_result's harness-reported output tokens —
+printed as JSON lines for the commander to journal as typed deviation events.
+Drift is evidence for a later change to the binding's anchors, which travels
+the evidence path of doctrine § Durable records. This tool WRITES NOTHING
+anywhere.
 
 Inputs are EXACTLY the run journal (doctrine: the mode binds a harness's
 interface, never its internals — session transcripts and on-disk internal
@@ -84,8 +81,8 @@ def main():
                 "w_actual": w_act,
                 # doctrine's canonical drift basis is delivered diff bytes
                 # through the anchors; the in-channel output count is a PROXY
-                # this journal-only tool can reach — named so the calibration
-                # reader never mistakes it for a bytes measurement. The
+                # this journal-only tool can reach — named so a later reader
+                # never mistakes it for a bytes measurement. The
                 # commander computes the bytes-basis drift at close via
                 # estimate-tokens.py on the delivered files (SKILL Phase 5).
                 "w_actual_source": "usage-output-tokens(proxy)",

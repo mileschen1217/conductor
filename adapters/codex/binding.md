@@ -20,14 +20,29 @@
 | mid | `gpt-5.4`，reasoning effort `medium` | 規格清楚的實作、搜尋、研究 | models_cache 描述："Strong model for everyday coding"；`config.toml` 的 `[notice.model_migrations]` 標示 `gpt-5.4`→`gpt-5.5` 升級建議，但 models_cache 仍列 `gpt-5.4` 為 `visibility: list`（現行可用，非棄用）。定性：中費率檔 |
 | cheap | `gpt-5.4-mini`，reasoning effort `low` | 已解模式批次套用、機械枚舉 | models_cache 描述："Small, fast, and cost-efficient model for simpler coding tasks"。定性：最低費率檔 |
 
+## Worker tier（doctrine § Capability tiers「worker tier default」的 codex 綁定）
+
+L1 原則：預設低 commander 一階，取「預期一次 dispatch 就過驗收的最便宜階」。
+本表的一階梯：commander `gpt-5.5`（frontier）→ worker `gpt-5.4`（mid）為預設。
+
+- **`gpt-5.4-mini`（cheap）作 worker 的准入（三條件全中才合法）**：(1) brief
+  純機械、零殘留判斷；(2) 有便宜的可執行 check artifact，失敗由機器抓而非
+  自報；(3) 小而多的子任務，單次重派成本有界。典型：逐模組盤點/掃描工位、
+  格式 sweep。
+- **誠實線**：本 binding 無費率表，故上列「省多少」在 codex 側無數字支撐；
+  三條件是可移植的**風險**判準（失敗要機器抓得到、重派成本要有界），不是
+  成本結論。cheap-tier 作 worker 在本 adapter 樣本數 0。
+
 ## 價格比 r 與單位權重（doctrine § Amortization brake 的 codex 綁定）
 
 **本 binding 目前無 r 表、無換算錨表、無 boot 探針程序**：Codex 無公開
-token 成本係數（上節成本備註、spec deferred D-1），粗比例無誠實取值基礎；
-錨率與探針程序亦未盤點。依 doctrine § Amortization brake 的 cold-start
+token 成本係數（上節成本備註），粗比例無誠實取值基礎；錨率與探針程序亦
+未盤點。此三缺只影響 instrumented run 的**計算面**——ordinary run 的
+brake 本就是質性判斷（doctrine § Amortization brake「Two forms, one rule」），
+故本 binding 在 ordinary run 上與其他 binding 同等可用。依 doctrine § Amortization brake 的 cold-start
 規則（v3.1 觸發條件 = 無探針/無錨）：economics leg 不可計算 → brake
-verdict=not-computable，offload 僅必要理由（wall-clock／corpus／
-disjoint-write）可派，缺值記入 deviation log。benchmark 實測產生費率證據
+verdict=not-computable，offload 僅必要理由（四項 ground：wall-clock／
+corpus／disjoint-write／verification-mandated）可派，缺值記入 deviation log。benchmark 實測產生費率證據
 後回填本節（變更記 changelog）。
 
 changelog：
@@ -35,26 +50,11 @@ changelog：
   明文本 binding 三缺（r 表／錨表／探針）。
 - 2026-07-16 建節，記缺值（v3 build）。
 
-## Warm channel（doctrine § Dispatch primitive「warm continuation」的 codex 綁定）
-
-**本 binding 明文宣告：無 warm channel。** `codex exec` 每次派工起獨立
-sandbox process，無同 run 續話機制——codex 側全部派工一律冷啟記帳
-（宣告缺席的合法降級，非缺文；doctrine 能力宣告制）。若未來 codex 提供
-session 續接介面，回填本節並記 changelog。
-
 ## model_gen 正規化
 
 現行 gen-tag：**`g2026.07`**（gpt-5.5 世代，models_cache fetched
 2026-07-09）。規則同 CC binding：tier 表任一模型換主版本＝tag 換新
 （`gYYYY.MM`）；minor 漂移不換。
-
-## User-level 常數表【歷史檔，0.4.0 起退役】
-
-`~/.codex/conductor/constants.jsonl`——自 0.4.0（v3.1）起無生產者也無消費者
-（doctrine § Precedent & eval loop：gate 不秤價、brake 輸入逐次計算＋探針
-取得）。本 binding 從未有 collector，故實務上此檔多半不存在；若存在則留檔
-作歷史，行 schema（`contract/constants.schema.json`）保留 deprecated 註記
-作歷史行法源。
 
 ## Role card 綁定（doctrine § Complexity tiering — Role cards 的 codex 面）
 
@@ -71,34 +71,3 @@ doctrine 檔最後變更 commit；安裝態讀出貨的 `doctrine/REV`，絕不�
 | read-scout | `--sandbox read-only` | `gpt-5.4`（mid） | `Role card: contract/roles/read-scout.md — read-only; findings cited file:line, delivered in the result summary.` |
 | mech-writer | `--sandbox workspace-write` | `gpt-5.4-mini`（cheap） | `Role card: contract/roles/mech-writer.md — recipe application inside Owned Files only; record every contracted command's exit code.` |
 | fresh-verifier | `--sandbox read-only` | `gpt-5.4`（mid） | `Role card: contract/roles/fresh-verifier.md — fresh context, no builder state; per-criterion pass/fail with file:line evidence.` |
-
-## Advisor transport（doctrine § Advisor primitive 的 codex 綁定）
-
-digest 封套：commander 把該判斷時刻的完整 context 濃縮為 digest 檔
-（`<task-dir>/advisor/<moment_id>-digest.md`），以 frontier 檔次呼叫：
-
-    codex exec --sandbox read-only -m gpt-5.5 \
-      "You are an advisor to an orchestration commander. Read the digest
-       below and return EXACTLY one JSON object (no prose) with fields:
-       decision_type, ruling, rationale, confidence (high|medium|low),
-       what_would_change_my_mind.
-       --- DIGEST ---
-       $(cat "$task_dir/advisor/${moment_id}-digest.md")" < /dev/null
-
-回傳 JSON 填 `digest_ref` 後即 `advisor_ruling` 行 payload（schema:
-`$conductor/contract/advisor-ruling.schema.json`）。與 CC 側差異＝傳輸形
-（digest 上行 vs full-context 上行）；可移植性保證只及 schema 層，ruling
-內容 parity 明文不保證（spec REQ-8）。
-
-### worker→advisor 面（doctrine § Advisor primitive 的 codex 綁定）
-
-codex worker 跑在獨立 sandbox，其工具面不含本 mode 的 advisor primitive，故
-worker→advisor 路徑**推定不存在**——但這是**推理，非實測**（CC 側正是在此處推錯
-過一次：把 session 級缺席讀成 worker 級隔離）。因此：
-
-- **Observation surface：無。** undisclosed-use 檢查在 codex 側常態＝
-  **UNVERIFIABLE，永不 CLEAN**，直到有 probe 為止。治理同 CC：靠契約宣告
-  （task-contract § Advisor Scope）+ worker 揭露義務。
-- Measurement-bearing run（benchmark cell／parity／ablation）若含 codex 臂，
-  該臂的 tier 宣稱以 UNVERIFIABLE 記錄，不得記為 CLEAN——見
-  `benchmark/protocol.md` § Isolation invariants 第 5 條。

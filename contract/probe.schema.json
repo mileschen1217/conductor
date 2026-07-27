@@ -3,7 +3,7 @@
   "title": "boot-probe-record-line",
   "x_notes": {
     "created": "2026-07-18 (v3.1 build)",
-    "record": "one per-project append-only JSONL file (path named by each harness binding; project-local, never shipped). Sole writer = the binding's probe procedure; a run's own measurements NEVER write back (doctrine § Amortization brake — cache semantics, never calibration)",
+    "record": "one per-project append-only JSONL file (path named by each harness binding; project-local, never shipped). Read and written ONLY on an instrumented run (doctrine § Audit surface trigger enum); an ordinary run neither reads nor writes it. Sole writer = the binding's probe procedure; a run's own measurements NEVER write back (doctrine § Amortization brake — cache semantics, never a feedback loop: a stale stamp means re-measure, never adjust in place)",
     "selection": "consumable row = latest row (file order) matching current harness + config_hash + model_gen — three axes, equal weight; no match = deterministic re-probe (append a new row, never edit or delete old ones); malformed line or unreadable file = ERROR, conservative-closed (a suspicious row is never consumed). Tier-0 selector: scripts/probe-select.py",
     "config_hash_inputs": "the hash's input list is binding-declared and binding-changelog-governed; the hash value is opaque at this layer",
     "boot_tokens": "the harness's fixed context-establishment overhead measured by the binding's probe procedure (first-request input plus any cache-population tokens the binding's telemetry reports), in raw tokens; tier-agnostic (same tokenizer surface)"

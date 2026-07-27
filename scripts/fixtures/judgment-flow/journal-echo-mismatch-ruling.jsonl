@@ -1,4 +1,0 @@
-{"event":"commander_stamp","model":"mid-model-1","doctrine_rev":"abc1234"}
-{"event":"judgment_moment","moment_id":1,"decision_type":"entry-gate","disposition":"advisor"}
-{"event":"advisor_intent","moment_id":1,"decision_type":"entry-gate","why":"intent echoes fine"}
-{"event":"advisor_ruling","moment_id":1,"decision_type":"acceptance-ambiguity","ruling":"open","rationale":"r","confidence":"high","what_would_change_my_mind":"w","digest_ref":null}

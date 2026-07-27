@@ -1,17 +1,25 @@
 #!/usr/bin/env python3
-"""audit-model-conformance.py — journal x telemetry model-conformance audit (M8, spec REQ-4/AC-5).
+"""audit-model-conformance.py — journal x telemetry model-conformance audit.
 
 Python 3 stdlib ONLY.
 
-Usage: python3 scripts/audit-model-conformance.py <journal.jsonl> <telemetry.jsonl>
+Usage: python3 scripts/audit-model-conformance.py <journal.jsonl> [telemetry.jsonl]
+
+Telemetry is OPTIONAL, and that is the point of this script's shape. C0 is
+telemetry-independent: it reads the journal alone. While telemetry was a
+required argument, the close chain could only invoke this audit when a
+telemetry export existed, so on every run without one C0 — the cheapest and
+most load-bearing check of the three — never ran at all. Model drift was
+caught three times by a human reading the journal, and never once by this
+script. So: the audit runs on every instrumented close, telemetry or not.
 
 Telemetry format (fixed contract of this script; converters live in bindings):
   {"type":"agent","model":"<id>"}    one row per worker execution
   {"type":"session","model":"<id>"}  optional; the commander's own session model
 
 Checks:
-  C0 the journal's FIRST event is commander_stamp (REQ-4 self-stamp duty);
-     missing or late stamp is a VIOLATION
+  C0 the journal's FIRST event is commander_stamp (self-stamp duty); missing
+     or late stamp is a VIOLATION. Runs always.
   C1 every journal dispatch line's resolved_model consumes one matching
      telemetry agent row (multiset join — telemetry carries no task ids);
      an unconsumable dispatch line is a VIOLATION naming that line (ST-5 shape)
@@ -19,8 +27,9 @@ Checks:
      among them (the self-report mirror of ST-5)
   Leftover agent rows are an informational NOTE (e.g. acceptance judges).
 
-Fail-closed: missing/empty/unparseable telemetry, or dispatches present with
-zero agent rows -> exit 2 UNVERIFIABLE, never CLEAN.
+Fail-closed: absent, empty, or unparseable telemetry, or dispatches present
+with zero agent rows -> C1/C2 are UNVERIFIABLE and the run is NEVER reported
+CLEAN. C0 still returns its own verdict in every one of those cases.
 Exit: 1 VIOLATION > 2 UNVERIFIABLE > 0 CLEAN.
 """
 import json
@@ -47,8 +56,8 @@ def load_jsonl(path, label):
 
 
 def main():
-    if len(sys.argv) != 3:
-        print("usage: audit-model-conformance.py <journal.jsonl> <telemetry.jsonl>")
+    if len(sys.argv) not in (2, 3):
+        print("usage: audit-model-conformance.py <journal.jsonl> [telemetry.jsonl]")
         sys.exit(2)
 
     journal, journal_error = load_jsonl(sys.argv[1], "journal")
@@ -64,7 +73,18 @@ def main():
     # (priority: 1 VIOLATION > 2 UNVERIFIABLE > 0 CLEAN).
     violations = []
     if not journal or journal[0][1].get("event") != "commander_stamp":
-        violations.append("journal's first event is not commander_stamp (REQ-4 self-stamp duty)")
+        violations.append("journal's first event is not commander_stamp (self-stamp duty)")
+
+    if len(sys.argv) == 2:
+        # No telemetry offered. C0 has already run; C1/C2 cannot, and saying
+        # so is the whole difference between this and not running at all.
+        for v in violations:
+            print(f"VIOLATION: {v}")
+        if not violations:
+            print("C0 CLEAN: journal's first event is commander_stamp")
+        print("UNVERIFIABLE: no telemetry export given — C1 (dispatch↔agent join) and "
+              "C2 (commander session model) cannot be evaluated; never CLEAN on missing evidence")
+        sys.exit(1 if violations else 2)
 
     telemetry, telemetry_error = load_jsonl(sys.argv[2], "telemetry")
     if telemetry_error is not None:

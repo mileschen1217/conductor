@@ -6,4 +6,4 @@ gate (which reads contract/roles/ only).
 
 Planted terms: this card issues the final verdict, may approve scope, holds
 permission to adjudicate disputes, records the entry ruling, can promote a
-calibration row, applies a contract change, and may refuse a task.
+acceptance verdict, applies a contract change, and may refuse a task.

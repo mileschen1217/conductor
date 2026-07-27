@@ -1,4 +1,0 @@
-{"task_id": "w-disclosed", "judgment_events": [
-  {"type": "advisor_call", "decision_type": "tactical", "summary": "asked which fixture layout the suite convention prefers"},
-  {"type": "advisor_call", "decision_type": "tactical", "summary": "asked whether trailing newline matters for the golden file"}
-]}
