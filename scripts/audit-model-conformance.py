@@ -30,7 +30,13 @@ Checks:
 Fail-closed: absent, empty, or unparseable telemetry, or dispatches present
 with zero agent rows -> C1/C2 are UNVERIFIABLE and the run is NEVER reported
 CLEAN. C0 still returns its own verdict in every one of those cases.
-Exit: 1 VIOLATION > 2 UNVERIFIABLE > 0 CLEAN, and 3 = CALLED WRONG.
+Exit, once the audit runs: 1 VIOLATION > 2 UNVERIFIABLE > 0 CLEAN. That is a
+priority ordering among coexisting conditions, so a C0 violation with no
+telemetry still exits 1, not 2.
+
+Exit 3 = CALLED WRONG stands OUTSIDE that ordering rather than at the end of
+it: the argument check is the first thing main() does and short-circuits
+before any verdict logic runs, so 3 never competes with a verdict.
 
 Codes 2 and 3 are deliberately distinct, and must stay distinct. The close
 chain records a failing member as fail(<rc>), so the exit code is the only
