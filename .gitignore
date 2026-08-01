@@ -2,18 +2,32 @@
 ROADMAP.md
 ROADMAP.html
 CLAUDE.local.md
-.touchstone/*
-!.touchstone/checker/
-!.touchstone/checker/**
+.touchstone/
 # Session working notes (SDD ledgers, briefs, reports — contain local paths)
 .superpowers/
-# Personal Claude Code overrides
-.claude/settings.local.json
+# Personal Claude Code overrides and local workspace config
+.claude/
 # conductor repo's OWN precedent ledger = dev dogfood state, not product.
 # It ships answers to benchmark scenarios (ST-5 lesson ≈ M9 S6) if tracked —
 # a plugin install copies every tracked file and no exclusion mechanism exists.
 # The "repo-tracked ledger" rule in the binding applies to projects RUNNING
 # the mode; immutability audit for our own rows lives in git history pre-removal.
 .conductor/
-# Operator-local benchmark run ledger (rows reference local artifacts; protocol.md: maintained locally, does not ship)
+# Operator-local benchmark run records (ledger, findings, arm briefs, probe
+# logs) — rows and notes reference local artifacts; protocol.md § Verification
+# record: maintained locally, never ships.
 benchmark/ledger.jsonl
+benchmark/findings/
+benchmark/briefs/
+benchmark/probes/
+
+# Instrumentation switch (operator-local measurement state; never ships — a marker
+# in a tracked tree would arm every consumer that installs the plugin)
+.conductor-instrumented
+
+# macOS
+.DS_Store
+
+# Build artifacts and caches — never part of the delivery
+__pycache__/
+*.pyc

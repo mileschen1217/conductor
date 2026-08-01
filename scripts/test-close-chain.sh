@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Journal event vocabulary: contract/journal-event.schema.json (doctrine § Machine pointers).
 # test-close-chain.sh — portability + membership fixture suite for the close
 # chain (mode-at-first-dispatch AC-17).
 #
@@ -30,7 +31,7 @@ printf '%s\n' "$JOURNAL_OK" > "$TMP/clean/journal.jsonl"
 printf '%s\n' '{"type":"session","model":"m"}' > "$TMP/clean/telemetry.jsonl"
 
 # --- fixture 2: same run, telemetry ABSENT. Every instrumented run is
-#     deliberately triggered, so the evidence it depends on is owed: the
+#     deliberately armed by an operator, so the evidence it depends on is owed: the
 #     conformance member must FAIL, not pass and not drop. ---
 mkdir -p "$TMP/notelemetry"
 printf '%s\n' "$JOURNAL_OK" > "$TMP/notelemetry/journal.jsonl"

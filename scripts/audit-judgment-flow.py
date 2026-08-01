@@ -1,43 +1,25 @@
 #!/usr/bin/env python3
-"""audit-judgment-flow.py — semantic audit over an instrumented run journal.
+# Journal event vocabulary: contract/journal-event.schema.json (doctrine § Machine pointers).
+"""Semantic audit over an instrumented run journal. Stdlib only.
 
-Python 3 stdlib ONLY.
+Usage: audit-judgment-flow.py <journal.jsonl>
 
-Usage:
-  python3 scripts/audit-judgment-flow.py <journal.jsonl>
+Stamp gate, fail-closed: the dialect is declared by commander_stamp.vocab, never
+inferred from event presence. No stamp, or below VOCAB, is a VIOLATION
+(doctrine RT-4 @ audit-dialect).
 
-Scope: the journal its own close chain hands it (doctrine § Audit surface).
-This audit runs only on instrumented runs, because only instrumented runs have
-a journal at all.
+Enforces the cross-line rules a per-line schema cannot state (doctrine
+§ Machine pointers — cross-line journal rules):
+  S1  one judgment_moment per moment_id per journal; a blocked_to_human echoing
+      its moment is not a re-use
+  S2  every dispatch_result.task_id resolves to an EARLIER dispatch.task_id in
+      the same journal
+  S3  dispatch_result.usage is a token-count object or the marker "unavailable";
+      prose pointers are illegal
+  S4  an entry declaring a class owes a class_default; an override carries a
+      non-empty reason. An empty reason or an omitted field is a VIOLATION.
 
-Stamp gate (fail-closed). The journal's dialect is declared by
-commander_stamp.vocab — an integer stamp, NEVER inferred from event presence
-(presence inference would let a drifting commander escape audit by writing
-old-form events). A journal handed to this audit that carries no stamp, or a
-stamp below VOCAB, is a VIOLATION: there is no legacy dialect and no fallback.
-An honest historical journal is not misread here — it is simply never
-re-invoked, because its run closed under the vocabulary it was written in.
-
-The four semantic rules (doctrine § Audit surface — single home of their
-definitions; this file is their enforcement path):
-  S1 moment_id uniqueness   one judgment_moment per moment_id per journal
-                            (a blocked_to_human echoing its moment is not a
-                            re-use)
-  S2 referential pairing    every dispatch_result.task_id resolves to an
-                            EARLIER dispatch.task_id in the SAME journal — a
-                            result attributed to a dispatch this journal never
-                            recorded is unattributable work
-  S3 usage enum             dispatch_result.usage is a token-count object or
-                            the typed marker "unavailable"; prose pointers
-                            (e.g. "see-transcript") are illegal
-  S4 override reason        an entry event that declares a task class owes a
-                            class_default; when that class_default overrides
-                            the frozen default set it must carry a non-empty
-                            recorded reason inside the marker. An empty reason
-                            -- or an omitted class_default -- takes the licence
-                            without paying for it -> VIOLATION
-
-Exit: 1 if any VIOLATION, 2 if the journal cannot be read or parsed, else 0.
+Exit: 0 CLEAN; 1 VIOLATION; 2 unreadable/unparseable.
 """
 import argparse
 import json

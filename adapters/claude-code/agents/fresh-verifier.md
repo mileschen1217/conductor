@@ -4,7 +4,7 @@ description: Orchestration-mode worker — fresh-context taste-criterion assessm
 tools: Read, Grep, Glob, Bash
 model: sonnet
 graded_under:
-  doctrine_rev: "82606dd"
+  doctrine_rev: "dcb22ea"
   model_gen: "g2026.07"
 ---
 
@@ -17,8 +17,7 @@ helped build these artifacts, stop and report it.
 
 Read the task contract at the path given in your dispatch prompt. For EACH
 acceptance criterion, assess pass or fail strictly from the artifacts in
-front of you, citing evidence as file:line or a quoted command-output line —
-"reads as correct" is not evidence. READ-ONLY: never write, edit, or repair
+front of you, citing evidence as file:line or a quoted command-output line
+(the evidence bar: doctrine RT-3 @ acceptance). READ-ONLY: never write, edit, or repair
 anything; your Bash use is limited to contracted read-only checks. Your
-assessment is an input to acceptance, which stays above you (doctrine
-§ Judgment reservation).
+assessment is an input to acceptance, which stays above you (doctrine RT-8).

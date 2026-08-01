@@ -1,44 +1,24 @@
 #!/usr/bin/env bash
-# close-chain.sh — the canonical close audit set, as ONE invocation.
+# close-chain.sh — the canonical close audit set, as ONE invocation. This file is
+# the single home of the chain's MEMBERSHIP and ORDER (doctrine § Definitions —
+# close law).
 #
-# This file is the single home of the chain's MEMBERSHIP and ORDER (doctrine
-# § Audit surface, "The close event and its chain"). Anything that says "the
-# close audits" cites this script rather than re-enumerating them, and a
-# caller never sequences members by hand.
+# Journal event vocabulary: contract/journal-event.schema.json (doctrine
+# § Machine pointers). Member statuses and their meaning: doctrine's close law
+# plus RT-3 @ close-verdict (ran-but-inconclusive is a fail).
 #
-# PORTABILITY IS A HARD REQUIREMENT of this file. It is executed by whatever
-# shell the operator happens to be running, and it must behave identically
-# under at least sh, bash and zsh. Concretely, and each of these has drawn
-# blood:
-#   - no ${PIPESTATUS[...]} — a bash-ism that expands to empty under zsh, so
-#     every member's exit code silently reads as success (three incidents)
-#   - no arrays — bash indexes from 0, zsh from 1
-#   - no `local` — not POSIX; status is accumulated in plain strings
-#   - every member's rc is captured immediately after its own invocation,
-#     never inferred from a pipeline
-# scripts/test-close-chain.sh executes this file under bash AND zsh and
-# asserts both report the same per-member exit codes.
-#
-# Members are ALL run — the chain does not stop at the first failure, because
-# the close event records every member and a record truncated at the first
-# problem is a record with holes. A failure names its member and its exit
-# code, and the chain's own exit is non-zero.
-#
-# Member status vocabulary (doctrine § Audit surface, close event):
-#   pass                     ran, exit 0
-#   fail(<rc>)               ran and did not conclude in the affirmative.
-#                            A member that could not conclude for want of
-#                            evidence lands here too, and is meant to: every
-#                            instrumented run is deliberately triggered, so the
-#                            evidence a measurement depends on is owed.
-#   dropped(trigger-absent)  not run because its trigger did not fire
+# PORTABILITY IS A HARD REQUIREMENT: this runs under whatever shell the operator
+# has. No ${PIPESTATUS[...]} (empty under zsh), no arrays (bash indexes from 0,
+# zsh from 1), no `local`. scripts/test-close-chain.sh executes this file under
+# bash AND zsh and asserts identical per-member exit codes — that suite, not this
+# comment, is what holds the requirement.
 #
 # Usage:
 #   close-chain.sh --journal <journal.jsonl> --task-dir <dir> --anchors <spec>
 #                  [--probe <probe.jsonl>] [--telemetry <telemetry.jsonl>]
 #
-# --anchors takes the binding's conversion-anchor spec verbatim (the values
-# live only in binding.md § 換算錨表; this script embeds none).
+# --anchors takes the binding's conversion-anchor spec verbatim; this script
+# embeds no anchor values.
 #
 # Output: one line per member, then a `close-members:` line carrying the JSON
 # array the commander journals in the `close` event.

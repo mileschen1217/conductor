@@ -4,73 +4,19 @@ One-shot comparative acceptance procedures (NOT standing eval infrastructure).
 Human-governed: the human selects the task, adjudicates quality, and rules
 pass/fail — this protocol contains NO automatic pass logic.
 
-**How to read this file.** Sections below marked **[historical — ran under
-<revision>]** describe protocols that already executed. They are kept in the
-vocabulary of the doctrine revision they ran under, because a record rewritten
-to match current vocabulary is no longer a record of what happened. Only the
-unmarked sections — § Isolation invariants, § Ceremony-replay method,
-§ Ledger, § Quality rubric, § Acceptance-judge instruction — are live
-procedure for a new run.
-
-Vocabulary note for every historical section: they predate the
-pay-at-first-dispatch cut (0.7.0), so they speak of a "0-worker form" — a run
-that entered the mode and paid its ceremony without dispatching anything.
-That form no longer exists: a run that never dispatches is not in the mode.
-The measurements those sections report remain valid measurements OF that
-form.
-
+**How to read this file.** Only live procedure ships here: § Task selection,
+§ Isolation invariants, § Verification record, § Ceremony-replay method,
+§ Ledger, § Quality rubric, § Acceptance-judge instruction. Records of runs
+that already executed (per-run protocol sections, arm briefs, findings,
+probe logs) are operator-local working state — kept beside the ledger,
+gitignored, never shipped: a record rewritten to match current vocabulary is
+no longer a record of what happened, and rows reference local artifacts.
 ## Task selection (human)
 
 Criteria (all required): a real repo; the task spans ≥3 files; subtasks are
 heterogeneous; quality is decidable by tests and/or severity-graded review.
 The selection (task, repo, why it meets each criterion) is recorded in the
 run ledger entry (`task_ref`).
-
-## Matrix (v2) **[historical — ran under the v2 revision, 2026-07-12/13]**
-
-Commander models (4, human-confirmable at R1): fable / opus / sonnet / haiku
-(CC binding table 2026-07-11). Cells: 4 commander models × {inline, v2-form}
-plus ONE bare-inline ablation cell = **9 cells / 9 ledger rows**.
-
-- **matrix inline cell** = the v2 "0-worker form": journal + entry-gate
-  declaration, pen stays with the commander; contract/result artifacts
-  produced only when a second context consumed them. (Under the current
-  revision this cell is not constructible — an undelegated run does not enter
-  the mode at all.)
-- **v2-form cell** = topology per the entry gate's own output for the task.
-- **bare-inline ablation cell** (the 9th): prompt-only, NO mode machinery, on
-  the mid-tier commander model (sonnet — the tier the gate's refusal
-  threshold serves).
-
-**Ablation pair (discipline unit price):** the 9th cell vs the matrix's own
-mid-tier inline cell (REUSED, not rerun). The ledger records, as separate
-fields on the ablation ruling row: `discipline_unit_price_usd` (cost delta)
-and `quality_delta` (what mechanical acceptance caught that bare inline
-missed) — never folded into topology comparisons.
-
-**Staged execution:** inline row first (4 cells), then v2-form row, ablation
-cell last. Cell 2 (opus-inline) may reuse the 2026-07-10 ledger data ONLY if
-the task is identical to v1's; else rerun (+cost accepted). Every completed
-cell appended one ledger row (and, under that revision, one line to the
-per-project precedent ledger — a mechanism since removed).
-
-**Adjudication:** the commander-vs-inline face is human-ruled per cell pair
-by the R3 formula (quality not-worse AND cost lower — § Quality rubric).
-This protocol still contains NO automatic pass logic.
-
-**Model pinning is verified, never assumed (standing rule):**
-operator-level configuration can silently re-pin dispatched workers — the
-2026-07-12 incident: a forgotten `CLAUDE_CODE_SUBAGENT_MODEL` env override
-in the operator's settings pinned every worker to the mid tier regardless
-of the requested model; the M8 conformance audit caught it
-(smoke/ac-14 — planned-vs-actual VIOLATION), root-caused to config, fixed
-by removing the override + session restart. Therefore: (1) every cell's
-models are verified post-run by `audit-model-conformance.py`
-(journal × telemetry), never assumed from the plan; (2) the R1 human
-ruling confirms the reachable cell set against the CURRENT session's
-verified dispatch behavior (one probe dispatch per distinct model before
-the matrix starts); (3) any planned-vs-actual mismatch voids the cell's
-tier claim, whatever its cause.
 
 ## Isolation invariants (all five hold per cell; violation voids the arm)
 
@@ -113,132 +59,16 @@ Isolation audit: before adjudication, an audit of each arm's inputs (worktree
 diff provenance + transcript reads) confirms invariant 4; the audit record
 lands beside the ledger rows.
 
-## Verification record (adapters/*/README)
+## Verification record (operator-local)
 
 One line per cell that completed a protocol run: `verified-run:
-<commander>×<topology> — ledger <run_id>`. Lines cite ledger rows ONLY —
+<commander>×<topology> — ledger <run_id>`, kept with the operator's local
+ledger (`benchmark/ledger.jsonl`, gitignored). Lines cite ledger rows ONLY —
 no prose claims; a cell without run evidence never appears (claim ≤
-evidence). **A verification record is not a capability claim** (miles
-ruling 2026-07-13): each line asserts only that the combination ran
-validly under this protocol; comparative verdicts (R3) live in the
+evidence). **A verification record is not a capability claim** (maintainer
+ruling 2026-07-13): each line asserts only that the combination ran validly
+under this protocol; comparative verdicts (§ Quality rubric) live in the
 ledger's ruling rows, including negative ones.
-
-## v3 regression — distill kernel 4+1 arms **[historical — ran under v3, 2026-07-17]**
-
-Harness single home: the distill repo's `benchmark/` (run-arm / summarize /
-cost scripts and the cross-check rule in its README — cite, never restate).
-Frozen inputs: distill arm-base `a43c48a`, byte-identical spec per arm (plus
-each arm's own methodology paragraph only), same main model on every arm,
-headless, arms run serially, worktree isolation per arm (invariants above
-apply unchanged). (That revision also kept an operator-level
-constants table, which coupled serial arms through a shared file; the table
-and its coupling are gone.)
-
-Arms (5): `inline` (floor) / `inline+v3form` (the v3 "0-worker form") / `anvil-sdd` (incumbent) / `conductor-v3` (gate's own topology)
-/ `forced-1-worker` (commander never holds the pen; the forcing is the
-doctrine's human-veto mechanism — who/changed-to/why recorded in the arm
-brief, so the conformance audit reads it as governed, not violating).
-
-Acceptance targets (these numbers live ONLY here and in the v3 spec's AC
-layer — never in doctrine/adapter text; a fresh operator's table starts
-empty):
-
-- conductor-v3 arm on the kernel task: no fan-out (brake-line refusal on the
-  record), or gate refusal → the arm completes via the light path and its
-  cost criterion becomes same order as the floor arm.
-- 0-worker arm discipline price ≤ **+3,500 tok-eq** (v2 baseline +5,800);
-  cache-write/output ratio ≤ **3.0×** (v2 baseline 4.14×, floor 2.09×).
-- spec-fidelity held: single check home = distill held-out suite
-  `test_ac47_lock_dir_is_injectable_and_the_vault_stays_clean`, both mode
-  arms.
-- Comparison verdicts come from a fresh-context judge (producer ≠ judge,
-  doctrine § Verification); an arm's executor never self-rules.
-
-Every arm lands one ledger row; each completed cell adds a `verified-run:`
-line to the adapter README **stamped with the doctrine rev it ran under**
-(judgment claims do not cross doctrine revisions).
-
-### v2 → v3 dispatch-plan field mapping (journal/plan comparability)
-
-| v2 mandatory field (7) | v3 home |
-|---|---|
-| 1. Entry decision | mandatory 1 — Entry decision (+ family + price-row citation) |
-| 2. Task-shape declaration | mandatory 2 — Shape & precedent (merged) |
-| 3. Precedent line | mandatory 2 — Shape & precedent (merged) |
-| 4. Subtask table | mandatory 3 — Subtask table (card citation may replace grade columns) |
-| 5. Containment check | conditional — owed iff any write-role dispatch |
-| 6. Doubt surfacing | conditional — owed iff entry/grading disposition ≠ frozen |
-| 7. Deviation log | conditional — opens at first deviation event |
-| — (new) | conditional — brake line, owed iff any offload planned/executed |
-
-Journal events: v2 vocabulary unchanged (zero-shrink); v3 adds
-`dispatch_result` (checker verdict + in-channel worker usage) and additive
-`dispatch` fields (`card`, `brief_tokens_est`, `w_est`).
-
-## judgment-surface-reduction re-run **[historical — ran under 0.6.0, 2026-07-25]**
-
-Harness single home: the distill repo's `benchmark/` (cite, never restate),
-frozen kernel Phase 1 task, frozen held-out pytest suite (133 assertions),
-commander = frontier tier, arms run serially in isolated worktrees (the
-isolation invariants above apply unchanged).
-
-**Shared denominator — the reused floor.** Both arms are scored against the
-existing measured floor **$11.254** (bare inline, no mode; reproduced across
-two prior pairs at 0.1% variance). The floor is NOT re-run. **Validity check,
-recorded in the findings BEFORE either verdict:** the commander model's
-current billing rates must equal those the floor fit used (in 5 / out 25 /
-cache-read 0.5 / 1h-write 10 USD per MTok). Any mismatch voids the reused
-floor and forces a fresh floor run.
-
-**Pinned session settings (every arm, no exceptions).** An arm inherits from
-the CLI exactly what it does not pin, and CLI defaults move: the `opus` alias
-resolved to `claude-opus-4-8` when the floor was measured and to
-`claude-opus-5` two days later, which would have put a model generation inside
-a discipline-price delta had it not been caught. Therefore every arm pins the
-commander model (`ARM_MODEL`) and the reasoning effort (`ARM_EFFORT`)
-explicitly, and `summary.json` records the effort and CLI version actually
-observed in the transcript. An arm whose recorded settings differ from another
-arm's is not comparable with it, and a recorded value of `UNRECORDED` voids the
-comparison rather than being read as "probably the default". Effort is an
-operator setting, not a conductor lever — this harness's dispatch primitive
-exposes no effort parameter — so it is controlled, never optimised.
-
-**Canonical turn metric (both arms):** unique API calls, deduped by message
-id from the session transcript. The summary fields `num_turns` /
-`num_turns_reported` are advisory only and DISQUALIFIED as evidence — the
-sidechain-inclusive count produced a "+9 turns" narrative that the deduped
-count overturned (floor 65 vs 59). Per-arm tables stay isolated: neither arm
-is reported in the other's row.
-
-### Arm — form (the 0.6.0 "0-worker form")
-
-- Brief: `benchmark/briefs/jsr-form-arm.md`.
-- Installed from the published marketplace at the revision under test; the
-  entry gate declares the task class and the journal records it.
-- Targets: billed ≤ floor × 1.10; unique API calls ≤ 65; frozen suite 133/0;
-  the close audit set CLEAN over the arm's journal; ceremony invocations ≤ 5
-  (membership: ANY tool invocation that reads or writes `.conductor/` run
-  artifacts — journal appends INCLUDED — or runs a mode script, in any phase;
-  conditional mid-run events count when they fire; the task's own build /
-  test / version-control commands are excluded).
-- A band miss is an honest negative presented for human accept, never a
-  silent re-tune.
-
-### Arm — nudge (native turn economy, no mode)
-
-- Brief: `benchmark/briefs/jsr-nudge-arm.md`, which carries the canonical
-  marker `<!-- nudge:batch-v1 -->` beside its batching instruction.
-- Floor task plus the permissive batching nudge; no mode machinery.
-- Targets: billed ≤ floor × 0.95; unique API calls ≤ 58 (the mechanism
-  witness, gated separately from cost so a cost win with no turn cut is
-  visible); frozen suite 133/0.
-- Owed either way: the deduped-usage decomposition, and an offline
-  batching-integrity review of the transcript — every multi-call turn's calls
-  pairwise independent, an ambiguous group counting as a violation, each
-  violation reported with its turn id.
-- **Pollution rule:** the nudge text and its marker appear in this arm's
-  brief only. Every other arm brief is checked both ways — a grep for the
-  marker and a read for the same guidance in any paraphrase.
 
 ## Ceremony-replay method (live procedure)
 
@@ -290,6 +120,57 @@ round that used it, and the archived copy — not a re-derivation — is what a
 later round re-runs. A replay whose instrument was not preserved is not a
 reproducible measurement, which is how one prior round lost its baseline.
 
+**Repair of 2026-07-29 (rule 3 mechanised; rules 2 and 1 corrected).** Until
+this date the instrument implemented rule 1 and part of rule 2 only. Its path
+predicate matched `.conductor/` and a hand-written allowlist of script
+basenames, so a run-time read of a mode document in the installed plugin tree
+scored as task work, and `close-chain.sh` — a rule-2 member under an adapter's
+`tools/` — was never in the allowlist. The repaired instrument mechanises rule 3
+with the **transcript's own start as the run boundary** (a read recorded inside
+the transcript is a run-time read by construction, since the arm's brief is
+authored before the transcript exists), replaces the basename allowlist with a
+directory rule, and widens rule 1 from `.conductor/` to `.conductor` at a token
+boundary. The carriers counted are the installed plugin tree, a clone rooted at
+a directory named `conductor`, the `$VAR/scripts/…` and bare checkout-relative
+shapes (the unset `${CLAUDE_PLUGIN_ROOT}` case), and `.conductor/`. Where a path
+carries a conductor root the directory decides; where it does not, the name must
+— `scripts/x.py` in the ARM's own repo is shape-identical to one in conductor's,
+so a carrier-less token earns membership only by a name conductor owns.
+
+**Two boundaries this method fixes in writing, because both were got wrong
+once.** (i) Rules 2 and 3 are published with the verbs *invokes* and *reads*;
+neither covers WRITING a file, so a write outside `.conductor/` is task work
+however conductor-shaped its path — rule 1 is the only rule whose verb reaches
+writes. (ii) A `cat` of a mode script's SOURCE does count, even though rule 2
+says "invokes" and rule 3's parenthetical names documents rather than scripts.
+That is continuity — the pre-repair instrument matched reading and executing
+alike — and excluding it now would be an undisclosed narrowing against the
+published baseline. It is stated here rather than left implicit because
+script-source reads are exactly where the two arms' costs diverge.
+
+**A null check is necessary and not sufficient.** A floor arm has no mode
+installed, so scoring it zero proves the instrument invents no ceremony; it
+cannot prove the predicate rejects the shapes a REAL task repo carries — its own
+`scripts/`, a search pattern naming a mode document, a mode path quoted in
+prose. Those need negative fixtures. The instrument therefore carries a
+`--self-test` covering both directions, and a round that runs only the null check
+has tested half the instrument.
+
+**Mechanising rule 3 widened the rule's extension, and the reported number goes
+up.** Rule 3's prior form asked the operator to judge whether a document was
+read "in order to act"; a mechanical boundary admits reads that judgment could
+have excluded, so post-repair figures are not comparable to pre-repair figures
+and neither replaces the other. This is a stated amendment with both numbers on
+the record, not a re-tuning: the governing spec's § Out-of-scope carves rule 3
+in for exactly this reason while barring any re-tuning of an AC-24 prediction or
+band. Old and new figures for all three re-scored arms, the instrument hashes,
+and the null check are on record in the operator-local findings notes (kept
+beside the ledger; they reference local artifacts). That round also
+found the pre-repair under-count to be **asymmetric across arms**, which the
+governing spec had assumed it was not — so a contrast drawn from pre-repair
+figures alone may not survive re-scoring, and any future round comparing arms
+must re-score both under one instrument rather than lift a published pair.
+
 ## Ledger — `benchmark/ledger.jsonl` (append-only; one run per line; never rewrite)
 
 ```json
@@ -331,8 +212,10 @@ are judging. Read the task contract at <contract-path> and the artifacts in
 criterion in the contract's Acceptance Criteria section, judge pass or fail
 STRICTLY from the artifacts in front of you — do not re-run the task, do not
 repair anything, do not consult any other context. Cite evidence as file:line
-or a quoted command-output line. Write EXACTLY one JSON array (no prose, no
-wrapper object) to <task-dir>/acceptance.json:
+or a quoted command-output line. Reason as much as the judgement needs; your
+reply's FINAL block must be a single fenced ```json block containing one array
+and nothing else, and that array is what is written to
+<task-dir>/acceptance.json:
 [{"ac_id": "<id>", "status": "pass"|"fail", "evidence": "<file:line or quote>"}]
 ```
 

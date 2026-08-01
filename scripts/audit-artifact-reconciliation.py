@@ -1,55 +1,32 @@
 #!/usr/bin/env python3
-"""audit-artifact-reconciliation.py — artifact ↔ record reconciliation.
+"""Reconcile an instrumented run's artifacts against its journal, both directions.
 
-An instrumented dispatch run's artifacts and its journal must describe the same
-world. This audit checks that in BOTH directions, because each direction is
-blind to the other's failure:
-
-  disk → journal   every contract/result artifact on disk reconciles to a
-                   journal event that accounts for it. An orphan artifact —
-                   paper with no journal home — is ceremony produced for no
-                   consumer.
-  journal → disk   every contract path a journal names, and every result a
-                   journal claims was harvested, resolves to a file that
-                   exists. A record naming an artifact that is not there is a
-                   claim with no referent — and it is exactly how a renamed
-                   contract escapes the disk-side scan (the glob stops
-                   matching, so disk→journal falls silent while the run still
-                   looks accounted for).
-
-The filename convention both directions pair on is contractual (doctrine
-§ Dispatch primitive): `task-contract.md` / `task-contract-<suffix>.md` for the
-contract, `result.json` for the result.
-
-Reconciliation is journal-only (doctrine § Audit surface): it reads the
-append-only journal, NEVER file mtimes, NEVER a session transcript.
-
-Pairing rules:
-  - `task-contract*.md`  → accounted iff cited by a journal `dispatch` line's
-    `contract` field, OR by a `deviation{kind:"aborted-dispatch"}` line's
-    STRUCTURED `contract` field (a decided-but-unlaunched dispatch's record;
-    NOT free-text `note` parsing — doctrine § Audit surface additive-fields).
-  - `result.json`        → accounted iff its task dir holds a contract cited by
-    a `dispatch` whose `task_id` has a matching `dispatch_result` line (a worker
-    executed the task; the read-only-worker carrier — commander-persisted result
-    — rides the same dispatch_result, doctrine § Report contract).
-
-Owed-when: a run with zero artifacts and an empty journal is vacuous — exit 0,
-nothing to reconcile in either direction.
+Journal-only: reads journal.jsonl, never file mtimes, never a transcript
+(doctrine § Machine pointers — journal).
+Filename convention both directions pair on is contractual (doctrine RT-5
+@ artifact-naming).
+Journal event vocabulary: contract/journal-event.schema.json (doctrine § Machine pointers).
 
 Usage:
   python3 scripts/audit-artifact-reconciliation.py <dir>
   python3 scripts/audit-artifact-reconciliation.py --self-test
-Exit: 0 = CLEAN / vacuous; 1 = orphan artifact(s) found; 2 = environment error.
+Exit: 0 = CLEAN / vacuous; 1 = reconciliation failure(s); 2 = environment error.
 """
 import json
 import os
 import sys
+from typing import NamedTuple
+
+
+class Claims(NamedTuple):
+    """What the journal says exists."""
+    dispatched_contracts: dict   # contract relpath -> task_id
+    aborted_contracts: set       # contract relpaths from aborted-dispatch deviations
+    executed_task_dirs: set      # task dirs whose dispatch got a dispatch_result
+    errors: list
 
 
 def _relnorm(base, path):
-    """Normalize `path` to a base-relative posix path for comparison.
-    Absolute paths under base become relative; others are normpath'd as-is."""
     p = path.replace("\\", "/")
     if os.path.isabs(p):
         try:
@@ -59,19 +36,10 @@ def _relnorm(base, path):
     return os.path.normpath(p)
 
 
-def _parse_journal(journal_path, base):
-    """Return (dispatched_contracts, aborted_contracts, result_dirs, errors).
-    dispatched_contracts: {relnorm contract path -> task_id}
-    aborted_contracts: set of relnorm contract paths (aborted-dispatch record)
-    result_dirs: set of relnorm task dirs that have a worker-executed result
-    """
-    dispatched = {}          # contract relpath -> task_id
-    dispatch_by_task = {}    # task_id -> contract relpath
-    aborted = set()          # contract relpaths from aborted-dispatch deviations
-    result_task_ids = set()  # task_ids with a dispatch_result
-    errors = []
+def _read_claims(journal_path, base):
+    dispatched, contract_of_task, aborted, tasks_with_result, errors = {}, {}, set(), set(), []
     if not os.path.isfile(journal_path):
-        return dispatched, aborted, set(), errors  # empty-journal semantics
+        return Claims(dispatched, aborted, set(), errors)   # empty journal is vacuous
     with open(journal_path, encoding="utf-8") as fh:
         for n, line in enumerate(fh, 1):
             line = line.strip()
@@ -82,41 +50,25 @@ def _parse_journal(journal_path, base):
             except json.JSONDecodeError:
                 errors.append(f"journal line {n}: not JSON")
                 continue
-            kind = ev.get("event")
-            if kind == "dispatch":
-                c = ev.get("contract")
-                tid = ev.get("task_id")
-                if c:
-                    rc = _relnorm(base, c)
-                    dispatched[rc] = tid
-                    if tid:
-                        dispatch_by_task[tid] = rc
-            elif kind == "deviation" and ev.get("kind") == "aborted-dispatch":
-                c = ev.get("contract")
-                if c:
-                    aborted.add(_relnorm(base, c))
-            elif kind == "dispatch_result":
-                tid = ev.get("task_id")
-                if tid:
-                    result_task_ids.add(tid)
-    # a task dir has a legitimate result iff its contract's dispatch has a result
-    result_dirs = set()
-    for tid in result_task_ids:
-        rc = dispatch_by_task.get(tid)
-        if rc:
-            result_dirs.add(os.path.dirname(rc))
-    return dispatched, aborted, result_dirs, errors
+            kind, contract, task = ev.get("event"), ev.get("contract"), ev.get("task_id")
+            if kind == "dispatch" and contract:
+                dispatched[_relnorm(base, contract)] = task
+                if task:
+                    contract_of_task[task] = _relnorm(base, contract)
+            elif kind == "deviation" and ev.get("kind") == "aborted-dispatch" and contract:
+                aborted.add(_relnorm(base, contract))
+            elif kind == "dispatch_result" and task:
+                tasks_with_result.add(task)
+    executed = {os.path.dirname(contract_of_task[t])
+                for t in tasks_with_result if t in contract_of_task}
+    return Claims(dispatched, aborted, executed, errors)
 
 
 def _find_artifacts(base):
     contracts, results = [], []
     for root, _dirs, files in os.walk(base):
         for f in files:
-            full = os.path.join(root, f)
-            # disk artifacts are always under `base` (os.walk starts there);
-            # make them base-relative directly so comparison holds whether the
-            # caller passed base as an absolute or a relative path.
-            rel = os.path.normpath(os.path.relpath(full, base))
+            rel = os.path.normpath(os.path.relpath(os.path.join(root, f), base))
             if f.startswith("task-contract") and f.endswith(".md"):
                 contracts.append(rel)
             elif f == "result.json":
@@ -125,38 +77,30 @@ def _find_artifacts(base):
 
 
 def reconcile(base):
-    """Return (failures, errors, n_artifacts).
-
-    failures: list of (path, reason). Both directions land in this one list —
-    a reconciliation failure is a reconciliation failure whichever side is
-    missing its counterpart."""
-    journal_path = os.path.join(base, "journal.jsonl")
-    dispatched, aborted, result_dirs, errors = _parse_journal(journal_path, base)
+    claims = _read_claims(os.path.join(base, "journal.jsonl"), base)
     contracts, results = _find_artifacts(base)
+    accounted = set(claims.dispatched_contracts) | claims.aborted_contracts
     failures = []
 
-    # --- direction 1: disk -> journal ---
-    accounted_contracts = set(dispatched) | aborted
     for c in contracts:
-        if c not in accounted_contracts:
+        if c not in accounted:
             failures.append((c, "ORPHAN: contract with no journal dispatch / aborted-dispatch record"))
     for r in results:
-        if os.path.dirname(r) not in result_dirs:
+        if os.path.dirname(r) not in claims.executed_task_dirs:
             failures.append((r, "ORPHAN: result.json with no matching dispatch_result (no worker executed this task)"))
 
-    # --- direction 2: journal -> disk ---
-    # A path the journal names must exist. Without this leg a renamed contract
-    # is invisible: the disk scan's basename glob stops matching it, so
-    # direction 1 has nothing to flag and the run reads as fully accounted.
-    for c in sorted(accounted_contracts):
+    # The journal->disk leg is what catches a RENAMED contract: the disk scan
+    # globs on basename, so a rename makes the orphan check above go silent while
+    # the run still reads as fully accounted.
+    for c in sorted(accounted):
         if not os.path.isfile(os.path.join(base, c)):
             failures.append((c, "DANGLING: journal names this contract path but no such file exists"))
-    for d in sorted(result_dirs):
+    for d in sorted(claims.executed_task_dirs):
         rp = os.path.join(d, "result.json") if d else "result.json"
         if not os.path.isfile(os.path.join(base, rp)):
             failures.append((rp, "DANGLING: journal records a dispatch_result for this task but no result.json exists"))
 
-    return failures, errors, len(contracts) + len(results)
+    return failures, claims.errors, len(contracts) + len(results)
 
 
 def _run(base):
@@ -181,12 +125,7 @@ def _run(base):
 
 
 def _self_test():
-    """Prove the reconciler on planted fixtures under scripts/fixtures/reconciliation/.
-    Filename convention on each fixture subdir mirrors test-*.sh: dir name
-    prefix `clean-` expects a pass, any other prefix (`orphan-`, `dangling-`)
-    expects a flagged failure."""
-    here = os.path.dirname(os.path.abspath(__file__))
-    fixdir = os.path.join(here, "fixtures", "reconciliation")
+    fixdir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures", "reconciliation")
     if not os.path.isdir(fixdir):
         print(f"SELF-TEST ERROR: fixtures missing at {fixdir}", file=sys.stderr)
         return 2
@@ -203,11 +142,8 @@ def _self_test():
             failed = 1
         else:
             print(f"ok: {name} ({'flagged' if want_fail else 'clean'})")
-    if failed:
-        print("SELF-TEST FAIL")
-        return 1
-    print("SELF-TEST OK")
-    return 0
+    print("SELF-TEST FAIL" if failed else "SELF-TEST OK")
+    return failed
 
 
 def main(argv):

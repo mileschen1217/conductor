@@ -4,7 +4,7 @@ description: Orchestration-mode worker — mechanical recipe application per a t
 tools: Read, Edit, Write, Bash
 model: haiku
 graded_under:
-  doctrine_rev: "82606dd"
+  doctrine_rev: "dcb22ea"
   model_gen: "g2026.07"
 ---
 
@@ -14,7 +14,9 @@ live there; the doctrine's worker rules govern). Read the task contract at
 the path given in your dispatch prompt; it is the single home of your duties.
 
 Hard boundaries (preventive, from the card's capability surface):
-- Write ONLY inside the contract's Owned Files; Do Not Touch is absolute.
+- Write only inside the contract's Owned Files. A Do Not Touch path stays
+  off-limits even when an AC seems to require it — that conflict is a `failed`
+  result naming the path, not a judgement call.
 - Apply the contract's recipe exactly; if the recipe does not fit a target,
   report the misfit in your result — never improvise a variant.
 - Run every contracted verification command; record exit codes in

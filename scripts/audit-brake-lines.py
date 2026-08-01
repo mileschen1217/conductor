@@ -1,60 +1,30 @@
 #!/usr/bin/env python3
-"""audit-brake-lines.py — brake audit over an instrumented run journal.
+# Journal event vocabulary: contract/journal-event.schema.json (doctrine § Machine pointers).
+"""Brake audit over an instrumented run journal. Stdlib only.
 
-Python 3 stdlib ONLY. Input is always a journal: the brake's computed, typed
-form is instrumentation (doctrine § Amortization brake, "Two forms, one rule"),
-so an audit of it has a journal or it has nothing.
+Usage: audit-brake-lines.py <journal.jsonl> [--anchors prose=<r>,code=<r>,cjk=<r>[,correction=<f>]]
+                            [--probe <probe.jsonl>] [--r-values <csv>] [--commander-r <r>]
 
-Stamp gate (fail-closed, same polarity as every stamp-keyed audit): a journal
-handed to this audit that carries no commander_stamp, or a stamp below VOCAB,
-FAILS. There is no legacy dialect and no fallback — a journal from an earlier
-vocabulary belongs to a run that has closed, and is never re-invoked.
+Stamp gate, fail-closed: no commander_stamp, or vocab below VOCAB, FAILS
+(doctrine RT-4 @ audit-dialect).
 
-Per-event checks:
-  - verdict enum pass|fail|not-computable
-  - ground enum wall-clock|corpus|disjoint-write|verification-mandated|none
-    (the four necessity grounds plus the absent marker) — an unrecognized
-    ground is a VIOLATION, not free text
-  - LAUNCH RULE (doctrine § Amortization brake): an economics-failing brake
-    whose wave actually dispatched must name a necessity ground. verdict=fail
-    or not-computable, a non-empty offload, a dispatch in the same wave, and
-    ground none/absent = VIOLATION. This is the mechanical enforcement of "an
-    economics-failing dispatch without a necessity ground does not launch";
-    planning an offload and then NOT launching it is the rule working, and is
-    clean.
-  - r membership in the allowed set (--r-values / --commander-r as below)
-  - computed-term stations (inputs.C_brief_cmd, inputs.C_reread, and per
-    offload C_brief_worker + corpus) each carry a recomputable basis
-    {refs, bytes, class}; a station without one is an INVENTED VALUE (FAIL)
-  - save = Σ w_est×(1−r); pay = C_reread.tok + C_brief_cmd.tok +
-    Σ r×(C_brief_worker.tok + boot + corpus.tok) (5% tolerance)
-  - with --anchors prose=<r>,code=<r>,cjk=<r>[,correction=<f>]: each
-    computed term's tok is band-checked against basis.bytes through the
-    anchor rates (order-of-magnitude tolerance — anchor-table precision)
-  - EVERY offload on a computed verdict (pass|fail) owes a non-null
-    probe_ref — boot:0 without one is an invented zero (the honest no-probe
-    state is verdict=not-computable); with --probe <probe.jsonl> the
-    reference must resolve to a row (config_hash@ts), and ANY malformed
-    line in the probe record makes every probe_ref unverifiable
-    (whole-record suspicion, conservative-closed); anchor_rev and r_rev
-    must be present (bad-ref FAIL otherwise)
+Checks:
+  - verdict and ground against their closed enums (doctrine § Definitions —
+    necessity grounds)
+  - launch rule (doctrine RT-2): verdict fail|not-computable + non-empty offload + a
+    dispatch in the same wave + ground none/absent = VIOLATION. Planning an
+    offload and not launching it is the rule working, and is clean.
+  - r membership in the allowed set
+  - every computed-term station carries a recomputable basis; one without is an
+    invented value (doctrine RT-3)
+  - save and pay recompute within 5%; with --anchors, each tok is band-checked
+    against basis.bytes through the anchor rates
+  - every offload on a computed verdict owes a non-null probe_ref, resolving to
+    a row under --probe. Any malformed line in the probe record makes every
+    probe_ref unverifiable (doctrine RT-3 + RT-4: an untrusted measurement
+    has no consumable basis).
 
-Usage:
-  audit-brake-lines.py <journal.jsonl> [--anchors ...] [--probe <probe.jsonl>] \
-      [--r-values 1.0,0.4,0.2,0.1,0.5] [--commander-r 0.2,0.1]
-
---commander-r narrows the legal set to the given commander's OWN column of
-the binding's per-pair table (plus 1.0, always legal for same-model). Without
-it the audit can only check set membership, not pair correctness — a live
-witness run (MR7) wrote r=0.2 for a same-model offload (true value 1.0) and
-set-membership alone passed it. CAVEAT: even with --commander-r the
-protection is commander-dependent, not general pair-correctness — the
-offload's tier label is not cross-checked against r, so a mislabeled r that
-coincides with another legitimate value in the SAME commander's column still
-passes. Full pair verification needs the worker's resolved model, which brake
-events do not carry.
-
-Exit: 0 = no VIOLATION; 1 = any VIOLATION; 2 = env/usage error.
+Exit: 0 CLEAN; 1 VIOLATION; 2 unreadable/unparseable.
 """
 import argparse
 import json
@@ -64,7 +34,7 @@ import sys
 VOCAB = 3
 CLASS_ENUM = ("prose", "code", "cjk", "mixed")
 VERDICT_ENUM = ("pass", "fail", "not-computable")
-# The four necessity grounds (doctrine § Amortization brake) plus the marker
+# The four necessity grounds (doctrine § Definitions — necessity grounds) plus the marker
 # for "no ground named". `none` is legal only where no ground is owed.
 NECESSITY_GROUNDS = ("wall-clock", "corpus", "disjoint-write", "verification-mandated")
 GROUND_ENUM = NECESSITY_GROUNDS + ("none",)
@@ -168,6 +138,10 @@ def audit(events, args, allowed_r):
     brakes = [(ln, e) for ln, e in events if e.get("event") == "brake"]
     dispatches = [(ln, e) for ln, e in events if e.get("event") == "dispatch"]
     dispatched_waves = {e.get("wave") for _, e in dispatches}
+    dispatch_count = {}
+    for _, e in dispatches:
+        w = e.get("wave")
+        dispatch_count[w] = dispatch_count.get(w, 0) + 1
 
     violations = 0
     if dispatches and not brakes:
@@ -200,6 +174,15 @@ def audit(events, args, allowed_r):
                 f"verdict={verdict} with a launched offload (wave {e.get('wave')!r} has a "
                 f"dispatch) and ground={ground!r} — an economics-failing dispatch without a "
                 "necessity ground does not launch")
+        # Concurrency the inequality does not price owes a ground even when the
+        # economics pass (doctrine RT-2). Without this leg a disjoint-write wave records
+        # ground:"none" and no audit surface carries its non-overlap evidence.
+        if launched and dispatch_count.get(e.get("wave"), 0) > 1 \
+                and ground not in NECESSITY_GROUNDS:
+            problems.append(
+                f"wave {e.get('wave')!r} launched {dispatch_count[e.get('wave')]} dispatches "
+                f"with ground={ground!r} — parallel dispatch names a necessity ground "
+                "whatever the economics say")
         inputs = e.get("inputs") or {}
         c_reread = check_term("inputs.C_reread", inputs.get("C_reread"), anchors, problems)
         c_brief_cmd = check_term("inputs.C_brief_cmd", inputs.get("C_brief_cmd"), anchors, problems)

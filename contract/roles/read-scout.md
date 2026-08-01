@@ -29,17 +29,15 @@ when_not:
     full grading, frontier-leaning)
   - the question needs a pass/fail call on someone else's deliverable (that
     is fresh-verifier's shape, or the doctrine's reserved set)
-  - any duty in the doctrine's reserved set (§ Judgment reservation)
+  - any duty in the doctrine's reserved set (RT-8)
 graded_under:
-  doctrine_rev: "82606dd"
+  doctrine_rev: "dcb22ea"
   model_gen: "g2026.07"
 ---
 
 # read-scout — cached grading: read-only reconnaissance
 
-One shape, graded once: a bounded read-only sweep (search, inventory,
-multi-source lookup) whose findings are evidence-cited and whose acceptance
-can be checked against the citations. The grade above is the card's cache;
-citing this card in a dispatch plan replaces the three-axis grade columns
-for the subtask (doctrine § Complexity tiering — Role cards). Staleness rule
-lives there: any `graded_under` mismatch = miss = full grading.
+One shape, graded once: a bounded read-only sweep whose findings are
+evidence-cited and whose acceptance can be checked against the citations.
+Citing this card replaces the three-axis grade columns (RT-4 @ role-card); any `graded_under`
+mismatch is a miss and full grading is owed.

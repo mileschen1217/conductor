@@ -1,52 +1,30 @@
 #!/usr/bin/env python3
-"""audit-model-conformance.py — journal x telemetry model-conformance audit.
+# Journal event vocabulary: contract/journal-event.schema.json (doctrine § Machine pointers).
+"""Journal x telemetry model-conformance audit. Stdlib only.
 
-Python 3 stdlib ONLY.
+Usage: audit-model-conformance.py <journal.jsonl> [telemetry.jsonl]
 
-Usage: python3 scripts/audit-model-conformance.py <journal.jsonl> [telemetry.jsonl]
-
-Telemetry is OPTIONAL, and that is the point of this script's shape. C0 is
-telemetry-independent: it reads the journal alone. While telemetry was a
-required argument, the close chain could only invoke this audit when a
-telemetry export existed, so on every run without one C0 — the cheapest and
-most load-bearing check of the three — never ran at all. Model drift was
-caught three times by a human reading the journal, and never once by this
-script. So: the audit runs on every instrumented close, telemetry or not.
+Telemetry is OPTIONAL so that C0 runs on every instrumented close.
 
 Telemetry format (fixed contract of this script; converters live in bindings):
   {"type":"agent","model":"<id>"}    one row per worker execution
   {"type":"session","model":"<id>"}  optional; the commander's own session model
 
-Checks:
-  C0 the journal's FIRST event is commander_stamp (self-stamp duty); missing
-     or late stamp is a VIOLATION. Runs always.
-  C1 every journal dispatch line's resolved_model consumes one matching
-     telemetry agent row (multiset join — telemetry carries no task ids);
-     an unconsumable dispatch line is a VIOLATION naming that line (ST-5 shape)
-  C2 when session rows exist, the journal's commander_stamp model must appear
-     among them (the self-report mirror of ST-5)
-  Leftover agent rows are an informational NOTE (e.g. acceptance judges).
+  C0  the journal's FIRST event is commander_stamp. Runs always.
+  C1  every dispatch line's resolved_model consumes one matching telemetry agent
+      row (multiset join — telemetry carries no task ids)
+  C2  when session rows exist, the commander_stamp model appears among them
+  Leftover agent rows are an informational NOTE.
 
-Fail-closed: absent, empty, or unparseable telemetry, or dispatches present
-with zero agent rows -> C1/C2 are UNVERIFIABLE and the run is NEVER reported
-CLEAN. C0 still returns its own verdict in every one of those cases.
-Exit, once the audit runs: 1 VIOLATION > 2 UNVERIFIABLE > 0 CLEAN. That is a
-priority ordering among coexisting conditions, so a C0 violation with no
-telemetry still exits 1, not 2.
+Fail-closed: absent, empty or unparseable telemetry, or dispatches with zero
+agent rows -> C1/C2 UNVERIFIABLE, never CLEAN. C0 still returns its verdict.
 
-Exit 3 = CALLED WRONG stands OUTSIDE that ordering rather than at the end of
-it: the argument check is the first thing main() does and short-circuits
-before any verdict logic runs, so 3 never competes with a verdict.
-
-Codes 2 and 3 are deliberately distinct, and must stay distinct. The close
-chain records a failing member as fail(<rc>), so the exit code is the only
-thing that survives into the close event: 2 there reads "this audit ran and
-could not conclude for want of evidence", which on an instrumented run is a
-real, owed failure. If a caller bug — wrong argument count after some future
-refactor of the invocation — also exited 2, that bug would be recorded as a
-legitimate evidence gap and read as an honest red rather than a broken call.
-That is the silent-false-green shape this whole audit surface exists to
-prevent, so a usage error gets its own code and never borrows this one.
+Exit, once the audit runs: 1 VIOLATION > 2 UNVERIFIABLE > 0 CLEAN — a priority
+ordering among coexisting conditions, so a C0 violation with no telemetry exits
+1, not 2. Exit 3 = called wrong, and stands OUTSIDE that ordering: the argument
+check short-circuits before any verdict logic. 2 and 3 must stay distinct — the
+close chain records the code, and collapsing them would file a caller bug as an
+honest evidence gap.
 """
 import json
 import sys
