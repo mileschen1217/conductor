@@ -26,16 +26,15 @@ when_not:
   - targets are not enumerable in advance
   - the change spans cross-file invariants that the recipe does not already
     encode
-  - any duty in the doctrine's reserved set (§ Judgment reservation)
+  - any duty in the doctrine's reserved set (RT-8)
 graded_under:
-  doctrine_rev: "82606dd"
+  doctrine_rev: "6998330"
   model_gen: "g2026.07"
 ---
 
 # mech-writer — cached grading: recipe application
 
 One shape, graded once: batch application of a solved pattern whose checks
-are written before dispatch (doctrine § Escalation ladder — de-escalation
-endpoint). The grade above is the card's cache; citing this card in a
-dispatch plan replaces the three-axis grade columns. Staleness rule:
-doctrine § Complexity tiering — Role cards.
+are written before dispatch (doctrine § Defaults — solved pattern, its
+de-escalation endpoint). Citing this card replaces the three-axis grade
+columns (RT-4 @ role-card); any `graded_under` mismatch is a miss and full grading is owed.

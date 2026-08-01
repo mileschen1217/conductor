@@ -1,0 +1,273 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "journal-event-line",
+  "x_notes": {
+    "created": "2026-07-29 (mode-at-first-dispatch, REQ-6 / AC-19)",
+    "vocab": 3,
+    "scope": "Single home of event names, required sets and value enums. Doctrine § Machine pointers cites this file. Validating against it is necessary and NOT sufficient: the cross-line rules (moment_id uniqueness, dispatch_result pairing to a dispatch the same journal recorded) cannot be stated per line and live in the journal auditors. The within-line half — a declared `class` owing `class_default` — IS enforced here, via `dependencies`.",
+    "owed_when": "Normative home of the owed-events map (doctrine § Machine pointers cites it). `commander_stamp`, `entry` and `close` are unconditional, one each per journal. Every other event is owed only when its trigger fires, decidable from the journal alone: `probe` before the first dispatch; `brake` per wave when any offload is planned or executed — dispatch events with no brake event is a fail; `containment` on every write-role dispatch line — expected drift exposure against containment capacity; `doubt` on the dispatch line of an entry or grading moment whose disposition was not `frozen`; `judgment_moment` once per recognized moment; `blocked_to_human` when a judgment_moment carries disposition `blocked`, echoing that moment verbatim; `deviation` at the first deviation.",
+    "additive_fields": "`additionalProperties: true` on every branch IS the rule. Open-set enums: `deviation.kind`, and member statuses of the `dropped(<trigger>)` form. Every other enum here is closed. Constraints on CHANGING this file live in ADR 0003.",
+    "free_text_fields": "`grounds`, `k_note`, `containment`, `doubt`, `check`, `note`, `payload`, `why_not_script`, `config.tiers` — typed `string`, no enum, no length cap. This file is their single home — doctrine states no length rule for them."
+  },
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["event", "ts"],
+  "properties": {
+    "event": {
+      "type": "string",
+      "enum": [
+        "commander_stamp", "entry", "probe", "brake", "deviation", "dispatch",
+        "judgment_moment", "blocked_to_human", "dispatch_result", "close"
+      ]
+    },
+    "ts": { "type": "string", "description": "ISO8601 UTC, on every line" }
+  },
+  "oneOf": [
+    {
+      "title": "commander_stamp",
+      "additionalProperties": true,
+      "required": ["event", "ts", "model", "doctrine_rev", "model_gen", "vocab"],
+      "properties": {
+        "event": { "const": "commander_stamp" },
+        "model": { "type": "string" },
+        "doctrine_rev": { "type": "string" },
+        "model_gen": { "type": "string" },
+        "vocab": { "type": "integer", "enum": [3] }
+      }
+    },
+    {
+      "title": "entry",
+      "additionalProperties": true,
+      "required": ["event", "ts", "family", "write_shape", "read_breadth", "config", "grounds", "veto"],
+      "dependencies": { "class": ["class_default"] },
+      "properties": {
+        "event": { "const": "entry" },
+        "family": { "type": "string", "enum": ["read-heavy", "write-heavy"] },
+        "write_shape": { "type": "string", "enum": ["inline", "1-worker", "disjoint-write"] },
+        "read_breadth": { "type": "integer", "minimum": 0 },
+        "config": { "type": "object", "additionalProperties": true },
+        "grounds": { "type": "string" },
+        "veto": {
+          "oneOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "additionalProperties": true,
+              "required": ["who", "changed_to", "why"],
+              "properties": {
+                "who": { "type": "string" },
+                "changed_to": { "type": "string" },
+                "why": { "type": "string" }
+              }
+            }
+          ]
+        },
+        "class": { "type": "string", "enum": ["mechanical"] },
+        "class_default": {
+          "type": "string",
+          "pattern": "^(cited|overridden\\(.+\\))$",
+          "description": "An override carries a non-empty reason. That a declared class OWES this field is expressed by `dependencies` on this branch."
+        }
+      }
+    },
+    {
+      "title": "probe",
+      "additionalProperties": true,
+      "required": ["event", "ts", "action", "row"],
+      "properties": {
+        "event": { "const": "probe" },
+        "action": { "type": "string", "enum": ["hit", "probed", "reprobed", "failed"] },
+        "row": { "type": ["string", "null"] }
+      }
+    },
+    {
+      "title": "brake",
+      "additionalProperties": true,
+      "required": ["event", "ts", "wave", "offload", "save", "pay", "verdict", "ground", "inputs", "probe_ref", "anchor_rev", "r_rev"],
+      "properties": {
+        "event": { "const": "brake" },
+        "wave": { "type": "integer", "minimum": 1 },
+        "offload": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": ["tier", "w_est", "r", "C_brief_worker", "corpus", "boot"],
+            "properties": {
+              "tier": { "type": "string", "enum": ["tier-0", "frontier", "mid", "cheap"] },
+              "w_est": { "type": "number", "minimum": 0 },
+              "r": { "type": "number", "minimum": 0 },
+              "C_brief_worker": { "$ref": "#/definitions/computed_term" },
+              "corpus": { "$ref": "#/definitions/computed_term" },
+              "boot": { "type": "integer", "minimum": 0 }
+            }
+          }
+        },
+        "save": {
+          "type": ["number", "null"],
+          "description": "null iff verdict is `not-computable` — an unobtainable cold-start cost leaves the economics leg uncomputable and offload legal on necessity grounds only (doctrine RT-2 + the brake's C_fresh definition)."
+        },
+        "pay": { "type": ["number", "null"] },
+        "verdict": { "type": "string", "enum": ["pass", "fail", "not-computable"] },
+        "ground": {
+          "type": "string",
+          "enum": ["wall-clock", "corpus", "disjoint-write", "verification-mandated", "none"],
+          "description": "Closed: the four necessity grounds plus `none` (doctrine § Definitions — necessity grounds)."
+        },
+        "inputs": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["C_brief_cmd", "C_reread"],
+          "properties": {
+            "C_brief_cmd": { "$ref": "#/definitions/computed_term" },
+            "C_reread": { "$ref": "#/definitions/computed_term" }
+          }
+        },
+        "probe_ref": { "type": ["string", "null"] },
+        "anchor_rev": { "type": "string" },
+        "r_rev": { "type": "string" },
+        "k_note": { "type": "string" }
+      }
+    },
+    {
+      "title": "deviation",
+      "additionalProperties": true,
+      "required": ["event", "ts", "kind", "note"],
+      "properties": {
+        "event": { "const": "deviation" },
+        "kind": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Open set. Named values: escalation | scope-change | estimate-drift | declaration-audit | aborted-dispatch."
+        },
+        "note": { "type": "string" },
+        "contract": {
+          "type": "string",
+          "description": "The task-contract path a decided-but-unlaunched dispatch left behind (kind: aborted-dispatch). Structured so reconciliation pairs on it rather than parsing `note`."
+        }
+      }
+    },
+    {
+      "title": "dispatch",
+      "additionalProperties": true,
+      "required": ["event", "ts", "task_id", "tier", "resolved_model", "read_only", "wave", "contract"],
+      "properties": {
+        "event": { "const": "dispatch" },
+        "task_id": { "type": "string" },
+        "tier": { "type": "string", "enum": ["tier-0", "frontier", "mid", "cheap"] },
+        "resolved_model": { "type": "string" },
+        "read_only": {
+          "type": "boolean",
+          "description": "Literally this key. A dispatch line without it is MALFORMED to audit-single-writer.sh."
+        },
+        "wave": { "type": "integer", "minimum": 1 },
+        "contract": { "type": "string" },
+        "card": {
+          "type": "string",
+          "pattern": "^([^@\\s]+@[^@\\s]+|none\\(.+\\))$",
+          "description": "`<role>@<graded_under>`, or `none(<reason>)` on a miss or stale stamp."
+        },
+        "grade": { "type": "object", "additionalProperties": true },
+        "why_not_script": { "type": "string" },
+        "contract_family": { "type": "string" },
+        "write_surface": { "type": "string" },
+        "brief_tokens_est": { "type": "integer", "minimum": 0 },
+        "w_est": { "type": "number", "minimum": 0 },
+        "containment": { "type": "string" },
+        "doubt": { "type": "string" }
+      }
+    },
+    {
+      "title": "judgment_moment",
+      "additionalProperties": true,
+      "required": ["event", "ts", "moment_id", "decision_type", "disposition", "check"],
+      "properties": {
+        "event": { "const": "judgment_moment" },
+        "moment_id": { "type": ["integer", "string"] },
+        "decision_type": {
+          "type": "string",
+          "enum": ["entry-gate", "grading-dispute", "worker-blocked", "acceptance-ambiguity", "scope-change-preview"]
+        },
+        "disposition": {
+          "type": "string",
+          "enum": ["frozen", "mechanized", "surfaced", "blocked"]
+        },
+        "check": { "type": "string" }
+      }
+    },
+    {
+      "title": "blocked_to_human",
+      "additionalProperties": true,
+      "required": ["event", "ts", "moment_id", "reason", "payload"],
+      "properties": {
+        "event": { "const": "blocked_to_human" },
+        "moment_id": { "type": ["integer", "string"] },
+        "reason": { "type": "string", "enum": ["judgment-reserved", "worker-blocked"] },
+        "payload": { "type": "string" }
+      }
+    },
+    {
+      "title": "dispatch_result",
+      "additionalProperties": true,
+      "required": ["event", "ts", "task_id", "checker", "usage"],
+      "properties": {
+        "event": { "const": "dispatch_result" },
+        "task_id": { "type": "string" },
+        "checker": { "type": "string", "enum": ["VALID", "INVALID"] },
+        "usage": {
+          "description": "Token counts verbatim, or the marker `unavailable`. The string branch is a const so a prose pointer cannot pass.",
+          "oneOf": [
+            { "type": "object", "additionalProperties": { "type": "integer" } },
+            { "type": "string", "const": "unavailable" }
+          ]
+        },
+        "reread_tokens_est": { "type": "integer", "minimum": 0 }
+      }
+    },
+    {
+      "title": "close",
+      "additionalProperties": true,
+      "required": ["event", "ts", "terminal", "members"],
+      "properties": {
+        "event": { "const": "close" },
+        "terminal": { "type": "string", "enum": ["done", "failed", "blocked"] },
+        "members": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": ["name", "status"],
+            "properties": {
+              "name": { "type": "string" },
+              "status": {
+                "type": "string",
+                "pattern": "^(pass|fail\\([0-9]+\\)|dropped\\(.+\\))$",
+                "description": "`fail(<rc>)` carries the exit code so batching cannot hide which member failed; `dropped(<trigger>)` means the trigger did not fire (doctrine § Definitions — close law)."
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "definitions": {
+    "computed_term": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["tok", "basis"],
+      "properties": {
+        "tok": { "type": "integer", "minimum": 0 },
+        "basis": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["refs", "bytes", "class"],
+          "properties": {
+            "refs": { "type": "array", "items": { "type": "string" } },
+            "bytes": { "type": "integer", "minimum": 0 },
+            "class": { "type": "string", "enum": ["prose", "code", "cjk", "mixed"] }
+          }
+        }
+      }
+    }
+  }
+}

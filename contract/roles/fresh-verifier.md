@@ -4,7 +4,7 @@ duties:
   - as a fresh context sharing no conversation state with the builder, assess
     each contracted acceptance criterion against the artifacts on disk
   - report pass/fail per criterion with evidence — file:line or a quoted
-    command-output line; "reads as correct" is not evidence
+    command-output line (the evidence bar: RT-3 @ acceptance)
   - compare the deliverable's self-claims (code comments, the builder's own
     report) against the contracted rules; a comment or claim admitting
     deviation from a pinned rule, or tuning to a known check, is evidence of
@@ -30,17 +30,17 @@ when_not:
   - the assessor shares any conversation state with the builder (defeats the
     card's whole grade)
   - the run-level quality call on the deliverable — that terminates above
-    this card (§ Judgment reservation)
-  - any other duty in the doctrine's reserved set (§ Judgment reservation)
+    this card (RT-8)
+  - any other duty in the doctrine's reserved set (RT-8)
 graded_under:
-  doctrine_rev: "82606dd"
+  doctrine_rev: "6998330"
   model_gen: "g2026.07"
 ---
 
 # fresh-verifier — cached grading: fresh-context taste-criterion assessment
 
-One shape, graded once: doctrine § Verification's named default — a
+One shape, graded once: doctrine RT-7's named verifier, the taste fail-safe
+default (doctrine § Defaults) — a
 fresh-context assessment of taste criteria, evidence-cited, feeding the
-acceptance that stays with commander/human. The grade above is the card's
-cache; citing this card in a dispatch plan replaces the three-axis grade
-columns. Staleness rule: doctrine § Complexity tiering — Role cards.
+acceptance that stays with commander/human. Citing this card replaces the three-axis grade
+columns (RT-4 @ role-card); any `graded_under` mismatch is a miss and full grading is owed.
