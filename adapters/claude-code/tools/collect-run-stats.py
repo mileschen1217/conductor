@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Journal event vocabulary: contract/journal-event.schema.json (doctrine § Machine pointers).
 """collect-run-stats.py — L3 tier-0 estimate-drift emitter.
 
 Runs on an instrumented close only, because only an instrumented run has the
@@ -6,7 +7,7 @@ journal this reads. Its one duty is the estimate-drift signal —
 dispatch.w_est vs the dispatch_result's harness-reported output tokens —
 printed as JSON lines for the commander to journal as typed deviation events.
 Drift is evidence for a later change to the binding's anchors, which travels
-the evidence path of doctrine § Durable records. This tool WRITES NOTHING
+the evidence path in ADR 0003. This tool WRITES NOTHING
 anywhere.
 
 Inputs are EXACTLY the run journal (doctrine: the mode binds a harness's

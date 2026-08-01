@@ -1,29 +1,22 @@
 # orchestration-mode — Codex adapter
 
 Binds the L1 dispatch primitive's harness step to `codex exec` (non-interactive).
-Doctrine: `doctrine/orchestration-mode.md` (cite, never restate). Tier→model:
-`binding.md` beside this file. Codex-as-commander is documented at the end —
-documentation only, not an acceptance surface (flip-trigger FT-2).
+Doctrine is cited, never restated. Tier→model: `binding.md` beside this file.
 
-**The mode is paid for at the first dispatch** (doctrine § Entry gate). This
-adapter is the dispatch primitive's middle step, so everything below applies
-from the moment work is handed to a worker; a run that never dispatches uses
-none of it and leaves nothing behind. Self-audit ceremony — journal, computed
-brake terms, close chain — is instrumentation and applies only to a
-measurement-bearing run (doctrine § Audit surface trigger enum). The forwarder
-recipe below is the always-on part: contract in, result out, checker verdict.
+Scope: doctrine RT-1. The forwarder recipe is the always-on part: contract in,
+result out, checker verdict.
+Self-audit ceremony applies only to a run an operator armed (RT-9 @ switch;
+carrier in `binding.md` § Instrumentation switch).
 
 ## Verification record
 
-No `verified-run:` lines yet — no benchmark cell has been executed through
-this adapter (run + audit procedure: `benchmark/protocol.md`). A line
-appears here only when a commander×topology combination completes a
-protocol run; a verification record is not a capability claim.
+No `verified-run:` lines yet — no benchmark cell has been executed through this
+adapter (procedure: `benchmark/protocol.md`). A verification record is not a
+capability claim.
 
 ## AGENTS.md load fragment (worker side)
 
-Paste into the task workspace's AGENTS.md so a Codex worker session picks up
-the mode contract:
+Paste into the task workspace's AGENTS.md:
 
 ```markdown
 ## orchestration-mode worker contract
@@ -35,34 +28,25 @@ produce its Expected Output into the task directory (result schema path given
 in your prompt).
 ```
 
-## Preventive single-writer enforcement (mandatory, every dispatch run)
+## Preventive single-writer enforcement (doctrine RT-6, bound to this harness's sandbox flag)
 
-Doctrine § Single-writer rule's preventive half, bound to this harness's
-sandbox flag. It is a procedural step, not paperwork: it binds on ordinary and
-instrumented runs alike, and does not depend on a journal existing.
-
-- Read-only fan-out workers: `--sandbox read-only`. Any number in parallel.
-- Write-capable work: `--sandbox workspace-write`, **ONE worker at a time**
-  per write surface (disjoint-write: non-overlapping surfaces, one writer
-  each, and the merge-back is itself a single-writer step).
+- Read-only fan-out: `--sandbox read-only`. Any number in parallel.
+- Write-capable work: `--sandbox workspace-write`, ONE worker at a time per
+  write surface.
 - The sandbox value actually passed is what an instrumented run records as the
   dispatch line's `read_only` field (`read-only` → `true`).
 
 ## Thin-forwarder recipe (dispatch primitive, middle step)
 
-Inputs: `$task_dir` containing `task-contract.md` (the contract filename
-convention is contractual — doctrine § Dispatch primitive); `$model` resolved
-from `binding.md`; `$sandbox` per the preventive rule above; `$conductor` =
-conductor repo root.
+Inputs: `$task_dir` containing `task-contract.md` (RT-5 @ artifact-naming); `$model` from
+`binding.md`; `$sandbox` per the rule above; `$conductor` = conductor repo root.
 
 ```bash
 # 1. probe — CLI absent is NOT a task failure; it is adapter-unavailable:
 #    report unavailable + fallback_reason upstream; portability ACs go blocked.
 command -v codex >/dev/null || { echo "codex-unavailable"; exit 3; }
 
-# 2. dispatch
-#    sandbox: read-only for fan-out; workspace-write for the single write worker
-#    stdin MUST be /dev/null: codex exec waits on stdin in non-interactive contexts
+# 2. dispatch. stdin MUST be /dev/null: codex exec waits on stdin non-interactively
 codex exec \
   --cd "$task_dir" \
   --sandbox "$sandbox" \
@@ -71,8 +55,8 @@ codex exec \
 rc=$?
 
 # 3. infra-failure fallback (codex exec died, or no/empty/invalid result.json):
-#    synthesize a schema-valid failure via the L2-owned generator (result-shape
-#    knowledge stays in contract/; any existing invalid file is preserved).
+#    synthesize a schema-valid failure via the L2-owned generator; any existing
+#    invalid file is preserved.
 if [ $rc -ne 0 ]; then
   if ! python3 "$conductor/contract/check-result.py" "$task_dir/result.json" >/dev/null 2>&1; then
     [ -f "$task_dir/result.json" ] && mv "$task_dir/result.json" "$task_dir/result.invalid.json"
@@ -87,19 +71,14 @@ python3 "$conductor/contract/check-result.py" "$task_dir/result.json"
 
 ## Codex-as-commander (documentation only — FT-2)
 
-Running the commander side on Codex means: an AGENTS.md fragment carrying the
-L1 doctrine pointer + this forwarder as the dispatch mechanism, with judgment
-reservation intact. Codex offers no tool-scoping hardening for the commander
-posture — AGENTS.md is a soft constraint. This stays out of acceptance until
-flip-trigger FT-2 fires (a real case where CC is unavailable and Codex must
-command).
+An AGENTS.md fragment carrying the L1 doctrine pointer plus the forwarder above
+as the dispatch mechanism, with judgment reservation intact. Codex offers no
+tool-scoping hardening for the commander posture, so AGENTS.md is a soft
+constraint. This stays out of acceptance until FT-2 fires.
 
-An FT-2 rework SHALL import the commander stations landed for the other
-adapter meanwhile — verify-locus routing, the mechanical judgment-check form,
-the instrumentation trigger check, and the single-invocation close chain —
-rather than re-deriving them. That import duty is the whole of this section's
-forward scope: naming it here does not make Codex-as-commander an acceptance
-surface before FT-2 fires.
+An FT-2 rework SHALL import the commander stations landed for the other adapter
+meanwhile — verify-locus routing, the mechanical judgment-check form, the switch
+read at the first actual dispatch, and the single-invocation close chain — rather
+than re-deriving them.
 
-`[unverified: FT-3]` Whether a TOML-defined agent can be spawned by file path
-— re-verify against official Codex docs when this adapter is reworked.
+`[unverified: FT-3]` Whether a TOML-defined agent can be spawned by file path.
