@@ -1,0 +1,78 @@
+# Run-obeyed manifest — the single declared set of files a run loads or obeys.
+#
+# TWO consumers read this file and no third set exists anywhere:
+#   1. scripts/check-doctrine-rev.sh  — doctrine/REV keys on the last-change
+#      commit ACROSS THIS SET, never on a directory. `doctrine/` alone would
+#      strand contract/journal-event.schema.json, a file a run obeys that does
+#      not live under doctrine/.
+#   2. scripts/check-run-context-size.sh — the size gate measures exactly this
+#      set. One manifest for both is the point: a file cannot be
+#      obeyed-but-unpriced or priced-but-unkeyed.
+#
+# ACCEPTED CONSEQUENCE, named rather than discovered later: because the two sets
+# are one, editing any member — including a script's source — moves doctrine/REV
+# and therefore stales every role card's `graded_under`. That is heavier coupling
+# than keying on the doctrine file alone. It is deliberate: a commander that must
+# read close-chain.sh to learn how to call it is obeying that file, and a grading
+# cached under the old interface is stale in the way `graded_under` exists to
+# express. The cost is bounded because a build re-keys once, at the end (AC-28).
+#
+# WHAT IS NOT HERE, and why:
+#   - a rationale companion file — none exists. Spec amendment A-2 withdrew it:
+#     justification lives in an ADR or in the commit that makes the change.
+#   - scripts/check-*.sh, scripts/test-*.sh — repo quality gates. A run never
+#     calls them; they are not run-obeyed and pricing them would tax every run
+#     for the repo's own hygiene.
+#   - contract/fixtures/, scripts/fixtures/ — test inputs, never loaded by a run.
+#   - doctrine/REV, this file — stamps and declarations about the set, not
+#     members of it.
+#
+# Format: one repo-relative path per line. `#` comments and blank lines ignored.
+# A path listed here that is missing or unreadable is a FAIL in BOTH consumers,
+# never a skip and never scored as zero characters.
+#
+# A path prefixed `stamped ` is PRICED but NOT KEYED. Such a file carries the
+# graded_under stamp that the keyed set defines, so including it in the keyed set
+# is circular: re-keying it moves the very commit it was keyed to, and doctrine/
+# REV is stale the instant it is written. Discovered at the first re-key under
+# this manifest. The size gate measures these; the rev check skips them.
+
+# --- L1 -----------------------------------------------------------------
+doctrine/orchestration-mode.md
+
+# --- L2: the commander<->worker interface a run obeys --------------------
+contract/task-contract.md
+contract/task-result.schema.json
+contract/probe.schema.json
+contract/journal-event.schema.json
+stamped contract/roles/read-scout.md
+stamped contract/roles/mech-writer.md
+stamped contract/roles/fresh-verifier.md
+
+# --- L2: source a run reads in order to call it -------------------------
+contract/check-result.py
+contract/check-journal-event.py
+contract/make-fallback-result.py
+
+# --- L3: adapters a run loads -------------------------------------------
+adapters/claude-code/SKILL.md
+adapters/claude-code/binding.md
+adapters/codex/README.md
+adapters/codex/binding.md
+
+# --- source a run reads in order to call it -----------------------------
+# The failing 0.7.0 arm read close-chain.sh, four audit scripts and
+# probe.schema.json to learn their interfaces before calling them. That is
+# product gap #6 ("腳本介面在使用點沒有文件", ~4 round-trips), and the
+# 2026-07-29 replay round priced it a second time: script-source reads are
+# where the two measured arms' costs diverge. A set defined only by prose files
+# would score a script that grew as free.
+scripts/probe-select.py
+scripts/estimate-tokens.py
+scripts/audit-artifact-reconciliation.py
+scripts/audit-brake-lines.py
+scripts/audit-judgment-flow.py
+scripts/audit-model-conformance.py
+scripts/audit-single-writer.sh
+adapters/claude-code/tools/close-chain.sh
+adapters/claude-code/tools/collect-run-stats.py

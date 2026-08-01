@@ -1,2 +1,2 @@
-{"event":"commander_stamp","model":"mid-model-1","doctrine_rev":"abc1234","run_id":"fixture-run-4"}
-{"event":"judgment_moment","moment_id":1,"decision_type":"entry-gate","disposition":"frozen"}
+{"event":"commander_stamp","model":"mid-model-1","doctrine_rev":"abc1234","run_id":"fixture-run-4","ts":"2026-07-20T09:00:00Z","model_gen":"g2026.07","vocab":3}
+{"event":"judgment_moment","moment_id":1,"decision_type":"entry-gate","disposition":"frozen","ts":"2026-07-20T09:00:01Z","check":"judgment-check: entry / no-match / declared-mechanical class pre-answers this station"}

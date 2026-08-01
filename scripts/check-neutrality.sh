@@ -25,7 +25,7 @@ if [ "${1:-}" = "--self-test" ]; then
   trap 'rm -f "$PLANT"' EXIT
   rm -f "$PLANT"  # self-heal a leftover from an abnormally killed prior run
   echo "planted-term-for-selftest: subagent" > "$PLANT"
-  if grep -rnioEH "$TERMS" "$ROOT/doctrine" "$ROOT/contract" 2>/dev/null | grep -q "roles/.neutrality-selftest-planted"; then
+  if grep -rnioEH --exclude-dir=__pycache__ --exclude="*.pyc" "$TERMS" "$ROOT/doctrine" "$ROOT/contract" 2>/dev/null | grep -q "roles/.neutrality-selftest-planted"; then
     echo "SELF-TEST OK: planted terms detected (regex + contract/roles/ scope)"
     exit 0
   fi
@@ -40,7 +40,7 @@ for d in "$ROOT/doctrine" "$ROOT/contract"; do
   fi
 done
 
-hits="$(grep -rnioEH "$TERMS" "$ROOT/doctrine" "$ROOT/contract" 2>/dev/null)"
+hits="$(grep -rnioEH --exclude-dir=__pycache__ --exclude="*.pyc" "$TERMS" "$ROOT/doctrine" "$ROOT/contract" 2>/dev/null)"
 rc=$?
 case "$rc" in
   0)

@@ -14,8 +14,8 @@ append-only probe record (schema: contract/probe.schema.json):
   ERROR <reason>
       — record file exists but is unreadable, or ANY line is malformed
         (bad JSON, wrong schema tag, missing/ill-typed fields). Fail-safe:
-        a suspicious row is never consumed (doctrine § Amortization brake
-        conservative-closed path).
+        a suspicious row is never consumed (doctrine RT-3 + RT-4:
+        conservative-closed — an untrusted row has no consumable basis).
 
 Usage:
   probe-select.py <probe.jsonl> --harness <binding id> --config-hash <hex> \

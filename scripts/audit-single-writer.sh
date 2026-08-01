@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
+# Journal event vocabulary: contract/journal-event.schema.json (doctrine § Machine pointers).
 # audit-single-writer.sh — post-hoc single-writer audit (invariant I2).
 #
 # This is the DETECTIVE half of the rule. The preventive half — read-only
 # worker toolsets, one write-capable worker at a time — is a procedural step
 # in every adapter and binds every dispatch run, instrumented or not
-# (doctrine § Single-writer rule). This script exists only where a journal
+# (doctrine RT-6 @ dispatch-record). This script exists only where a journal
 # does, which is to say on instrumented runs.
 #
 # Write activity lives on {"event":"dispatch","read_only":false,"wave":N}

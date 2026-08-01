@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Journal event vocabulary: contract/journal-event.schema.json (doctrine § Machine pointers).
 # test-collect-run-stats.sh — fixture suite for the harness binding's tier-0
 # estimate-drift emitter (the tool writes nothing anywhere).
 # Offline, deterministic.
