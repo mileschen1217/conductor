@@ -33,7 +33,7 @@ when_not:
     this card (RT-8)
   - any other duty in the doctrine's reserved set (RT-8)
 graded_under:
-  doctrine_rev: "6998330"
+  doctrine_rev: "dcb22ea"
   model_gen: "g2026.07"
 ---
 
