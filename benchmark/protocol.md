@@ -196,7 +196,10 @@ v1 rows (2026-07-10) are immutable history in legacy shape.
 When both arms decompose the task into the same work units (e.g. one worker
 per module on each side), **the cost finding of record is the per-unit paired
 comparison**: each unit's cost on each arm, the paired statistic over the
-per-unit log-ratios (mean, dispersion, n), and its sign. Run totals are
+per-unit log-ratios (mean, dispersion, n), and its sign. The estimator is
+fixed as `log(conductor_unit_cost / inline_unit_cost)` — positive means
+conductor is more expensive; a report using any other orientation says so
+explicitly or is misread. Run totals are
 derived numbers — reported, never the headline. Rationale, from a five-pair
 round (2026-08): the totals differed −0.5% while the paired per-unit mean was
 +4.2% with two large opposite-signed effects cancelling inside the aggregate
