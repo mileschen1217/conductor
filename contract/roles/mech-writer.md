@@ -28,7 +28,7 @@ when_not:
     encode
   - any duty in the doctrine's reserved set (RT-8)
 graded_under:
-  doctrine_rev: "dcb22ea"
+  doctrine_rev: "9b59741"
   model_gen: "g2026.07"
 ---
 

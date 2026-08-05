@@ -31,7 +31,7 @@ when_not:
     is fresh-verifier's shape, or the doctrine's reserved set)
   - any duty in the doctrine's reserved set (RT-8)
 graded_under:
-  doctrine_rev: "dcb22ea"
+  doctrine_rev: "9b59741"
   model_gen: "g2026.07"
 ---
 
