@@ -191,6 +191,21 @@ citation key), `cell` (`<commander>x<inline|v2-form|bare-inline>`), and on
 the ablation ruling row `discipline_unit_price_usd` + `quality_delta`.
 v1 rows (2026-07-10) are immutable history in legacy shape.
 
+## Unit of analysis (cost verdicts on paired work units)
+
+When both arms decompose the task into the same work units (e.g. one worker
+per module on each side), **the cost finding of record is the per-unit paired
+comparison**: each unit's cost on each arm, the paired statistic over the
+per-unit log-ratios (mean, dispersion, n), and its sign. Run totals are
+derived numbers — reported, never the headline. Rationale, from a five-pair
+round (2026-08): the totals differed −0.5% while the paired per-unit mean was
++4.2% with two large opposite-signed effects cancelling inside the aggregate
+— the aggregate manufactured a headline with the wrong sign and hid that the
+data contained no signal at all (t=0.26, n=5). Log-ratio is the estimator
+because costs are ratio-scale and unit sizes differ; a round whose arms do
+not share a unit decomposition states so and falls back to run totals
+explicitly.
+
 ## Quality rubric (human adjudication)
 
 Floor: the task's own tests/checks all green. Above the floor: the human
