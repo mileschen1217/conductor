@@ -34,12 +34,9 @@ r = worker output 牌價 ÷ commander output 牌價。
 單位權重（token 種類換算成 output-token 等值）：
 `weight[output]=1, weight[cache-write]=0.25, weight[input]=0.2`
 
-**Re-pin 2026-08-05（r_rev 引用點）** —— sonnet 依標準價 $3/$15 入表。原
-introductory pricing（$2/$10）雖排程 2026-09-01 到期，帳單證據顯示已提前
-終止：兩個實跑 run 的 token 帳以 $15 重建與帳單各差 8.15%／3.71%（既知
-儀器殘差量級），以 $10 重建差 37.4%／34.4%——每個變體下 $15 都遠更吻合。
-有到期日的牌價格自此以**到期日或帳單證據，先到者為準**判定；判定用比較
-擬合（候選費率何者遠更吻合），不用絕對吻合（既知殘差會誤報）。
+**Re-pin 2026-08-05（r_rev 引用點）** —— sonnet 依標準價 $3/$15 入表；intro
+價（$2/$10）經帳單重建證據提前終止（證據在 re-pin commit）。到期牌價格以
+**到期日或帳單證據，先到者為準**判定，判定用比較擬合、不用絕對吻合。
 
 ## 換算錨表（doctrine「the brake」anchors 項的 CC 綁定）
 
