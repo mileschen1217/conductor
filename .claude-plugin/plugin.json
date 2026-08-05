@@ -1,7 +1,7 @@
 {
   "name": "conductor",
   "description": "Portable orchestration mode — a commander judges, decomposes, and dispatches; tiered workers execute through file contracts (L1 doctrine / L2 contracts / L3 adapters). The mode is paid for at the first dispatch: a run that never delegates creates nothing, and an ordinary dispatch run pays only contract + result + checker verdict. Self-audit ceremony — journal, computed brake terms, boot probe, close chain — is instrumentation, armed from outside the run by an operator and off by default; no property of a run makes it instrumented.",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "skills": [
     "./adapters/claude-code"
   ]
